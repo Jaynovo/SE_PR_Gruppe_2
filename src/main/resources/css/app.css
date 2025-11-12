@@ -1,0 +1,65 @@
+.root {
+    -fx-font-family: "Segoe UI", "Inter", system-ui, sans-serif;
+
+    /* Farben als looked-up values */
+    -fx-bg:            #0f172a;  /* Hintergrund */
+    -fx-surface:       #111827;  /* dunkle Fläche */
+    -fx-card:          #1f2937;  /* Kartenfläche */
+    -fx-text:          #e5e7eb;  /* Primärtext */
+    -fx-muted:         #9ca3af;  /* Sekundärtext */
+    -fx-primary:       #cc4f29;  /* Primär */
+    -fx-primary-weak:  #c96b4f;  /* Hover */
+
+    /* Hintergrund für die gesamte App */
+    -fx-background-color: -fx-bg;
+    -fx-text-fill: -fx-text;
+}
+
+/* 2) Karten / Container */
+.card {
+    -fx-background-color: -fx-card;
+    -fx-background-radius: 12;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 20, 0.15, 0, 6);
+}
+
+/* 3) Buttons */
+.button {
+    -fx-background-color: -fx-primary;
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-background-radius: 10;
+    -fx-padding: 10 16 10 16;
+    -fx-cursor: hand;
+}
+.button:hover {
+    -fx-background-color: -fx-primary-weak;
+}
+
+/* 4) Textfelder */
+.text-field, .password-field {
+    -fx-background-color: -fx-surface;
+    -fx-text-fill: -fx-text;
+    -fx-prompt-text-fill: -fx-muted;
+    -fx-background-radius: 10;
+    -fx-padding: 10 12 10 12;
+    -fx-border-color: transparent;
+    -fx-border-radius: 10;
+}
+.text-field:focused, .password-field:focused {
+    -fx-border-color: -fx-primary;
+    -fx-border-width: 1;
+}
+
+/* 5) Labels und allgemeiner Text */
+.label {
+    -fx-text-fill: -fx-text;
+}
+
+/* 6) Menüleiste dezenter */
+.menu-bar {
+    -fx-background-color: transparent;
+}
+.menu, .menu .label, .menu-item .label {
+    -fx-text-fill: -fx-text;
+}

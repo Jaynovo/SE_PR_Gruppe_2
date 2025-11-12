@@ -1,0 +1,24 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="CssUnknownProperty" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="myCustomPropertiesEnabled" value="true" />
+      <option name="myIgnoreVendorSpecificProperties" value="false" />
+      <option name="myCustomPropertiesList">
+        <value>
+          <list size="9">
+            <item index="0" class="java.lang.String" itemvalue="-app-surface" />
+            <item index="1" class="java.lang.String" itemvalue="-app-bg" />
+            <item index="2" class="java.lang.String" itemvalue="-app-card" />
+            <item index="3" class="java.lang.String" itemvalue="-app-text" />
+            <item index="4" class="java.lang.String" itemvalue="-app-muted" />
+            <item index="5" class="java.lang.String" itemvalue="-app-primary" />
+            <item index="6" class="java.lang.String" itemvalue="-app-primary-weak" />
+            <item index="7" class="java.lang.String" itemvalue="-app-radius" />
+            <item index="8" class="java.lang.String" itemvalue="-app-shadow" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
