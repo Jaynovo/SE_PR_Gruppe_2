@@ -39,6 +39,7 @@
                         <String fx:value="United Kingdom" />
                         <String fx:value="United States" />
                         <String fx:value="Canada" />
+                        <String fx:value="Brazil" />
                     </FXCollections>
                 </items>
             </ComboBox>
