@@ -1,0 +1,8 @@
+# -- Ignore all these directories
+# Makes committing and pushing much more comfortable
+target/
+*.class
+*.jar
+.idea/
+*.iml
+out/

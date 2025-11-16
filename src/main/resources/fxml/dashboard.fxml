@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import com.sun.javafx.scene.control.ContextMenuContent.ArrowMenuItem?>
+<?import javafx.geometry.Insets?>
+<BorderPane prefHeight="980.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.jku.se.gruppe2.ui.controller.Dashboard_Controller">
+   <top>
+       <ToolBar BorderPane.alignment="CENTER">
+           <Label text="Dashboard" styleClass="title"/>
+           <Pane HBox.hgrow="ALWAYS"/>
+           <Button text =" + New Room" onAction="#handleCreateRoom"/>
+           <Separator orientation="VERTICAL"/>
+           <MenuButton text="User ▾" fx:id="userMenu">
+                   <items>
+                       <MenuItem text="Profile" onAction="#handleUserProfile"/>
+                       <MenuItem text="Logout" onAction="#handleLogout"/>
+                   </items>
+           </MenuButton>
+       </ToolBar>
+   </top>
+    <center>
+        <ScrollPane fitToWidth="true" pannable="true">
+            <content>
+                <FlowPane fx:id="cardsFlow" hgap="16" vgap="16">
+                    <padding>
+                        <Insets top="16" right="16" bottom="16" left="16"/>
+                    </padding>
+                </FlowPane>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>
