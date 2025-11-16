@@ -1,7 +1,7 @@
 .root {
     -fx-font-family: "Segoe UI", "Inter", system-ui, sans-serif;
 
-    /* Farben als looked-up values */
+    /* Colours */
     -fx-bg:            #0f172a;  /* Hintergrund */
     -fx-surface:       #111827;  /* dunkle Fläche */
     -fx-card:          #1f2937;  /* Kartenfläche */
@@ -10,20 +10,41 @@
     -fx-primary:       #cc4f29;  /* Primär */
     -fx-primary-weak:  #c96b4f;  /* Hover */
 
-    /* Hintergrund für die gesamte App */
+    /* BG-colours */
     -fx-background-color: -fx-bg;
     -fx-text-fill: -fx-text;
 }
 
-/* 2) Karten / Container */
+/* Cards */
 .card {
     -fx-background-color: -fx-card;
     -fx-background-radius: 12;
     -fx-padding: 16;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 20, 0.15, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 18, 0.15, 0, 6);
 }
 
-/* 3) Buttons */
+.card-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+}
+
+/* Badges */
+.badge {
+    -fx-background-radius: 999;
+    -fx-padding: 4 10 4 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: whitesmoke;
+}
+.badge-on {
+    -fx-background-color: #16c756;
+}
+.badge-off {
+    -fx-background-color: #e54848;
+}
+
+
+/* Buttons */
 .button {
     -fx-background-color: -fx-primary;
     -fx-text-fill: white;
@@ -36,7 +57,7 @@
     -fx-background-color: -fx-primary-weak;
 }
 
-/* 4) Textfelder */
+/* Textfields */
 .text-field, .password-field {
     -fx-background-color: -fx-surface;
     -fx-text-fill: -fx-text;
@@ -51,12 +72,50 @@
     -fx-border-width: 1;
 }
 
-/* 5) Labels und allgemeiner Text */
+.stack-pane, .border-pane, .vbox{
+    -fx-alignment: center;
+}
+
+.scroll-pane, .flow-pane, .tool-bar, .menu-button, .menu-item {
+    -fx-background-color: -fx-bg;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: -fx-bg;
+}
+
+/* Labels  */
 .label {
     -fx-text-fill: -fx-text;
 }
+.title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+}
+
+/* Metric pills */
+.metric {
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 10;
+    -fx-padding: 10 12 10 12;
+}
+
+.metric-value {
+    -fx-text-fill: -fx-text;
+    -fx-font-size: 14;
+    -fx-font-weight: 600;
+}
+
+.muted { -fx-text-fill: -fx-muted; -fx-font-size: 11px; }
+
+/* Buttons */
+.button { -fx-background-radius: 10; }
+
+/* Toolbar */
+.tool-bar { -fx-padding: 8 12 8 12; }
 
 /* 6) Menüleiste dezenter */
+/* Should be deleted? */
 .menu-bar {
     -fx-background-color: transparent;
 }
