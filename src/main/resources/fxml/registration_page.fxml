@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+
+<StackPane xmlns="http://javafx.com/javafx/17.0.12"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="at.jku.se.gruppe2.app.RegistrationController"
+           prefHeight="400.0" prefWidth="640.0">
+    <children>
+        <VBox alignment="CENTER" maxHeight="365.0" maxWidth="604.0" prefHeight="365.0" prefWidth="604.0" spacing="12" styleClass="card">
+            <Label text="Smart Home User Registration">
+                <font>
+                    <Font size="15.0" />
+                </font>
+            </Label>
+
+            <TextField fx:id="firstNameField" promptText="First Name:" />
+            <TextField fx:id="lastNameField" promptText="Last Name:" />
+            <TextField fx:id="streetNameField" promptText="Street Name:" />
+
+            <HBox spacing="10">
+                <TextField fx:id="plzField" promptText="PLZ:" prefWidth="150" />
+                <TextField fx:id="cityField" promptText="City:" HBox.hgrow="ALWAYS" />
+            </HBox>
+
+            <ComboBox fx:id="countryBox" promptText="Choose Country:">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="Austria" />
+                        <String fx:value="Germany" />
+                        <String fx:value="Switzerland" />
+                        <String fx:value="France" />
+                        <String fx:value="Italy" />
+                        <String fx:value="Spain" />
+                        <String fx:value="United Kingdom" />
+                        <String fx:value="United States" />
+                        <String fx:value="Canada" />
+                        <String fx:value="Brazil" />
+                    </FXCollections>
+                </items>
+            </ComboBox>
+
+            <TextField fx:id="emailField" promptText="E-Mail:"/>
+            <PasswordField fx:id="passwordField" promptText="Password:" />
+            <PasswordField fx:id="confirmPasswordField" promptText="Confirm Password:" />
+            <Button fx:id="registrationButton" text="Register" onAction="#registrationButtonClicked"/>
+
+        </VBox>
+    </children>
+</StackPane>

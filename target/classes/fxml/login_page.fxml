@@ -4,7 +4,10 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<StackPane prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane xmlns="http://javafx.com/javafx/17.0.12"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="at.jku.se.gruppe2.app.LoginController"
+           prefHeight="400.0" prefWidth="640.0">
     <children>
         <!---<AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
             <children>
@@ -16,14 +19,16 @@
                 <Hyperlink layoutX="233.0" layoutY="241.0" text="Register new User" />
             </children>
         </AnchorPane>-->
-       <VBox alignment="CENTER" maxHeight="210" maxWidth="360" spacing="12" styleClass="card">
+        <VBox alignment="CENTER" maxHeight="210" maxWidth="360" spacing="12" styleClass="card">
             <Label text="Smart Home Login">
-            <font>
-               <Font size="15.0" />
-            </font></Label>
+                <font>
+                    <Font size="15.0" />
+                </font>
+            </Label>
             <TextField fx:id="emailField" promptText="E-Mail: " />
-            <TextField fx:id="passwordField" promptText="Password: " />
-         <Button alignment="BOTTOM_CENTER" mnemonicParsing="false" text="Login" />
+            <PasswordField fx:id="passwordField" promptText="Password: " />
+            <Button fx:id="registerButton" text="Register new User" onAction="#registerButtonClicked" />
+            <Button fx:id="loginButton" text="Login" onAction="#loginButtonClicked" />
         </VBox>
     </children>
 </StackPane>
