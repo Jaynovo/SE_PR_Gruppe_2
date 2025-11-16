@@ -1,8 +1,11 @@
-package at.jku.se.gruppe2.app;
+package at.jku.se.gruppe2.ui.controller;
 
+import at.jku.se.gruppe2.app.MainApp;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -97,20 +100,19 @@ public class ProfileController {
 
     @FXML
     private void onSave() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Profile has been saved", ButtonType.OK);
+        alert.showAndWait();
         try{
-            MainApp.setRoot("login_page.fxml");
-
+            MainApp.setRoot("dashboard_page");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Profil gespeichert");
     }
 
     @FXML
     private void onCancel() {
         try {
-            //TODO: Root auf Dashboard ändern?
-            MainApp.setRoot("login_page.fxml");
+            MainApp.setRoot("dashboard_page");
         } catch (Exception e) { e.printStackTrace(); }
     }
 

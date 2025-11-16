@@ -76,7 +76,7 @@
     -fx-alignment: center;
 }
 
-.scroll-pane, .flow-pane, .tool-bar, .menu-button, .menu-item {
+.scroll-pane, .flow-pane, .tool-bar, .menu-button, .menu-item, .combo-box {
     -fx-background-color: -fx-bg;
 }
 
