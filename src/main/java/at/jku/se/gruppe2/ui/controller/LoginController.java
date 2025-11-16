@@ -1,5 +1,6 @@
-package at.jku.se.gruppe2.app;
+package at.jku.se.gruppe2.ui.controller;
 
+import at.jku.se.gruppe2.app.MainApp;
 import javafx.fxml.FXML;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;

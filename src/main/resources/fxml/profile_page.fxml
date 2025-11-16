@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<StackPane prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.jku.se.gruppe2.app.ProfileController">
+<StackPane prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.jku.se.gruppe2.ui.controller.ProfileController">
 
     <children>
         <VBox alignment="CENTER" maxWidth="360" spacing="12" styleClass="card">

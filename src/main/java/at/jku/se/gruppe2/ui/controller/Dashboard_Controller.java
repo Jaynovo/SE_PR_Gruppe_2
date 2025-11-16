@@ -1,5 +1,6 @@
 package at.jku.se.gruppe2.ui.controller;
 
+import at.jku.se.gruppe2.app.MainApp;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -30,7 +31,20 @@ public class Dashboard_Controller {
         }
     }
 
+    public static class House {
+        public final long id;
+        public final String name;
+        public List<Room> rooms;
+
+        public House (long id, String name, List<Room> rooms) {
+            this.id = id;
+            this.name = name;
+            this.rooms = rooms;
+        }
+    }
+
     private List<Room> rooms = new ArrayList<>();
+    private House house = new House(1, "Haus", rooms);
 
     @FXML
     public void initialize() {
@@ -106,15 +120,25 @@ public class Dashboard_Controller {
         });
     }
     public void handleUserProfile(ActionEvent actionEvent) {
-        showInfo("User Management", "Here, we go to the user management view");
+        try {
+            MainApp.setRoot("profile_page");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
+
     public void handleLogout(ActionEvent actionEvent) {
-        showInfo("Logout", "Here, we would log out");
+        showInfo("Logout", "You have been logged out.");
+        try {
+            MainApp.setRoot("login_page");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
+
     private void showInfo(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.CLOSE);
         alert.setTitle(title);
-        alert.getDialogPane().getStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/app.css")).toExternalForm());
         alert.showAndWait();
     }
 }
