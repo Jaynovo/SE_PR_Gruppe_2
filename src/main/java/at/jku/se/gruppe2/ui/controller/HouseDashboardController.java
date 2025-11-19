@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Dashboard_Controller {
+public class HouseDashboardController {
     @FXML private FlowPane cardsFlow;
     @FXML private MenuButton userMenu;
 
