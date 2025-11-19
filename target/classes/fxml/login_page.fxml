@@ -3,8 +3,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
 
-<StackPane xmlns="http://javafx.com/javafx/17.0.12"
+<StackPane prefHeight="600.0" prefWidth="640.0"
+           xmlns="http://javafx.com/javafx/17.0.12"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="at.jku.se.gruppe2.ui.controller.LoginController"
            prefHeight="900.0" prefWidth="640.0">
