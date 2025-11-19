@@ -14,7 +14,7 @@ public class MainApp extends Application {
     public void start(Stage stage) throws Exception {
         primaryStage = stage;
         primaryStage.setTitle("Smart Home Simulator");
-        primaryStage.setResizable(false);
+        primaryStage.setResizable(true);
         Scene scene = new Scene(FXMLLoader.load(getClass().getResource("/fxml/login_page.fxml")));
         scene.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
         primaryStage.setScene(scene);

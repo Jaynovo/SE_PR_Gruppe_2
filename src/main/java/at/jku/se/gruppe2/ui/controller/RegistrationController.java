@@ -12,8 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class RegistrationController {
-    @FXML
-    private Button registrationButton;
+    @FXML private Button registrationButton;
 
     @FXML
     private void registrationButtonClicked(ActionEvent event) {
@@ -26,7 +25,8 @@ public class RegistrationController {
                 e.printStackTrace();
             }
         } else if (result.get() == ButtonType.CANCEL) {
-            for (int i = 0; i < 10; i++) {
+            //Pop-Up Message when not accepted
+            for (int i = 0; i < 1; i++) {
                 Alert alert1 = new Alert(Alert.AlertType.INFORMATION);
                 alert1.showAndWait();
             }

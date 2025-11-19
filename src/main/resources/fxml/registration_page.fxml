@@ -4,30 +4,43 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
 <?import java.lang.String?>
+<?import at.jku.se.gruppe2.ui.custom.IntegerField?>
 
-<StackPane xmlns="http://javafx.com/javafx/17.0.12"
+<StackPane prefHeight="600.0" prefWidth="640.0"
+           xmlns="http://javafx.com/javafx/17.0.12"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="at.jku.se.gruppe2.ui.controller.RegistrationController"
-           prefHeight="400.0" prefWidth="640.0">
+           fx:controller="at.jku.se.gruppe2.ui.controller.RegistrationController">
+
     <children>
-        <VBox alignment="CENTER" maxHeight="365.0" maxWidth="604.0" prefHeight="365.0" prefWidth="604.0" spacing="12" styleClass="card">
+        <VBox alignment="CENTER"
+              spacing="15"
+              styleClass="card">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20" />
+            </padding>
+
             <Label text="Smart Home User Registration">
                 <font>
                     <Font size="15.0" />
                 </font>
             </Label>
 
-            <TextField fx:id="firstNameField" promptText="First Name:" />
-            <TextField fx:id="lastNameField" promptText="Last Name:" />
-            <TextField fx:id="streetNameField" promptText="Street Name:" />
+            <TextField fx:id="firstNameField" promptText="First name:" />
+            <TextField fx:id="lastNameField" promptText="Last name:" />
 
             <HBox spacing="10">
-                <TextField fx:id="plzField" promptText="PLZ:" prefWidth="150" />
+                <TextField fx:id="streetNameField" promptText="Street name:" HBox.hgrow="ALWAYS"/>
+                <IntegerField fx:id="streetNumberField" promptText="Number:" prefWidth="100"/>
+            </HBox>
+
+            <HBox spacing="10">
+                <IntegerField fx:id="plzField" promptText="PLZ:" prefWidth="150" />
                 <TextField fx:id="cityField" promptText="City:" HBox.hgrow="ALWAYS" />
             </HBox>
 
-            <ComboBox fx:id="countryBox" promptText="Choose Country:">
+            <ComboBox fx:id="countryBox" promptText="Choose Country:" prefWidth="Infinity">
                 <items>
                     <FXCollections fx:factory="observableArrayList">
                         <String fx:value="Austria" />
