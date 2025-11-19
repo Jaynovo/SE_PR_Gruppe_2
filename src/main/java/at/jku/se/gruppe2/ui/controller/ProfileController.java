@@ -2,14 +2,14 @@ package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.image.ImageView;
@@ -30,7 +30,7 @@ public class ProfileController {
 
     @FXML
     public void initialize() {
-        countryComboBox.getItems().addAll("Österreich", "Deutschland", "Schweiz");
+        countryComboBox.getItems().addAll("Austria", "Germany", "Swizerland", "France", "Italy","Spain", "United Kingdom", "United States","Canada", "Brazil");
 
         // Prolifbild wird aktualisiert sobald die Felder geändert werden
         firstNameField.textProperty().addListener((obs, oldV, newV) -> updateAvatar());
@@ -118,6 +118,38 @@ public class ProfileController {
 
     @FXML
     private void onChangePassword() {
-        System.out.println("Passwort ändern");
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Passwort ändern");
+
+        Label header = new Label("Aktuelles Passwort");
+        header.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
+        dialog.getDialogPane().setContent(header);
+
+        PasswordField oldPassword = new PasswordField();
+        oldPassword.setPromptText("Aktuelles Passwort");
+
+        PasswordField newPassword = new PasswordField();
+        newPassword.setPromptText("Neues Passwort");
+
+        PasswordField confirmPassword = new PasswordField();
+        confirmPassword.setPromptText("Neues Passwort bestätigen");
+
+        VBox content = new VBox(10,
+                new Label("Altes Passwort"), oldPassword,
+                new Label("Neues Passwort"), newPassword,
+                new Label("Neues Passwort bestätigen"), confirmPassword);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new Insets(10));
+
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        //CSS
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/css/app.css").toExternalForm()
+        );
+
+        dialog.showAndWait();
+        //TODO: Passwort checken und speichern
     }
 }
