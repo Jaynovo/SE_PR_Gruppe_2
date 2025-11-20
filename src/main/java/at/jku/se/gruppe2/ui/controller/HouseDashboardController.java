@@ -119,6 +119,7 @@ public class HouseDashboardController {
            }
         });
     }
+
     public void handleUserProfile(ActionEvent actionEvent) {
         try {
             MainApp.setRoot("profile_page");

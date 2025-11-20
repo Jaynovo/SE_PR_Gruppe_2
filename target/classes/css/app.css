@@ -11,7 +11,7 @@
     -fx-primary-weak:  #c96b4f;  /* Hover */
 
     /* BG-colours */
-    -fx-background-color: -fx-bg;
+    -fx-background-color: -fx-bg, linear-gradient(from 0% 100% to 0% 0%, #0f172a 0%, #282f57 100%);
     -fx-text-fill: -fx-text;
 }
 
@@ -34,10 +34,10 @@
     -fx-padding: 4 10 4 10;
     -fx-font-size: 11px;
     -fx-font-weight: 700;
-    -fx-text-fill: whitesmoke;
+    -fx-text-fill: #f5f5ff;
 }
 .badge-on {
-    -fx-background-color: #16c756;
+    -fx-background-color: #24a211;
 }
 .badge-off {
     -fx-background-color: #e54848;
@@ -77,7 +77,7 @@
 }
 
 .scroll-pane, .flow-pane, .tool-bar, .menu-button, .menu-item, .combo-box {
-    -fx-background-color: -fx-bg;
+    -fx-background-color: -fx-bg, linear-gradient(from 0% 100% to 0% 100%, #1f293700 0%, #1F2937 45%, #1F2937 55%);
 }
 
 .scroll-pane .viewport {
@@ -87,6 +87,7 @@
 /* Labels  */
 .label {
     -fx-text-fill: -fx-text;
+    -fx-padding: 5 5 5 5;
 }
 .title {
     -fx-font-size: 16px;

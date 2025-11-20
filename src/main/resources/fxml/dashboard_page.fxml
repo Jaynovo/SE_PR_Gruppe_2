@@ -13,7 +13,7 @@
             <ToolBar BorderPane.alignment="CENTER">
                 <Label text="Smart Home Dashboard" styleClass="title"/>
                 <Pane HBox.hgrow="ALWAYS"/>
-                <MenuButton text="User ▾" fx:id="userMenu">
+                <MenuButton text="Manage User" fx:id="userMenu">
                     <items>
                         <MenuItem text="Profile" onAction="#handleUserProfile"/>
                         <MenuItem text="Logout" onAction="#handleLogout"/>
@@ -25,10 +25,7 @@
     <center>
         <FlowPane>
             <Label text="Your Houses:" styleClass="title">
-
             </Label>
-
-
         </FlowPane>
     </center>
 
