@@ -6,5 +6,6 @@ at\jku\se\gruppe2\ui\controller\HouseRegistrationController.class
 at\jku\se\gruppe2\ui\controller\HouseDashboardController$House.class
 at\jku\se\gruppe2\app\MainApp.class
 at\jku\se\gruppe2\ui\controller\LoginController.class
+at\jku\se\gruppe2\ui\UIUtils.class
 at\jku\se\gruppe2\ui\controller\HouseDashboardController.class
 at\jku\se\gruppe2\ui\controller\DashboardController.class

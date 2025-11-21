@@ -42,6 +42,9 @@
 .badge-off {
     -fx-background-color: #e54848;
 }
+.badge {
+    -fx-cursor: hand;
+}
 
 
 /* Buttons */
