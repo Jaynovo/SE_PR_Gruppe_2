@@ -24,4 +24,4 @@ L: 5-8h
 XL: >8h  
 
 Story Points:  
-Based on Sizes, provide a clearer estimate
+Based on Sizes, provide a clearer estimate of hours
