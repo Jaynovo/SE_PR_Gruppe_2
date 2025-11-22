@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
+import at.jku.se.gruppe2.ui.UIUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -82,7 +83,7 @@ public class HouseDashboardController {
     private Pane createRoomCard(Room room) {
         VBox card = new VBox(10);
         card.getStyleClass().add("card");
-        card.setPrefWidth(180);
+        card.setPrefWidth(240);
         card.setPadding(new Insets(10));
 
         HBox hBox = new HBox(10);
@@ -91,6 +92,19 @@ public class HouseDashboardController {
 
         Label light = new Label(room.isLightOn ? "Light: ON" : "Light: OFF");
         light.getStyleClass().addAll("badge", room.isLightOn ? "badge-on" : "badge-off");
+
+        // Make badge clickable
+        light.setOnMouseClicked(event -> {
+            // Toggle the state
+            room.isLightOn = !room.isLightOn;
+
+            // Update badge text
+            light.setText(room.isLightOn ? "Light: ON" : "Light: OFF");
+
+            // Update CSS style classes
+            light.getStyleClass().removeAll("badge-on", "badge-off");
+            light.getStyleClass().add(room.isLightOn ? "badge-on" : "badge-off");
+        });
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -107,18 +121,19 @@ public class HouseDashboardController {
     }
 
     public void handleCreateRoom(ActionEvent actionEvent) {
-        TextInputDialog inputDialog = new TextInputDialog();
-        inputDialog.setTitle("Create Room");
-        inputDialog.setHeaderText("Create Room");
-        inputDialog.getDialogPane().getStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/app.css")).toExternalForm());
-        inputDialog.showAndWait().ifPresent(name -> {
-           if (!name.isBlank()) {
-               long id = (long) (Math.random() * 1000);
-               rooms.add(new Room(id, "Room " + name, true, 0.5, 0.0));
-               renderCards();
-           }
+        TextInputDialog dialog = UIUtils.styledTextInputDialog("Please enter a room name:");
+
+        dialog.setTitle("Create Room");
+
+        dialog.showAndWait().ifPresent(name -> {
+            if (!name.isBlank()) {
+                long id = (long) (Math.random() * 1000);
+                rooms.add(new Room(id, name, true, 0.5, 0.0)); // avoid "Room Room X"
+                renderCards();
+            }
         });
     }
+
 
     public void handleUserProfile(ActionEvent actionEvent) {
         try {
