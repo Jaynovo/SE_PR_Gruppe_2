@@ -1,3 +1,7 @@
+DROP TABLE location_information CASCADE;
+DROP TYPE address_information CASCADE;
+DROP TABLE home, user_information,home_user, room, device, sensor_type, sensor, actuator_type, actuator, sensor_reading, actuator_state CASCADE;
+
 create table location_information (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     longitude REAL,
@@ -22,8 +26,8 @@ create table addresses (
 */
 create table home (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    floors SMALLINT,
-    label VARCHAR(100),
+    floors SMALLINT DEFAULT 0,
+    label VARCHAR(100) DEFAULT 'Room',
     loc_info INTEGER NOT NULL REFERENCES location_information(id)    -- One house, one location. Many houses could have the same location (i.e. apartments)
 );
 
@@ -32,6 +36,7 @@ create table user_information (
     first_name VARCHAR(25),
     last_name VARCHAR(25),
     e_mail VARCHAR(100) UNIQUE NOT NULL,
+    password TEXT NOT NULL,
     address address_information,                                   -- see loc_info
     loc_info INTEGER NOT NULL REFERENCES location_information(id), -- is this even necessary?? Since any user only ever has one house
     home_info INTEGER NOT NULL REFERENCES home (id)               -- One User, one house. Many users, still one house
@@ -43,8 +48,6 @@ create table home_user (                                    -- define a house-us
     role VARCHAR(20) DEFAULT 'MEMBER',
     PRIMARY KEY (home_id, user_id)
 );
-
-
 
 create table room (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -64,8 +67,8 @@ create table sensor_type (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,                       -- "Thermometer", "Humidity Sensor", "Light sensor", etc.
     unit VARCHAR(50),
-    min_value NUMERIC(3,3),
-    max_value NUMERIC(3,3)
+    min_value NUMERIC(6,3) DEFAULT 0,
+    max_value NUMERIC(6,3) DEFAULT 0
 );
 
 create table sensor (
