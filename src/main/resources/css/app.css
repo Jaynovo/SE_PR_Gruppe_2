@@ -56,6 +56,7 @@
     -fx-padding: 10 16 10 16;
     -fx-cursor: hand;
 }
+
 .button:hover {
     -fx-background-color: -fx-primary-weak;
 }
@@ -70,6 +71,7 @@
     -fx-border-color: transparent;
     -fx-border-radius: 10;
 }
+
 .text-field:focused, .password-field:focused {
     -fx-border-color: -fx-primary;
     -fx-border-width: 1;
@@ -84,7 +86,7 @@
 }
 
 .scroll-pane .viewport {
-    -fx-background-color: -fx-bg;
+    -fx-background-color: -fx-bg, linear-gradient(from 0% 100% to 0% 100%, #1f293700 0%, #1F2937 45%, #1F2937 55%);
 }
 
 /* Labels  */
@@ -92,6 +94,7 @@
     -fx-text-fill: -fx-text;
     -fx-padding: 5 5 5 5;
 }
+
 .title {
     -fx-font-size: 16px;
     -fx-font-weight: 700;
@@ -123,6 +126,7 @@
 .menu-bar {
     -fx-background-color: transparent;
 }
+
 .menu, .menu .label, .menu-item .label {
     -fx-text-fill: -fx-text;
 }

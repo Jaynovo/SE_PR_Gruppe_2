@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:latest  # always pull the newest version
+    restart: always         # makes sure that it restarts automatically
+    shm_size: 128mb
+    env_file:
+      - .env                # Best practice, although our .env is shared
+    ports:
+      - "5432:5432"         # Standard ports
+    volumes:
+      - db_data:/var/lib/postgresql
+volumes:
+  db_data:
+
+# To run this, open the project root in the terminal (right-click on the top-most Folder, SE_PR_GRUPPE_2, "open in Terminal")
+# "docker compose up -d"
+# ^ lets you run the image with the provided parameters (ports, image, etc.)
+# Verify that it runs through Docker - you should be able to see the container
+# You can start/stop the container through Docker or the command line (above or "docker compose down")
