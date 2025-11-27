@@ -36,7 +36,7 @@
             </HBox>
 
             <HBox spacing="10">
-                <IntegerField fx:id="plzField" promptText="PLZ:" prefWidth="150" />
+                <IntegerField fx:id="postalCodeField" promptText="Postal Code:" prefWidth="150" />
                 <TextField fx:id="cityField" promptText="City:" HBox.hgrow="ALWAYS" />
             </HBox>
 

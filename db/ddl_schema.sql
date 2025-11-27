@@ -11,7 +11,7 @@ create table location_information (
 create type address_information as (
     street VARCHAR(200),
     house_nr VARCHAR(8),
-    plz VARCHAR(15),
+    postalCode VARCHAR(15),
     city VARCHAR(200),
     country VARCHAR(2)      -- Country Codes, created via backend/controller
 );
@@ -28,7 +28,7 @@ create table home (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     floors SMALLINT DEFAULT 0,
     label VARCHAR(100) DEFAULT 'Room',
-    loc_info INTEGER NOT NULL REFERENCES location_information(id)    -- One house, one location. Many houses could have the same location (i.e. apartments)
+    loc_info INTEGER NOT NULL REFERENCES location_information(id)    -- One Home, one location. Many houses could have the same location (i.e. apartments)
 );
 
 create table user_information (
@@ -38,11 +38,11 @@ create table user_information (
     e_mail VARCHAR(100) UNIQUE NOT NULL,
     password TEXT NOT NULL,
     address address_information,                                   -- see loc_info
-    loc_info INTEGER NOT NULL REFERENCES location_information(id), -- is this even necessary?? Since any user only ever has one house
-    home_info INTEGER NOT NULL REFERENCES home (id)               -- One User, one house. Many users, still one house
+    loc_info INTEGER NOT NULL REFERENCES location_information(id), -- is this even necessary?? Since any user only ever has one Home
+    home_info INTEGER NOT NULL REFERENCES home (id)               -- One User, one Home. Many users, still one Home
 );
 
-create table home_user (                                    -- define a house-user in case we want to use roles later
+create table home_user (                                    -- define a Home-user in case we want to use roles later
     home_id INTEGER NOT NULL REFERENCES home (id),
     user_id INTEGER NOT NULL REFERENCES user_information(id),
     role VARCHAR(20) DEFAULT 'MEMBER',
@@ -54,7 +54,7 @@ create table room (
     label VARCHAR(100),
     home_info INTEGER NOT NULL REFERENCES home (id),
     area numeric(5,2),
-    UNIQUE(home_info, label)                               -- Each name is unique within each house
+    UNIQUE(home_info, label)                               -- Each name is unique within each Home
 );
 
 create table device (

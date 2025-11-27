@@ -2,17 +2,27 @@ package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.ui.UIUtils;
+import at.jku.se.gruppe2.ui.custom.IntegerField;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextField;
 
+import java.lang.reflect.Field;
 import java.util.Optional;
 
 public class HouseRegistrationController {
 
-    @FXML private Button registrationButton;
+    @FXML private TextField houseLabel;
+    @FXML private IntegerField floorLevels;
+    @FXML private TextField street;
+    @FXML private TextField streetNumber;
+    @FXML private TextField postalCode;
+    @FXML private TextField city;
+
+    @FXML private Button saveButton;
     @FXML private Button cancelButton;
 
     @FXML
@@ -20,7 +30,7 @@ public class HouseRegistrationController {
 
         Alert alert = UIUtils.styledAlert(
                 Alert.AlertType.INFORMATION,
-                "House has been created successfully!",
+                "Home has been created successfully!",
                 ButtonType.OK
         );
 
