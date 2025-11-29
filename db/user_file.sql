@@ -1,13 +1,12 @@
-INSERT INTO location_information(longitude, latitude)
-VALUES (16.3738, 48.2082);
+INSERT INTO address_information(street, house_nr, plz, city, country)
+VALUES ('Musterstraße', '28a', '1010', 'Vienna', 'Austria');
 
-INSERT INTO home(floors, label, loc_info)
+INSERT INTO home(floors, label, address_information)
 VALUES (3, 'Mustermanns home', 1);
 
-INSERT INTO user_information(first_name, last_name, e_mail, password, address, loc_info, home_info)
+INSERT INTO user_information(first_name, last_name, e_mail, password, home_info)
 VALUES ('Max', 'Mustermann', 'Max.Mustermann@example.com',
-        'password', ROW('Musterstraße', '1A', '1010', 'Wien', 'AT')::address_information,
-        1, 1
+        'password',  1
        );
 
 INSERT INTO room(label, home_info, area)
