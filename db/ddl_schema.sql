@@ -25,7 +25,7 @@ create table home (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     floors SMALLINT DEFAULT 0,
     label VARCHAR(100) DEFAULT 'Home',
-    address_information INTEGER REFERENCES address_information(id)  -- One house, one location. Many houses could have the same location (i.e. apartments)
+    address_information INTEGER REFERENCES address_information(id) ON DELETE SET NULL -- One house, one location. Many houses could have the same location (i.e. apartments)
 );
 
 create table user_information (
@@ -34,7 +34,7 @@ create table user_information (
     last_name VARCHAR(25),
     e_mail VARCHAR(100) UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    home_info INTEGER REFERENCES home (id)                          -- One User, one house. Many users, still one house. May be NULL if User doesn't have a home :(
+    home_info INTEGER REFERENCES home (id) ON DELETE SET NULL                         -- One User, one house. Many users, still one house. May be NULL if User doesn't have a home :(
 );
 
 create table home_user (                                    -- define a house-user in case we want to use roles later
@@ -47,14 +47,14 @@ create table home_user (                                    -- define a house-us
 create table room (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     label VARCHAR(100),
-    home_info INTEGER NOT NULL REFERENCES home (id),
+    home_info INTEGER NOT NULL REFERENCES home (id) ON DELETE CASCADE,
     area numeric(5,2),
     UNIQUE(home_info, label)                               -- Each name is unique within each house
 );
 
 create table device (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    room_id INTEGER NOT NULL REFERENCES room(id),
+    room_id INTEGER NOT NULL REFERENCES room(id) ON DELETE CASCADE,
     label VARCHAR(100)
 );
 

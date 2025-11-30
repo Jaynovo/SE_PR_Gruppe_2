@@ -2,10 +2,7 @@ package at.jku.se.gruppe2.persistence;
 
 import at.jku.se.gruppe2.domain.*; //This is where the Classes for User, Home, etc. should be
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Optional;
 
 
@@ -31,7 +28,7 @@ public class UserRepository {
     // This is intended to be used during logging in
     // Only returns the hashed password belonging to the email
     public Optional<String> findPasswordByUserEmail(String email) {
-        String request = "SELECT * FROM user_information WHERE email = ?";
+        String request = "SELECT password FROM user_information WHERE e_mail = ?";
 
         return JdbcTemplate.queryForValue(
                 request,
@@ -49,10 +46,21 @@ public class UserRepository {
         );
     }
 
+    //Quick check whether an email is already taken
+    public boolean existsUserByEmail(String email) {
+        String request = "SELECT * FROM user_information WHERE e_mail = ?";
+
+        return JdbcTemplate.queryForValue(
+                request,
+                ps -> ps.setString(1, email),
+                rs -> 1
+        ).isEmpty();
+    }
+
     public void createUserInDatabase(User user) {
         String request =
                 "INSERT INTO user_information (first_name, last_name, e_mail, password, home_info) " +
-                        "VALUES (?, ?, ?, ?, ?)";
+                        "VALUES (?, ?, ?, ?, ?) RETURNING id";
 
         // This returns an integer of how many rows were affected. In case we need it.
         JdbcTemplate.executeUpdate(
@@ -66,10 +74,55 @@ public class UserRepository {
                     if (user.getHome() != null) {
                         ps.setInt(5, user.getHome().getId());
                     } else {
-                        ps.setNull(5, java.sql.Types.INTEGER);
+                        ps.setNull(5, Types.INTEGER);
                     }
                 }
         );
+    }
+
+    public void updatePassword(User user, String password) {
+        String request = "UPDATE user_information SET password = ? WHERE e_mail = ?";
+        JdbcTemplate.executeUpdate(
+                request,
+                ps -> {
+                    ps.setString(1, password);
+                    ps.setString(2, user.getEmail());
+                }
+        );
+    }
+
+    public void updateHome(User user, Home home) {
+        String request = "UPDATE user_information SET home_info = ? WHERE id = ?";
+
+        JdbcTemplate.executeUpdate(
+                request,
+                ps -> {
+                    if (home != null) {
+                        ps.setInt(1, home.getId());
+                    } else {
+                        ps.setNull(1, Types.INTEGER);
+                    }
+                    ps.setInt(2, user.getId());
+                }
+        );
+    }
+
+    public int updateUserInDatabase(User user) {
+        String request = """
+            UPDATE user_information 
+            SET first_name = ?, last_name = ?, password = ?, home_info = ?
+            WHERE id = ?
+            """;
+        int success = JdbcTemplate.executeUpdate(
+                request,
+                ps -> {
+                    ps.setString(1, user.getFirst_name());
+                    ps.setString(2, user.getLast_name());
+                    ps.setString(3, user.getPassword());
+                    ps.setInt(4, user.getHome().getId());
+                }
+        );
+        return success;
     }
 
     private User mapUser(ResultSet rs) throws SQLException {
@@ -86,7 +139,6 @@ public class UserRepository {
             Home home = homeRepository.getHomeById(home_id).orElse(null);
             user.setHome(home);
         }
-
         return user;
     }
 }

@@ -63,9 +63,9 @@ public class UserRepositoryTest {
 
         assertNull(loadedUser.getHome(), "This home should be Null");
     }
-    @Test
-    void comparePasswords() {
-        Home home = null;
 
+    @Test
+    void feelGoodTest() {
+        assert(true);
     }
 }
