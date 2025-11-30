@@ -1,6 +1,8 @@
 package at.jku.se.gruppe2.model;
 
 public class Address {
+
+    private int id;
     private String street;
     private String houseNumber;
     private String city;
@@ -17,6 +19,17 @@ public class Address {
         this.postalCode = postalCode;
         this.country = country;
         this.longitude = longitude;
+        this.latitude = latitude;
+    }
+
+    public Address(int id, String street , String houseNumber, String city, String postalCode, double longitude, String country, double latitude) {
+        this.id = id;
+        this.street = street;
+        this.houseNumber = houseNumber;
+        this.city = city;
+        this.postalCode = postalCode;
+        this.longitude = longitude;
+        this.country = country;
         this.latitude = latitude;
     }
 

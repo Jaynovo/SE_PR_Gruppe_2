@@ -63,7 +63,7 @@ public class RegistrationController {
             );
 
             //In DB speichern
-            int userId = userRepository.registerUser(newUser);
+            int userId = userRepository.registerUser(newUser); //mit createUserInDatabase austauschen
 
             if (userId > 0) {
                 Alert successAlert = new Alert(Alert.AlertType.CONFIRMATION,
@@ -87,11 +87,6 @@ public class RegistrationController {
     private boolean validateInput() {
         return !firstNameField.getText().isEmpty() &&
                 !lastNameField.getText().isEmpty() &&
-                !streetNameField.getText().isEmpty() &&
-                !streetNumberField.getText().isEmpty() &&
-                !plzField.getText().isEmpty() &&
-                !cityField.getText().isEmpty() &&
-                countryBox.getValue() != null &&
                 !emailField.getText().isEmpty() &&
                 !passwordField.getText().isEmpty();
     }
