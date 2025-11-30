@@ -1,20 +1,20 @@
 package at.jku.se.gruppe2.utils;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class Database {
-    private static final String URL = "jdbc:postgresql://localhost:5432/shs_db";
-    private static final String USER = "postgres";
-    private static final String PASSWORD = "";
+    private final static String URL = "jdbc:postgresql://localhost:5432/shs_db";
+    private final static String USER = "postgres";
+    private final static String PASSWORD = "basiccoconut261";
 
-    public static Connection getConnection() throws SQLException {
+    static {
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("PostgreSQL JDBC Driver not found!", e);
+            throw new RuntimeException("Could not load PostgreSQL driver.", e);
         }
+    }
+
+    public static Connection getConnection() throws SQLException, ClassNotFoundException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 }

@@ -26,6 +26,7 @@
         <FlowPane>
             <Label text="Your Houses:" styleClass="title">
             </Label>
+            <Label fx:id="temperatureLabel" text="Loading weather..." style="-fx-font-size: 14;" />
         </FlowPane>
     </center>
 

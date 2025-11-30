@@ -11,7 +11,7 @@ public class UserRepository {
     public int registerUser(User user) throws SQLException {
         String sql = """
                 WITH address_ins AS (
-                    INSERT INTO address_information (street, house_nr, plz, city, country, longitude, latitude)
+                    INSERT INTO address_information (street, house_nr, post_code, city, country, longitude, latitude)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                     RETURNING id
                 ),
@@ -62,6 +62,8 @@ public class UserRepository {
                 }
             }
             return userId;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 }
