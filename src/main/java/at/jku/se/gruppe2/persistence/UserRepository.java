@@ -1,6 +1,6 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.domain.*;
+import at.jku.se.gruppe2.domain.*; //This is where the Classes for User, Home, etc. should be
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -40,6 +40,15 @@ public class UserRepository {
         );
     }
 
+    public Optional<User> findUserByEmail(String email) {
+        String request = "SELECT * FROM user_information WHERE e_mail = ?";
+        return JdbcTemplate.queryForObject(
+                request,
+                ps -> ps.setString(1, email),
+                this::mapUser
+        );
+    }
+
     public void createUserInDatabase(User user) {
         String request =
                 "INSERT INTO user_information (first_name, last_name, e_mail, password, home_info) " +
@@ -68,7 +77,7 @@ public class UserRepository {
         user.setId(rs.getInt("id"));
         user.setFirst_name(rs.getString("first_name"));
         user.setLast_name(rs.getString("last_name"));
-        user.setEmail(rs.getString("email"));
+        user.setEmail(rs.getString("e_mail"));
 
         int home_id = rs.getInt("home_info");
         if (rs.wasNull()) {
