@@ -8,22 +8,31 @@ public class User {
     private String email;
     private String password;
 
-    private Address address;
+    private Home home;
 
+
+    public User() {}
 
     //Konstruktor ohne ID
-    public User(String firstName, String lastName, String email, String password, Address address) {
+    public User(String firstName, String lastName, String email, String password, Home home) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
-        this.address = address;
+        this.home = home;
     }
 
     //Konstruktor mit ID (laden aus DB)
-    public User(int id, String firstName, String lastName, String email, String password, Address address) {
-        this(firstName, lastName, email, password, address);
+    public User(int id, String firstName, String lastName, String email, String password, Home home) {
+        this(firstName, lastName, email, password, home);
         this.id = id;
+    }
+
+    public User(String firstName, String lastName, String email, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
     }
 
     //Getter und Setter
@@ -67,11 +76,11 @@ public class User {
         this.password = password;
     }
 
-    public Address getAddress() {
-        return address;
+    public Home getHome() {
+        return home;
     }
-    public void setAddress(Address address) {
-        this.address = address;
+    public void setHome(Home home) {
+        this.home = home;
     }
 
     @Override

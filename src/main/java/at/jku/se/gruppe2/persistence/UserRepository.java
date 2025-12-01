@@ -1,6 +1,6 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.domain.*; //This is where the Classes for User, Home, etc. should be
+import at.jku.se.gruppe2.model.*; //This is where the Classes for User, Home, etc. should be
 
 import java.sql.*;
 import java.util.Optional;
@@ -9,6 +9,10 @@ import java.util.Optional;
 public class UserRepository {
 
     private final HomeRepository homeRepository;
+
+    public UserRepository() {
+        homeRepository = new HomeRepository();
+    }
 
     public UserRepository(HomeRepository homeRepository) {
         this.homeRepository = homeRepository;
@@ -57,17 +61,17 @@ public class UserRepository {
         ).isEmpty();
     }
 
-    public void createUserInDatabase(User user) {
+    public int createUserInDatabase(User user) {
         String request =
                 "INSERT INTO user_information (first_name, last_name, e_mail, password, home_info) " +
-                        "VALUES (?, ?, ?, ?, ?) RETURNING id";
+                        "VALUES (?, ?, ?, ?, ?)";
 
         // This returns an integer of how many rows were affected. In case we need it.
-        JdbcTemplate.executeUpdate(
+        int success = JdbcTemplate.executeUpdate(
                 request,
                 ps -> {
-                    ps.setString(1, user.getFirst_name());
-                    ps.setString(2, user.getLast_name());
+                    ps.setString(1, user.getFirstName());
+                    ps.setString(2, user.getLastName());
                     ps.setString(3, user.getEmail());
                     ps.setString(4, user.getPassword());
 
@@ -78,6 +82,8 @@ public class UserRepository {
                     }
                 }
         );
+        System.out.println("Success in createUserInDB: " + success);
+        return success;
     }
 
     public void updatePassword(User user, String password) {
@@ -117,8 +123,8 @@ public class UserRepository {
         int success = JdbcTemplate.executeUpdate(
                 request,
                 ps -> {
-                    ps.setString(1, user.getFirst_name());
-                    ps.setString(2, user.getLast_name());
+                    ps.setString(1, user.getFirstName());
+                    ps.setString(2, user.getLastName());
                     ps.setString(3, user.getPassword());
                     ps.setInt(4, user.getHome().getId());
                 }
@@ -129,8 +135,8 @@ public class UserRepository {
     private User mapUser(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getInt("id"));
-        user.setFirst_name(rs.getString("first_name"));
-        user.setLast_name(rs.getString("last_name"));
+        user.setFirstName(rs.getString("first_name"));
+        user.setLastName(rs.getString("last_name"));
         user.setEmail(rs.getString("e_mail"));
 
         int home_id = rs.getInt("home_info");

@@ -1,6 +1,6 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.domain.*;
+import at.jku.se.gruppe2.model.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -60,7 +60,7 @@ public class HomeRepository {
                 request,
                 ps -> {
                     ps.setInt(1, home.getFloors());
-                    ps.setString(2, home.getLabel());
+                    ps.setString(2, home.getHomeLabel());
                     ps.setInt(3, home.getAddress().getId());
                 },
                 rs -> rs.getInt("id")
@@ -80,7 +80,7 @@ public class HomeRepository {
         return JdbcTemplate.executeUpdate(request,
                     ps -> {
                     ps.setInt(1, home.getFloors());
-                    ps.setString(2, home.getLabel());
+                    ps.setString(2, home.getHomeLabel());
                     ps.setInt(3, home.getAddress().getId());
                 }
             );

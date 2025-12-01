@@ -2,6 +2,7 @@ package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
 import javafx.event.ActionEvent;
@@ -52,7 +53,7 @@ public class HomeRegistrationController {
                 postalCode.getText(),
                 city.getText(),
                 country.getSelectionModel().getSelectedItem(),
-                location
+                48, 16
                 );
 
         Home home= new Home(
@@ -62,7 +63,7 @@ public class HomeRegistrationController {
         );
 
         if(homeRepo != null){
-            homeRepo.saveHome(home);
+            homeRepo.createHomeInDatabase(home);
         }
 
         Alert alert = UIUtils.styledAlert(

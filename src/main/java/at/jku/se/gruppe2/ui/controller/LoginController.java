@@ -2,13 +2,13 @@ package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
 import javafx.fxml.FXML;
-import javafx.event.ActionEvent;
-import javafx.scene.control.Button;
 import at.jku.se.gruppe2.model.User;
-import at.jku.se.gruppe2.repository.UserRepository;
+import at.jku.se.gruppe2.persistence.UserRepository;
 import at.jku.se.gruppe2.utils.PasswordUtils;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.scene.control.*;
+
+import java.util.Optional;
 
 public class LoginController {
     @FXML private TextField emailField;
@@ -35,19 +35,19 @@ public class LoginController {
             return;
         }
 
-        User user = userRepository.findByEmail(email);  // DB-Abfrage genauer Funktionsname siehe Jason
+        Optional<User> user = userRepository.findUserByEmail(email);
 
-        if (user == null) {
+        if (user.isEmpty()) {
             errorLabel.setText("No user found with this email.");
             return;
         }
 
-        if (!PasswordUtils.verifyPassword(password, user.getPassword())) {
+        if (!PasswordUtils.verifyPassword(password, user.get().getPassword())) {
             errorLabel.setText("Incorrect password.");
             return;
         }
 
-        Session.setCurrentUser(user); // User speichern für Dashboard
+        Session.setCurrentUser(user.orElse(null)); // User speichern für Dashboard
 
         try {
             MainApp.setRoot("dashboard_page");

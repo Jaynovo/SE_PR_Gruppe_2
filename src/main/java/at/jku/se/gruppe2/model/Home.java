@@ -1,9 +1,12 @@
 package at.jku.se.gruppe2.model;
 
 public class Home {
+    private int id;
     private String homeLabel;
     private int floors;
     private Address address;
+
+    public Home() {}
 
     public Home(String homeLabel, int floors, Address address) {
         if (homeLabel == null || homeLabel.isBlank() || homeLabel.length() < 4)
@@ -38,6 +41,15 @@ public class Home {
         return address;
 
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public void setAddress(Address address) {
         this.address = address;
     }

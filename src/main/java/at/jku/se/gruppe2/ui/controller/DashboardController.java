@@ -29,7 +29,7 @@ public class DashboardController implements Initializable {
             return;
         }
 
-        Address address = user.getAddress();
+        Address address = user.getHome().getAddress();
         if (address == null) {
             temperatureLabel.setText("No address available");
             return;

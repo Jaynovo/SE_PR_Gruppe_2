@@ -1,6 +1,6 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.domain.Address;
+import at.jku.se.gruppe2.model.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,8 +30,8 @@ public class AddressRepository {
                 request,
                 ps -> {
                     ps.setString(1, address.getStreet());
-                    ps.setString(2, address.getHouseNr());
-                    ps.setString(3, address.getPostCode());
+                    ps.setString(2, address.getHouseNumber());
+                    ps.setString(3, address.getPostalCode());
                     ps.setString(4, address.getCity());
                     ps.setString(5, address.getCountry());
                     ps.setDouble(6, address.getLongitude());
@@ -52,8 +52,8 @@ public class AddressRepository {
                 request,
                 ps -> {
                     ps.setString(1, address.getStreet());
-                    ps.setString(2, address.getHouseNr());
-                    ps.setString(3, address.getPostCode());
+                    ps.setString(2, address.getHouseNumber());
+                    ps.setString(3, address.getPostalCode());
                     ps.setString(4, address.getCity());
                     ps.setString(5, address.getCountry());
                     ps.setDouble(6, address.getLongitude());
@@ -63,12 +63,12 @@ public class AddressRepository {
         return success;
     }
 
-    public Optional<Coordinates> getLongitudeLatitudeByAddress(Address address) {
+    public Optional<Location> getLongitudeLatitudeByAddress(Address address) {
         String request = "SELECT longitude, latitude FROM address_location WHERE id = ?";
         return JdbcTemplate.queryForObject(
                 request,
                 ps -> ps.setInt(1, address.getId()),
-                rs -> new Coordinates(
+                rs -> new Location(
                         rs.getDouble("longitude"),
                         rs.getDouble("latitude")
                 )
@@ -79,7 +79,7 @@ public class AddressRepository {
         Address address = new Address();
         address.setId(rs.getInt("id"));
         address.setStreet(rs.getString("street"));
-        address.setPostCode(rs.getString("post_code"));
+        address.setPostalCode(rs.getString("post_code"));
         address.setCity(rs.getString("city"));
         address.setCountry(rs.getString("country"));
         address.setLongitude(rs.getDouble("longitude"));

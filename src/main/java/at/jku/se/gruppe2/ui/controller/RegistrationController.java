@@ -1,9 +1,8 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
-import at.jku.se.gruppe2.model.Address;
-import at.jku.se.gruppe2.model.User;
-import at.jku.se.gruppe2.repository.UserRepository;
+import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.utils.PasswordUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -17,7 +16,7 @@ public class RegistrationController {
     @FXML private TextField streetNameField;
     @FXML private TextField streetNumberField;
     @FXML private TextField cityField;
-    @FXML private TextField plzField;
+    @FXML private TextField postalCodeField;
     @FXML private ComboBox<String> countryBox;
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
@@ -46,7 +45,7 @@ public class RegistrationController {
             Address address = new Address(
                     streetNameField.getText(),
                     streetNumberField.getText(),
-                    plzField.getText(),
+                    postalCodeField.getText(),
                     cityField.getText(),
                     countryBox.getValue(),
                     0.0, // longitude (dummy)
@@ -58,12 +57,11 @@ public class RegistrationController {
                     firstNameField.getText(),
                     lastNameField.getText(),
                     emailField.getText(),
-                    PasswordUtils.hashPassword(passwordField.getText()), // NICHT Klartext speichern!
-                    address
+                    PasswordUtils.hashPassword(passwordField.getText()) // NICHT Klartext speichern!
             );
 
             //In DB speichern
-            int userId = userRepository.registerUser(newUser); //mit createUserInDatabase austauschen
+            int userId = userRepository.createUserInDatabase(newUser);
 
             if (userId > 0) {
                 Alert successAlert = new Alert(Alert.AlertType.CONFIRMATION,
