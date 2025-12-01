@@ -31,6 +31,7 @@
             <PasswordField fx:id="passwordField" promptText="Password: " />
             <Button fx:id="registerButton" text="Register new User" onAction="#registerButtonClicked" />
             <Button fx:id="loginButton" text="Login" onAction="#handleLoginButton" />
+
         </VBox>
     </children>
 </StackPane>
