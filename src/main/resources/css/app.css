@@ -96,6 +96,11 @@
     -fx-padding: 5 5 5 5;
 }
 
+.error-label {
+    -fx-text-fill: #e54848; /* or -fx-primary if you prefer */
+    -fx-font-weight: 600;
+}
+
 .title {
     -fx-font-size: 16px;
     -fx-font-weight: 700;

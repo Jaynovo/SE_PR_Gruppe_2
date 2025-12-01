@@ -24,7 +24,6 @@ public class AddressRepository {
         String request = """
                 INSERT INTO address_information (street, house_nr, post_code, city, country, longitude, latitude)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-                RETURNING id
                 """;
         int success = JdbcTemplate.executeUpdate(
                 request,
@@ -58,6 +57,7 @@ public class AddressRepository {
                     ps.setString(5, address.getCountry());
                     ps.setDouble(6, address.getLongitude());
                     ps.setDouble(7, address.getLatitude());
+                    ps.setInt(8, address.getId());
                 }
         );
         return success;

@@ -1,12 +1,14 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import at.jku.se.gruppe2.model.User;
 import at.jku.se.gruppe2.persistence.UserRepository;
 import at.jku.se.gruppe2.utils.PasswordUtils;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.scene.control.*;
+import javafx.util.Duration;
 
 import java.util.Optional;
 
@@ -44,6 +46,7 @@ public class LoginController {
 
         if (!PasswordUtils.verifyPassword(password, user.get().getPassword())) {
             errorLabel.setText("Incorrect password.");
+            flashErrorLabel();
             return;
         }
 
@@ -55,5 +58,17 @@ public class LoginController {
             e.printStackTrace();
             errorLabel.setText("Error loading dashboard.");
         }
+    }
+
+    private void flashErrorLabel() {
+        errorLabel.setVisible(true);
+        errorLabel.setOpacity(1.0);
+
+        FadeTransition ft = new FadeTransition(Duration.millis(150), errorLabel);
+        ft.setFromValue(1.0);
+        ft.setToValue(0.1);
+        ft.setCycleCount(10);
+        ft.setAutoReverse(true);
+        ft.play();
     }
 }

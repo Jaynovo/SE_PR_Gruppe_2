@@ -2,6 +2,7 @@ package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.Address;
+import at.jku.se.gruppe2.model.Home;
 import at.jku.se.gruppe2.model.User;
 import at.jku.se.gruppe2.service.GeoCodingService;
 import at.jku.se.gruppe2.service.WeatherService;
@@ -26,6 +27,12 @@ public class DashboardController implements Initializable {
         User user = Session.getCurrentUser();
         if (user == null) {
             temperatureLabel.setText("No user logged in");
+            return;
+        }
+
+        Home home = user.getHome();
+        if (home == null) {
+            temperatureLabel.setText("No home available");
             return;
         }
 
