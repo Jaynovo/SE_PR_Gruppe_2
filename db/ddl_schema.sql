@@ -1,17 +1,16 @@
 DROP TABLE IF EXISTS location_information CASCADE;
-DROP TABLE IF EXISTS address_information CASCADE;
+DROP TABLE IF EXISTS  address_information CASCADE;
 DROP TABLE IF EXISTS home, user_information, home_user, room, device, sensor_type, sensor, actuator_type, actuator, sensor_reading, actuator_state CASCADE;
 
-create table address_information
-(
-    id        INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    street    VARCHAR(200),
-    house_nr  VARCHAR(8),
+create table address_information (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    street VARCHAR(200),
+    house_nr VARCHAR(8),
     post_code VARCHAR(15),
-    city      VARCHAR(200),
-    country   VARCHAR(50),
+    city VARCHAR(200),
+    country VARCHAR(50),
     longitude REAL,
-    latitude  REAL
+    latitude REAL
 );
 
 /* honestly, unnecessary. Could be used if we stumble on issues with address-related look-ups
@@ -34,10 +33,10 @@ create table user_information
 (
     id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     first_name VARCHAR(25),
-    last_name  VARCHAR(25),
-    e_mail     VARCHAR(100) UNIQUE NOT NULL,
-    password   TEXT                NOT NULL,
-    home_info  INTEGER REFERENCES home (id) -- One User, one house. Many users, still one house. May be NULL if User doesn't have a home :(
+    last_name VARCHAR(25),
+    e_mail VARCHAR(100) UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    home_info INTEGER REFERENCES home (id) ON DELETE SET NULL                         -- One User, one house. Many users, still one house. May be NULL if User doesn't have a home :(
 );
 
 create table home_user
@@ -48,29 +47,26 @@ create table home_user
     PRIMARY KEY (home_id, user_id)
 );
 
-create table room
-(
-    id        INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    label     VARCHAR(100),
-    home_info INTEGER NOT NULL REFERENCES home (id),
-    area      numeric(5, 2),
-    UNIQUE (home_info, label) -- Each name is unique within each house
+create table room (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    label VARCHAR(100),
+    home_info INTEGER NOT NULL REFERENCES home (id) ON DELETE CASCADE,
+    area numeric(5,2),
+    UNIQUE(home_info, label)                               -- Each name is unique within each house
 );
 
-create table device
-(
-    id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    room_id INTEGER NOT NULL REFERENCES room (id),
-    label   VARCHAR(100)
+create table device (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    room_id INTEGER NOT NULL REFERENCES room(id) ON DELETE CASCADE,
+    label VARCHAR(100)
 );
 
-create table sensor_type
-(
-    id        INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name      VARCHAR(50) UNIQUE NOT NULL, -- "Thermometer", "Humidity Sensor", "Light sensor", etc.
-    unit      VARCHAR(50),
-    min_value NUMERIC(6, 3) DEFAULT 0,
-    max_value NUMERIC(6, 3) DEFAULT 0
+create table sensor_type (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL, -- "Thermometer", "Humidity Sensor", "Light sensor", etc.
+    unit VARCHAR(50),
+    min_value NUMERIC(6,3) DEFAULT 0,
+    max_value NUMERIC(6,3) DEFAULT 0
 );
 
 create table sensor
