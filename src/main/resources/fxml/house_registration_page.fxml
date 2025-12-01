@@ -62,7 +62,7 @@
             <HBox alignment="CENTER_RIGHT"
                   spacing="10">
                 <Button fx:id="cancelButton" text="Cancel" onAction="#cancelButtonClicked"/>
-                <Button fx:id="saveButton" text="Save House" onAction="#saveHouseButtonClicked"/>
+                <Button fx:id="saveButton" text="Save House" onAction="#saveButtonClicked"/>
             </HBox>
         </VBox>
     </children>
