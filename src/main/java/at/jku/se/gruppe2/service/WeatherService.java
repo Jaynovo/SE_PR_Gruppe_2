@@ -26,7 +26,9 @@ public class WeatherService {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
-                    .header("User-Agent", "SmartHomeSimulator/1.0 (test@example.com)")
+                    .header("User-Agent", "SmartHomeSimulator/1.0 (markus.gaber@gmx.at)")
+                    .header("Accept-Language", "de-AT")
+                    .GET()
                     .build();
 
             HttpResponse<String> response =
