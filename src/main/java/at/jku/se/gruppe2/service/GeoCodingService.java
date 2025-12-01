@@ -1,41 +1,98 @@
 package at.jku.se.gruppe2.service;
 
 import at.jku.se.gruppe2.model.Address;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+
 public class GeoCodingService {
 
-    private static final OkHttpClient client = new OkHttpClient();
+    private static final HttpClient client = HttpClient.newHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    public static Address enrichWithCoordinates(Address address) {
+    public static void enrichWithCoordinates(Address address) {
         try {
-            String query = String.format("%s %s %s %s",
-                    address.getStreet(), address.getHouseNumber(),
-                    address.getPostalCode(), address.getCity());
+            if (address == null) {
+                System.err.println("GeoCodingService: address is null");
+                return;
+            }
 
-            String url = "https://nominatim.openstreetmap.org/search?format=json&q=" +
-                    query.replace(" ", "+");
+            String query = String.format(
+                    "%s %s, %s %s, %s",
+                    nullSafe(address.getStreet()),
+                    nullSafe(address.getHouseNumber()),
+                    nullSafe(address.getPostalCode()),
+                    nullSafe(address.getCity()),
+                    nullSafe(address.getCountry())
+            );
 
-            Request request = new Request.Builder()
-                    .url(url)
-                    .header("User-Agent", "JavaFX SmartHomeApp")
+            String encoded = URLEncoder.encode(query, StandardCharsets.UTF_8);
+            String url = String.format(
+                    Locale.US,
+                    "https://nominatim.openstreetmap.org/search?q=%s&format=json&limit=1",
+                    encoded
+            );
+
+            System.out.println("GeoCodingService: query = " + query);
+            System.out.println("GeoCodingService: calling " + url);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("User-Agent", "SmartHomeSimulator/1.0 (test@example.com)")
                     .build();
 
-            try (Response response = client.newCall(request).execute()) {
-                JsonNode node = mapper.readTree(response.body().string());
-                if (node.size() > 0) {
-                    address.setLatitude(node.get(0).get("lat").asDouble());
-                    address.setLongitude(node.get(0).get("lon").asDouble());
-                }
+            HttpResponse<String> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("GeoCodingService: HTTP status = " + response.statusCode());
+
+            if (response.statusCode() != 200) {
+                System.err.println("GeoCodingService: non-200 response: " + response.body());
+                return;
             }
+
+            String body = response.body();
+            // System.out.println("GeoCodingService response: " + body);
+
+            JsonNode root = mapper.readTree(body);
+
+            if (!root.isArray() || root.size() == 0) {
+                System.err.println("GeoCodingService: no results for address");
+                System.err.println("Body was: " + body);
+                return;
+            }
+
+            JsonNode first = root.get(0);
+
+            if (!first.has("lat") || !first.has("lon")) {
+                System.err.println("GeoCodingService: 'lat' or 'lon' not found in result");
+                System.err.println("First result: " + first);
+                return;
+            }
+
+            double lat = first.get("lat").asDouble();
+            double lon = first.get("lon").asDouble();
+
+            System.out.println("GeoCodingService: parsed lat=" + lat + ", lon=" + lon);
+
+            //Koordinaten in Address
+            address.setLatitude(lat);
+            address.setLongitude(lon);
+
         } catch (Exception e) {
+            System.err.println("GeoCodingService: exception while geocoding");
             e.printStackTrace();
         }
-        return address;
+    }
+
+    private static String nullSafe(String s) {
+        return s == null ? "" : s;
     }
 }

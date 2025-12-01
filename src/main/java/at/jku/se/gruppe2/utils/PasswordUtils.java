@@ -17,4 +17,7 @@ public class PasswordUtils {
             throw new RuntimeException(e);
         }
     }
+    public static boolean verifyPassword(String rawPassword, String storedHash) {
+        return hashPassword(rawPassword).equals(storedHash);
+    }
 }

@@ -66,4 +66,57 @@ public class UserRepository {
             throw new RuntimeException(e);
         }
     }
+
+    public User findByEmail(String email) {
+        String sql = """
+        SELECT ui.id as user_id,
+               ui.first_name,
+               ui.last_name,
+               ui.e_mail,
+               ui.password,
+               ai.street,
+               ai.house_nr,
+               ai.post_code,
+               ai.city,
+               ai.country,
+               ai.longitude,
+               ai.latitude
+        FROM user_information ui
+        LEFT JOIN home h ON ui.home_info = h.id
+        LEFT JOIN address_information ai ON h.address_information = ai.id
+        WHERE ui.e_mail = ?
+    """;
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+
+                    Address address = new Address(
+                            rs.getString("street"),
+                            rs.getString("house_nr"),
+                            rs.getString("post_code"),
+                            rs.getString("city"),
+                            rs.getString("country"),
+                            rs.getDouble("longitude"),
+                            rs.getDouble("latitude")
+                    );
+
+                    return new User(
+                            rs.getInt("user_id"),
+                            rs.getString("first_name"),
+                            rs.getString("last_name"),
+                            rs.getString("e_mail"),
+                            rs.getString("password"),
+                            address
+                    );
+                }
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

@@ -36,7 +36,9 @@ public class DashboardController implements Initializable {
         }
 
         // Nur geocoden, wenn noch keine Koordinaten vorhanden sind
-        if (address.getLatitude() == 0.0 && address.getLongitude() == 0.0) {
+        if ((address.getLatitude() == 0.0 && address.getLongitude() == 0.0) ||
+                (Double.isNaN(address.getLatitude()) || Double.isNaN(address.getLongitude()))) {
+
             GeoCodingService.enrichWithCoordinates(address);
         }
 
@@ -45,11 +47,19 @@ public class DashboardController implements Initializable {
                 address.getLongitude()
         );
 
+
         if (Double.isNaN(temp)) {
             temperatureLabel.setText("Weather unavailable");
         } else {
             temperatureLabel.setText(String.format("Current temperature: %.1f °C", temp));
         }
+        System.out.println("LAT = " + address.getLatitude() + ", LON = " + address.getLongitude());
+
+        System.out.println("Before geocoding: LAT=" + address.getLatitude() + ", LON=" + address.getLongitude());
+
+        GeoCodingService.enrichWithCoordinates(address);
+
+        System.out.println("After geocoding:  LAT=" + address.getLatitude() + ", LON=" + address.getLongitude());
     }
 
     public void addHouseButtonClicked(ActionEvent actionEvent) {
