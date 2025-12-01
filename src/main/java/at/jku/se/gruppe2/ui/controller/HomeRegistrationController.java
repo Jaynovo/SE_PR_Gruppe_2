@@ -6,10 +6,7 @@ import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 
 import java.util.Optional;
 
@@ -21,7 +18,7 @@ public class HomeRegistrationController {
     @FXML private TextField streetNumber;
     @FXML private TextField postalCode;
     @FXML private TextField city;
-    @FXML private TextField country;
+    @FXML private ComboBox<String> country;
 
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
@@ -33,7 +30,7 @@ public class HomeRegistrationController {
     }
 
     @FXML
-    private void saveHouseButtonClicked(ActionEvent event) {
+    private void saveButtonClicked(ActionEvent event) {
 
         if(!validateInputs()){
             UIUtils.styledAlert(
@@ -54,7 +51,7 @@ public class HomeRegistrationController {
                 streetNumber.getText(),
                 postalCode.getText(),
                 city.getText(),
-                country.getText(),
+                country.getSelectionModel().getSelectedItem(),
                 location
                 );
 
@@ -81,12 +78,52 @@ public class HomeRegistrationController {
     }
 
     private boolean validateInputs() {
-        return !homeLabel.getText().isEmpty() &&
-                !street.getText().isEmpty() &&
-                !streetNumber.getText().isEmpty() &&
-                !postalCode.getText().isEmpty() &&
-                !city.getText().isEmpty() &&
-                !country.getText().isEmpty();
+        StringBuilder errors = new StringBuilder();
+
+        //Check for all possible errors
+        if (homeLabel.getText().isBlank()) {
+            errors.append("- Home label cannot be empty.\n");
+        } else if (homeLabel.getText().length() < 4) {
+            errors.append("- Home label must be at least 4 characters long.\n");
+        }
+
+        if (floorLevels.getValue() <= 0) {
+            errors.append("- Number of floors must be greater than 0.\n");
+        }
+
+        if (street.getText().isBlank()) {
+            errors.append("- Street is required.\n");
+        }
+
+        if (streetNumber.getText().isBlank()) {
+            errors.append("- Street number is required.\n");
+        }
+
+        if (postalCode.getText().isBlank()) {
+            errors.append("- Postal code is required.\n");
+        }
+
+        if (city.getText().isBlank()) {
+            errors.append("- City is required.\n");
+        }
+
+        if (country.getSelectionModel().getSelectedItem().isBlank()) {
+            errors.append("- Country is required.\n");
+        }
+
+        // If no errors it is valid
+        if (errors.length() == 0) {
+            return true;
+        }
+
+        // Show all errors in a single alert
+        UIUtils.styledAlert(
+                Alert.AlertType.ERROR,
+                "You are missing the following inputs:\n\n" + errors.toString(),
+                ButtonType.OK
+        ).showAndWait();
+
+        return false;
     }
 
     @FXML

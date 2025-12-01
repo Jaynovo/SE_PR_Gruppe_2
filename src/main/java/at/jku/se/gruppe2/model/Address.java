@@ -9,6 +9,10 @@ public class Address {
     private Location location;
 
     public Address(String street, String streetNumber, String postalCode, String city, String country, Location location) {
+
+        if (street == null || street.isBlank())
+            throw new IllegalArgumentException("Street cannot be empty.");
+
         this.street = street;
         this.streetNumber = streetNumber;
         this.postalCode = postalCode;

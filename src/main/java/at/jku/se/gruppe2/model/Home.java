@@ -6,6 +6,15 @@ public class Home {
     private Address address;
 
     public Home(String homeLabel, int floors, Address address) {
+        if (homeLabel == null || homeLabel.isBlank() || homeLabel.length() < 4)
+            throw new IllegalArgumentException("Home label must be at least 4 characters.");
+
+        if (floors <= 0)
+            throw new IllegalArgumentException("Home must have at least 1 floor.");
+
+        if (address == null)
+            throw new IllegalArgumentException("Address cannot be null.");
+
         this.homeLabel = homeLabel;
         this.floors = floors;
         this.address = address;

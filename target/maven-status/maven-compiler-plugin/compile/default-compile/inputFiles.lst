@@ -3,8 +3,9 @@ C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\model\Address.java
 C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\model\Home.java
 C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\model\Location.java
 C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\ui\controller\DashboardController.java
+C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\ui\controller\HomeRegistrationController.java
+C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\ui\controller\HomeRepository.java
 C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\ui\controller\HouseDashboardController.java
-C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\ui\controller\HouseRegistrationController.java
 C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\ui\controller\LoginController.java
 C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\ui\controller\ProfileController.java
 C:\SE_PR_Gruppe_2\src\main\java\at\jku\se\gruppe2\ui\controller\RegistrationController.java

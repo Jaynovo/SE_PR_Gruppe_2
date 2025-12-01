@@ -29,20 +29,20 @@
                 </font>
             </Label>
 
-            <TextField fx:id="houseNameField" promptText="Name your House:" />
-            <IntegerField fx:id="floorLevelsField" promptText="Number of floors:" />
+            <TextField fx:id="homeLabel" promptText="Name your House:" />
+            <IntegerField fx:id="floorLevels" promptText="Number of floors:" />
 
             <HBox spacing="10">
-                <TextField fx:id="streetNameField" promptText="Street name:" HBox.hgrow="ALWAYS"/>
-                <IntegerField fx:id="streetNumberField" promptText="Number:" prefWidth="100"/>
+                <TextField fx:id="street" promptText="Street name:" HBox.hgrow="ALWAYS"/>
+                <IntegerField fx:id="streetNumber" promptText="Number:" prefWidth="100"/>
             </HBox>
 
             <HBox spacing="10">
-                <IntegerField fx:id="postalCodeField" promptText="Postal Code:" prefWidth="150" />
-                <TextField fx:id="cityField" promptText="City:" HBox.hgrow="ALWAYS" />
+                <IntegerField fx:id="postalCode" promptText="Postal Code:" prefWidth="150" />
+                <TextField fx:id="city" promptText="City:" HBox.hgrow="ALWAYS" />
             </HBox>
 
-            <ComboBox fx:id="countryBox" promptText="Choose Country:" prefWidth="Infinity">
+            <ComboBox fx:id="country" promptText="Choose Country:" prefWidth="Infinity">
                 <items>
                     <FXCollections fx:factory="observableArrayList">
                         <String fx:value="Austria" />
@@ -58,7 +58,6 @@
                     </FXCollections>
                 </items>
             </ComboBox>
-
             <!-- BUTTON ROW -->
             <HBox alignment="CENTER_RIGHT"
                   spacing="10">
