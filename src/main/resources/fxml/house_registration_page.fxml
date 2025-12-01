@@ -6,11 +6,13 @@
 <?import javafx.geometry.Insets?>
 <?import at.jku.se.gruppe2.ui.custom.IntegerField?>
 
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
 <StackPane prefHeight="600.0"
            prefWidth="640.0"
            xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
-           fx:controller="at.jku.se.gruppe2.ui.controller.HouseRegistrationController">
+           fx:controller="at.jku.se.gruppe2.ui.controller.HomeRegistrationController">
 
     <children>
         <!-- MAIN CONTAINER -->
@@ -27,24 +29,40 @@
                 </font>
             </Label>
 
-            <TextField fx:id="houseNameField" promptText="Name your House:" />
-            <IntegerField fx:id="floorLevelsField" promptText="Number of floors:" />
+            <TextField fx:id="homeLabel" promptText="Name your House:" />
+            <IntegerField fx:id="floorLevels" promptText="Number of floors:" />
 
             <HBox spacing="10">
-                <TextField fx:id="streetNameField" promptText="Street name:" HBox.hgrow="ALWAYS"/>
-                <IntegerField fx:id="streetNumberField" promptText="Number:" prefWidth="100"/>
+                <TextField fx:id="street" promptText="Street name:" HBox.hgrow="ALWAYS"/>
+                <IntegerField fx:id="streetNumber" promptText="Number:" prefWidth="100"/>
             </HBox>
 
             <HBox spacing="10">
-                <IntegerField fx:id="plzField" promptText="PLZ:" prefWidth="150" />
-                <TextField fx:id="cityField" promptText="City:" HBox.hgrow="ALWAYS" />
+                <IntegerField fx:id="postalCode" promptText="Postal Code:" prefWidth="150" />
+                <TextField fx:id="city" promptText="City:" HBox.hgrow="ALWAYS" />
             </HBox>
 
+            <ComboBox fx:id="country" promptText="Choose Country:" prefWidth="Infinity">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="Austria" />
+                        <String fx:value="Germany" />
+                        <String fx:value="Switzerland" />
+                        <String fx:value="France" />
+                        <String fx:value="Italy" />
+                        <String fx:value="Spain" />
+                        <String fx:value="United Kingdom" />
+                        <String fx:value="United States" />
+                        <String fx:value="Canada" />
+                        <String fx:value="Brazil" />
+                    </FXCollections>
+                </items>
+            </ComboBox>
             <!-- BUTTON ROW -->
             <HBox alignment="CENTER_RIGHT"
                   spacing="10">
                 <Button fx:id="cancelButton" text="Cancel" onAction="#cancelButtonClicked"/>
-                <Button fx:id="saveButton" text="Save House" onAction="#saveHouseButtonClicked"/>
+                <Button fx:id="saveButton" text="Save House" onAction="#saveButtonClicked"/>
             </HBox>
         </VBox>
     </children>

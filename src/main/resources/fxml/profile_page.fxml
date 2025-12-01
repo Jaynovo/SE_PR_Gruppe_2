@@ -37,7 +37,7 @@
 
                 <TextField fx:id="streetField" promptText="Address" />
 
-                <TextField fx:id="zipField" promptText="PLZ" />
+                <TextField fx:id="PostalCodeField" promptText="Postal Code" />
 
                 <TextField fx:id="cityField" promptText="City" />
 

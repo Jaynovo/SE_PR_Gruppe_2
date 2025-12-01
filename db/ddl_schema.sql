@@ -52,7 +52,7 @@ create table room (
     label VARCHAR(100),
     home_info INTEGER NOT NULL REFERENCES home (id) ON DELETE CASCADE,
     area numeric(5,2),
-    UNIQUE(home_info, label)                               -- Each name is unique within each house
+    UNIQUE(home_info, label)                               -- Each name is unique within each Home
 );
 
 create table device (
