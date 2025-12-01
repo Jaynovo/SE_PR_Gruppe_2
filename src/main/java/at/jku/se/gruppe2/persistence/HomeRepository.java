@@ -49,6 +49,7 @@ public class HomeRepository {
         );
     }
 
+    // Returns 1 if creation was successful, 0 if not
     public int createHomeInDatabase(Home home) {
         String request = """
             INSERT INTO home (floors, label, address_information)
@@ -70,6 +71,7 @@ public class HomeRepository {
         return id;
     }
 
+    // Returns 1 if Update was successful, 0 if not
     public int updateHomeInDatabase(Home home) {
         String request = """
                 UPDATE home
@@ -84,6 +86,7 @@ public class HomeRepository {
             );
     }
 
+    // Returns 1 if Deletion was successful, 0 if not
     public int deleteHomeInDatabase(int id) {
         String request = """
                 DELETE home
@@ -106,8 +109,8 @@ public class HomeRepository {
         home.setFloors(rs.getInt("floors"));
 
         //TODO This still needs creating
-        home.setAddress(
-                AddressRepository.getAddressById(rs.getInt("address_information")));
+        Optional<Address> adrOptional = Optional.ofNullable(rs.getObject("address_information", Address.class));
+        home.setAddress(adrOptional.orElse(new Address()));
         return home;
     }
 }

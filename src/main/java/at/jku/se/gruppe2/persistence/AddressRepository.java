@@ -19,12 +19,35 @@ public class AddressRepository {
         );
     }
 
+    // Returns 1 if creation was successful, 0 if not
     public int createAddressInDatabase(Address address) {
         String request = """
                 INSERT INTO address_information (street, house_nr, post_code, city, country, longitude, latitude)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 RETURNING id
                 """;
+        int success = JdbcTemplate.executeUpdate(
+                request,
+                ps -> {
+                    ps.setString(1, address.getStreet());
+                    ps.setString(2, address.getHouseNr());
+                    ps.setString(3, address.getPostCode());
+                    ps.setString(4, address.getCity());
+                    ps.setString(5, address.getCountry());
+                    ps.setDouble(6, address.getLongitude());
+                    ps.setDouble(7, address.getLatitude());
+                }
+        );
+        return success;
+    }
+
+    // Returns 1 if Update was successful, 0 if not
+    public int updateAddressInDatabase(Address address) {
+        String request = """
+                UPDATE address_information\s
+                SET street = ?, house_nr = ?, post_code = ?, city = ?, country = ?, longitude = ?, latitude = ?
+                WHERE id = ?
+        """;
         int success = JdbcTemplate.executeUpdate(
                 request,
                 ps -> {

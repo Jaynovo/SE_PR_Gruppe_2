@@ -107,12 +107,13 @@ public class UserRepository {
         );
     }
 
+    // Returns 1 if Update was successful, 0 if not
     public int updateUserInDatabase(User user) {
         String request = """
-            UPDATE user_information 
+            UPDATE user_information\s
             SET first_name = ?, last_name = ?, password = ?, home_info = ?
             WHERE id = ?
-            """;
+           \s""";
         int success = JdbcTemplate.executeUpdate(
                 request,
                 ps -> {
