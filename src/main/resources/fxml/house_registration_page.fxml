@@ -6,11 +6,13 @@
 <?import javafx.geometry.Insets?>
 <?import at.jku.se.gruppe2.ui.custom.IntegerField?>
 
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
 <StackPane prefHeight="600.0"
            prefWidth="640.0"
            xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
-           fx:controller="at.jku.se.gruppe2.ui.controller.HouseRegistrationController">
+           fx:controller="at.jku.se.gruppe2.ui.controller.HomeRegistrationController">
 
     <children>
         <!-- MAIN CONTAINER -->
@@ -39,6 +41,23 @@
                 <IntegerField fx:id="postalCodeField" promptText="Postal Code:" prefWidth="150" />
                 <TextField fx:id="cityField" promptText="City:" HBox.hgrow="ALWAYS" />
             </HBox>
+
+            <ComboBox fx:id="countryBox" promptText="Choose Country:" prefWidth="Infinity">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="Austria" />
+                        <String fx:value="Germany" />
+                        <String fx:value="Switzerland" />
+                        <String fx:value="France" />
+                        <String fx:value="Italy" />
+                        <String fx:value="Spain" />
+                        <String fx:value="United Kingdom" />
+                        <String fx:value="United States" />
+                        <String fx:value="Canada" />
+                        <String fx:value="Brazil" />
+                    </FXCollections>
+                </items>
+            </ComboBox>
 
             <!-- BUTTON ROW -->
             <HBox alignment="CENTER_RIGHT"

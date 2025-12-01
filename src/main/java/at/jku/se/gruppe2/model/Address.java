@@ -2,13 +2,13 @@ package at.jku.se.gruppe2.model;
 
 public class Address {
     private String street;
-    private Integer streetNumber;
+    private String streetNumber;
     private String postalCode;
     private String city;
     private String country;
     private Location location;
 
-    public Address(String street, Integer streetNumber, String postalCode, String city, String country, Location location) {
+    public Address(String street, String streetNumber, String postalCode, String city, String country, Location location) {
         this.street = street;
         this.streetNumber = streetNumber;
         this.postalCode = postalCode;
@@ -25,11 +25,11 @@ public class Address {
         this.street = street;
     }
 
-    public Integer getStreetNumber() {
+    public String getStreetNumber() {
         return streetNumber;
     }
 
-    public void setStreetNumber(Integer streetNumber) {
+    public void setStreetNumber(String streetNumber) {
         this.streetNumber = streetNumber;
     }
 

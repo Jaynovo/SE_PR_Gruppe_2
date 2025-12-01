@@ -1,21 +1,21 @@
 package at.jku.se.gruppe2.model;
 
 public class Home {
-    private String homeName;
+    private String homeLabel;
     private int floors;
     private Address address;
 
-    public Home(String homeName, int floors,  Address address) {
-        this.homeName = homeName;
+    public Home(String homeLabel, int floors, Address address) {
+        this.homeLabel = homeLabel;
         this.floors = floors;
         this.address = address;
     }
 
-    public String getHomeName() {
-        return homeName;
+    public String getHomeLabel() {
+        return homeLabel;
     }
-    public void setHomeName(String homeName) {
-        this.homeName = homeName;
+    public void setHomeLabel(String homeLabel) {
+        this.homeLabel = homeLabel;
     }
 
     public int getFloors() {
