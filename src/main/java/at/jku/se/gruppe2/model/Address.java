@@ -1,71 +1,79 @@
 package at.jku.se.gruppe2.model;
 
 public class Address {
+
+    private int id;
     private String street;
-    private String streetNumber;
-    private String postalCode;
+    private String houseNumber;
     private String city;
+    private String postalCode;
     private String country;
-    private Location location;
 
-    public Address(String street, String streetNumber, String postalCode, String city, String country, Location location) {
+    private double longitude;
+    private double latitude;
 
-        if (street == null || street.isBlank())
-            throw new IllegalArgumentException("Street cannot be empty.");
-
+    public Address(String street, String houseNumber, String city, String postalCode, String country, double longitude, double latitude) {
         this.street = street;
-        this.streetNumber = streetNumber;
-        this.postalCode = postalCode;
+        this.houseNumber = houseNumber;
         this.city = city;
+        this.postalCode = postalCode;
         this.country = country;
-        this.location = location;
+        this.longitude = longitude;
+        this.latitude = latitude;
     }
 
+    public Address(int id, String street , String houseNumber, String city, String postalCode, double longitude, String country, double latitude) {
+        this.id = id;
+        this.street = street;
+        this.houseNumber = houseNumber;
+        this.city = city;
+        this.postalCode = postalCode;
+        this.longitude = longitude;
+        this.country = country;
+        this.latitude = latitude;
+    }
+
+    //Getter und Setter
     public String getStreet() {
         return street;
     }
-
     public void setStreet(String street) {
         this.street = street;
     }
-
-    public String getStreetNumber() {
-        return streetNumber;
+    public String getHouseNumber() {
+        return houseNumber;
     }
-
-    public void setStreetNumber(String streetNumber) {
-        this.streetNumber = streetNumber;
+    public void setHouseNumber(String houseNumber) {
+        this.houseNumber = houseNumber;
     }
-
-    public String getPostalCode() {
-        return postalCode;
-    }
-
-    public void setPostalCode(String postalCode) {
-        this.postalCode = postalCode;
-    }
-
     public String getCity() {
         return city;
     }
-
     public void setCity(String city) {
         this.city = city;
     }
-
+    public String getPostalCode() {
+        return postalCode;
+    }
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
     public String getCountry() {
         return country;
     }
-
     public void setCountry(String country) {
         this.country = country;
     }
-
-    public Location getLocation() {
-        return location;
+    public double getLongitude() {
+        return longitude;
     }
-    public void setLocation(Location location) {
-        this.location = location;
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
-
+    public double getLatitude() {
+        return latitude;
+    }
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
 }
