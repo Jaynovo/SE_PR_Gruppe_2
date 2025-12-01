@@ -21,15 +21,17 @@ create table addresses (
     info address_information NOT NULL
 );
 */
-create table home (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    floors SMALLINT DEFAULT 0,
-    label VARCHAR(100) DEFAULT 'Home',
-    address_information INTEGER REFERENCES address_information(id) ON DELETE SET NULL -- One house, one location. Many houses could have the same location (i.e. apartments)
+create table home
+(
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    floors              SMALLINT     DEFAULT 0,
+    label               VARCHAR(100) DEFAULT 'Home',
+    address_information INTEGER REFERENCES address_information (id) -- One house, one location. Many houses could have the same location (i.e. apartments)
 );
 
-create table user_information (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+create table user_information
+(
+    id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     first_name VARCHAR(25),
     last_name VARCHAR(25),
     e_mail VARCHAR(100) UNIQUE NOT NULL,
@@ -37,10 +39,11 @@ create table user_information (
     home_info INTEGER REFERENCES home (id) ON DELETE SET NULL                         -- One User, one house. Many users, still one house. May be NULL if User doesn't have a home :(
 );
 
-create table home_user (                                    -- define a house-user in case we want to use roles later
+create table home_user
+( -- define a house-user in case we want to use roles later
     home_id INTEGER NOT NULL REFERENCES home (id),
-    user_id INTEGER NOT NULL REFERENCES user_information(id),
-    role VARCHAR(20) DEFAULT 'MEMBER',
+    user_id INTEGER NOT NULL REFERENCES user_information (id),
+    role    VARCHAR(20) DEFAULT 'MEMBER',
     PRIMARY KEY (home_id, user_id)
 );
 
@@ -66,32 +69,37 @@ create table sensor_type (
     max_value NUMERIC(6,3) DEFAULT 0
 );
 
-create table sensor (
-    device_id INTEGER PRIMARY KEY REFERENCES device(id) ON DELETE CASCADE,
-    sensor_type_id INTEGER NOT NULL REFERENCES sensor_type(id)
+create table sensor
+(
+    device_id      INTEGER PRIMARY KEY REFERENCES device (id) ON DELETE CASCADE,
+    sensor_type_id INTEGER NOT NULL REFERENCES sensor_type (id)
 );
 
-create table actuator_type (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+create table actuator_type
+(
+    id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
     unit VARCHAR(20)
 );
 
-create table actuator (
-    device_id INTEGER PRIMARY KEY REFERENCES device(id) ON DELETE CASCADE,
-    actuator_type_id INTEGER NOT NULL REFERENCES actuator_type(id)
+create table actuator
+(
+    device_id        INTEGER PRIMARY KEY REFERENCES device (id) ON DELETE CASCADE,
+    actuator_type_id INTEGER NOT NULL REFERENCES actuator_type (id)
 );
 
-create table sensor_reading (
-    id BIGSERIAL PRIMARY KEY,
-    sensor_id INTEGER REFERENCES sensor(device_id) ON DELETE CASCADE,
-    time TIMESTAMP NOT NULL DEFAULT now(),
-    value REAL
+create table sensor_reading
+(
+    id        BIGSERIAL PRIMARY KEY,
+    sensor_id INTEGER REFERENCES sensor (device_id) ON DELETE CASCADE,
+    time      TIMESTAMP NOT NULL DEFAULT now(),
+    value     REAL
 );
 
-create table actuator_state (
-    id BIGSERIAL PRIMARY KEY ,
-    actuator_id INTEGER REFERENCES actuator(device_id) ON DELETE CASCADE,
-    time TIMESTAMP NOT NULL DEFAULT now(),
-    state jsonb
+create table actuator_state
+(
+    id          BIGSERIAL PRIMARY KEY,
+    actuator_id INTEGER REFERENCES actuator (device_id) ON DELETE CASCADE,
+    time        TIMESTAMP NOT NULL DEFAULT now(),
+    state       jsonb
 );

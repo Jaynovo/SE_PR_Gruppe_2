@@ -19,18 +19,26 @@ import java.io.IOException;
 
 public class ProfileController {
 
-    @FXML private TextField firstNameField;
-    @FXML private TextField lastNameField;
-    @FXML private TextField emailField;
-    @FXML private TextField streetField;
-    @FXML private TextField zipField;
-    @FXML private TextField cityField;
-    @FXML private ComboBox<String> countryComboBox;
-    @FXML private ImageView avatarImage;
+    @FXML
+    private TextField firstNameField;
+    @FXML
+    private TextField lastNameField;
+    @FXML
+    private TextField emailField;
+    @FXML
+    private TextField streetField;
+    @FXML
+    private TextField zipField;
+    @FXML
+    private TextField cityField;
+    @FXML
+    private ComboBox<String> countryComboBox;
+    @FXML
+    private ImageView avatarImage;
 
     @FXML
     public void initialize() {
-        countryComboBox.getItems().addAll("Austria", "Germany", "Swizerland", "France", "Italy","Spain", "United Kingdom", "United States","Canada", "Brazil");
+        countryComboBox.getItems().addAll("Austria", "Germany", "Swizerland", "France", "Italy", "Spain", "United Kingdom", "United States", "Canada", "Brazil");
 
         // Prolifbild wird aktualisiert sobald die Felder geändert werden
         firstNameField.textProperty().addListener((obs, oldV, newV) -> updateAvatar());
@@ -41,7 +49,7 @@ public class ProfileController {
 
     private void updateAvatar() {
         String first = firstNameField.getText();
-        String last  = lastNameField.getText();
+        String last = lastNameField.getText();
 
         if (first == null) first = "";
         if (last == null) last = "";
@@ -83,8 +91,8 @@ public class ProfileController {
 
         gc.fillText(
                 initials,
-                (size - textWidth)/2,
-                (size + textHeight*0.35)/2
+                (size - textWidth) / 2,
+                (size + textHeight * 0.35) / 2
         );
 
         WritableImage image = new WritableImage((int) size, (int) size);
@@ -102,7 +110,7 @@ public class ProfileController {
     private void onSave() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Profile has been saved", ButtonType.OK);
         alert.showAndWait();
-        try{
+        try {
             MainApp.setRoot("dashboard_page");
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -113,7 +121,9 @@ public class ProfileController {
     private void onCancel() {
         try {
             MainApp.setRoot("dashboard_page");
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
