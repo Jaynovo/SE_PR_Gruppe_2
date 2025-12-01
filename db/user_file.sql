@@ -1,14 +1,13 @@
-INSERT INTO location_information(longitude, latitude)
-VALUES (16.3738, 48.2082);
+INSERT INTO address_information(street, house_nr, post_code, city, country)
+VALUES ('Stephansplatz', '3', '1010', 'Vienna', 'Austria');
 
-INSERT INTO home(floors, label, loc_info)
+INSERT INTO home(floors, label, address_information)
 VALUES (3, 'Mustermanns home', 1);
 
-INSERT INTO user_information(first_name, last_name, e_mail, password, address, loc_info, home_info)
+INSERT INTO user_information(first_name, last_name, e_mail, password, home_info)
 VALUES ('Max', 'Mustermann', 'Max.Mustermann@example.com',
-        'password', ROW('Musterstraße', '1A', '1010', 'Wien', 'AT')::address_information,
-        1, 1
-       );
+        '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8',
+        1);
 
 INSERT INTO room(label, home_info, area)
 VALUES ('Living Room', 1, 24.6);
@@ -30,28 +29,28 @@ VALUES ('Light Switch', NULL),
 -- Living Room devices
 INSERT INTO device(room_id, label)
 VALUES (
-    (SELECT id
-        FROM room
-        WHERE label = 'Living Room' AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
-        'Living Room Thermometer'
+           (SELECT id
+            FROM room
+            WHERE label = 'Living Room' AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
+           'Living Room Thermometer'
        ),
-    (
-    (SELECT id
-    FROM room
-    WHERE label = 'Living Room' AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
-    'Living Room Humidity Sensor'
-    ),
-    (
-    (SELECT id FROM room
-    WHERE label = 'Living Room' AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
-   'Living Room Ceiling Light'
-   ),
-   (
-   (SELECT id FROM room
-    WHERE label = 'Living Room'
-    AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
-   'Living Room Radiator Valve'
-   );
+       (
+           (SELECT id
+            FROM room
+            WHERE label = 'Living Room' AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
+           'Living Room Humidity Sensor'
+       ),
+       (
+           (SELECT id FROM room
+            WHERE label = 'Living Room' AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
+           'Living Room Ceiling Light'
+       ),
+       (
+           (SELECT id FROM room
+            WHERE label = 'Living Room'
+              AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
+           'Living Room Radiator Valve'
+       );
 
 -- Bedroom devices
 INSERT INTO device (room_id, label)
@@ -95,7 +94,7 @@ VALUES
     (
         (SELECT d.id
          FROM device d
-          JOIN room r ON d.room_id = r.id
+                  JOIN room r ON d.room_id = r.id
          WHERE d.label = 'Bedroom Thermometer'
            AND r.label = 'Bedroom'),
         (SELECT id FROM sensor_type WHERE name = 'Thermometer')

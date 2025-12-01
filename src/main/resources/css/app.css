@@ -61,6 +61,7 @@
     -fx-background-color: -fx-primary-weak;
 }
 
+
 /* Textfields */
 .text-field, .password-field {
     -fx-background-color: -fx-surface;
