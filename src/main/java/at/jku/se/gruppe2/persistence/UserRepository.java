@@ -60,7 +60,7 @@ public class UserRepository {
                 request,
                 ps -> ps.setString(1, email),
                 rs -> 1
-        ).isEmpty();
+        ).isPresent();
     }
 
     //Returns the User ID
@@ -131,7 +131,12 @@ public class UserRepository {
                     ps.setString(1, user.getFirstName());
                     ps.setString(2, user.getLastName());
                     ps.setString(3, user.getPassword());
-                    ps.setInt(4, user.getHome().getId());
+                    if (user.getHome() != null) {
+                        ps.setInt(4, user.getHome().getId());
+                    } else {
+                        ps.setNull(4, Types.INTEGER);
+                    }
+                    ps.setInt(5, user.getId());
                 }
         );
         return success;
@@ -146,6 +151,7 @@ public class UserRepository {
         user.setPassword(rs.getString("password"));
 
         int home_id = rs.getInt("home_info");
+        System.out.println("home_id in mapUser: " + home_id);
         if (rs.wasNull()) {
             user.setHome(null);
         } else {
