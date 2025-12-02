@@ -25,7 +25,7 @@ public class AddressRepository {
                 INSERT INTO address_information (street, house_nr, post_code, city, country, longitude, latitude)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """;
-        int success = JdbcTemplate.executeUpdate(
+        Optional<Integer> addrIdOpt = JdbcTemplate.queryForValue(
                 request,
                 ps -> {
                     ps.setString(1, address.getStreet());
@@ -35,9 +35,12 @@ public class AddressRepository {
                     ps.setString(5, address.getCountry());
                     ps.setDouble(6, address.getLongitude());
                     ps.setDouble(7, address.getLatitude());
-                }
+                },
+                rs -> rs.getInt("id")
         );
-        return success;
+        int addressId = addrIdOpt.orElseThrow(() -> new IllegalStateException("No address created!"));
+        address.setId(addressId);
+        return addressId;
     }
 
     // Returns 1 if Update was successful, 0 if not
