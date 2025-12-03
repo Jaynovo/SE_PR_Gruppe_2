@@ -19,12 +19,27 @@ public class AddressRepository {
         );
     }
 
+    public Optional<Address> getAddressByUser(User user) {
+        Optional<Home> addressHome = Optional.ofNullable(user.getHome());
+        if  (addressHome.isPresent() && addressHome.get().getAddress() != null) {
+            Home home = addressHome.get();
+            String request = "SELECT * FROM address_information WHERE id = ?";
+            return JdbcTemplate.queryForObject(
+                    request,
+                    ps -> ps.setInt(1, home.getAddress().getId()),
+                    this::mapAddress
+            );
+        }
+        System.out.println("Address for user not found.");
+        return Optional.empty();
+    }
+
     // Returns 1 if creation was successful, 0 if not
     public int createAddressInDatabase(Address address) {
         String request = """
                 INSERT INTO address_information (street, house_nr, post_code, city, country, longitude, latitude)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-                """;
+                RETURNING id;""";
         Optional<Integer> addrIdOpt = JdbcTemplate.queryForValue(
                 request,
                 ps -> {
@@ -67,7 +82,7 @@ public class AddressRepository {
     }
 
     public Optional<Location> getLongitudeLatitudeByAddress(Address address) {
-        String request = "SELECT longitude, latitude FROM address_location WHERE id = ?";
+        String request = "SELECT longitude, latitude FROM address_information WHERE id = ?";
         return JdbcTemplate.queryForObject(
                 request,
                 ps -> ps.setInt(1, address.getId()),
@@ -82,6 +97,7 @@ public class AddressRepository {
         Address address = new Address();
         address.setId(rs.getInt("id"));
         address.setStreet(rs.getString("street"));
+        address.setHouseNumber(rs.getString("house_nr"));
         address.setPostalCode(rs.getString("post_code"));
         address.setCity(rs.getString("city"));
         address.setCountry(rs.getString("country"));

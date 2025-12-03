@@ -7,6 +7,16 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 public class HomeRepository {
+    private final AddressRepository addressRepository;
+
+    public HomeRepository() {
+        addressRepository = new AddressRepository();
+    }
+
+    public HomeRepository(AddressRepository addressRepository) {
+        this.addressRepository = addressRepository;
+    }
+
     public Optional<Home> getHomeById(int id) {
         String request = "SELECT * FROM home WHERE id = ?";
 
@@ -54,7 +64,7 @@ public class HomeRepository {
         String request = """
             INSERT INTO home (floors, label, address_information)
             VALUES (?, ?, ?)
-            """;
+            RETURNING id;""";
         Optional<Integer> idOptional = JdbcTemplate.queryForObject(
                 request,
                 ps -> {
@@ -107,10 +117,15 @@ public class HomeRepository {
         Home home = new Home();
         home.setId(rs.getInt("id"));
         home.setFloors(rs.getInt("floors"));
+        home.setHomeLabel(rs.getString("label"));
+        int addressId = rs.getInt("address_information");
 
-        //TODO This still needs creating
-        Optional<Address> adrOptional = Optional.ofNullable(rs.getObject("address_information", Address.class));
-        home.setAddress(adrOptional.orElse(new Address()));
+        if (rs.wasNull()) {
+            home.setAddress(null);
+        } else {
+            Address address = addressRepository.getAddressById(addressId).orElse(null);
+            home.setAddress(address);
+        }
         return home;
     }
 }

@@ -53,6 +53,16 @@ public class LoginController {
         Session.setCurrentUser(user.orElse(null)); // User speichern für Dashboard
 
         try {
+            // TESTCODE >>>
+            User newUser = Session.getCurrentUser();
+            System.out.println("User logged in: " + newUser.getEmail());
+            if (newUser.getHome() != null) {
+                System.out.println("User home: " + newUser.getHome().getHomeLabel());
+            }
+            if (newUser.getHome() != null) {
+                System.out.println("User Address: " + newUser.getHome().getAddress().getStreet() + ", " + newUser.getHome().getAddress().getHouseNumber() + ", " + newUser.getHome().getAddress().getPostalCode());
+            }
+            // <<< TESTCODE
             MainApp.setRoot("dashboard_page");
         } catch (Exception e) {
             e.printStackTrace();

@@ -48,6 +48,9 @@ public class RegistrationController {
             }
 
             //Address-Objekt erstellen
+            /**
+             * Needs to be implemented with new separate user and home adress logic
+             */
             Address address = new Address(
                     streetNameField.getText(),
                     streetNumberField.getText(),

@@ -18,7 +18,9 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class DashboardController implements Initializable {
-    @FXML private Label temperatureLabel;
+
+    @FXML
+    private Label temperatureLabel;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {

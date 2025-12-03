@@ -24,7 +24,8 @@ public class HomeRegistrationController {
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
 
-    private HomeRepository homeRepo;
+    private HomeRepository homeRepo = new HomeRepository();
+    AddressRepository addressRepo = new AddressRepository();
 
     public void setHomeRepo(HomeRepository homeRepo) {
         this.homeRepo= homeRepo;
@@ -49,7 +50,7 @@ public class HomeRegistrationController {
                     10.5, 11
             );
 
-            Address address = new Address(
+            Address newAddress = new Address(
                     street.getText(),
                     streetNumber.getText(),
                     postalCode.getText(),
@@ -58,14 +59,17 @@ public class HomeRegistrationController {
                     48, 16
             );
 
-            Home home = new Home(
+            int addressId= addressRepo.createAddressInDatabase(newAddress);
+            newAddress.setId(addressId);
+
+            Home newHome = new Home(
                     homeLabel.getText(),
                     floorLevels.getValue(),
-                    address
+                    newAddress
             );
 
             if (homeRepo != null) {
-                homeRepo.createHomeInDatabase(home);
+                homeRepo.createHomeInDatabase(newHome);
             }
 
             Alert alert = UIUtils.styledAlert(
@@ -80,7 +84,10 @@ public class HomeRegistrationController {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            UIUtils.styledAlert(Alert.AlertType.ERROR, "","Error",  ButtonType.OK);
+            Alert alert = UIUtils.styledAlert(
+                    Alert.AlertType.ERROR,
+                    "An unexpected error occurred: " + ex.getMessage(),
+                    ButtonType.OK);
         }
     }
 

@@ -14,7 +14,7 @@
            <Pane HBox.hgrow="ALWAYS"/>
            <Button text =" + New Room" onAction="#handleCreateRoom"/>
            <Separator orientation="VERTICAL"/>
-           <MenuButton text="User ▾" fx:id="userMenu">
+           <MenuButton text="User" fx:id="userMenu">
                    <items>
                        <MenuItem text="Profile" onAction="#handleUserProfile"/>
                        <MenuItem text="Logout" onAction="#handleLogout"/>
