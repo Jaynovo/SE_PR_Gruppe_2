@@ -3,6 +3,7 @@ package at.jku.se.gruppe2.ui.controller;
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.PasswordUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -24,6 +25,11 @@ public class RegistrationController {
     @FXML private Button registrationButton;
 
     private final UserRepository userRepository = new UserRepository();
+
+    @FXML
+    public void initialize (){
+        UIUtils.setupCountryComboBox(countryBox);
+    }
 
     @FXML
     private void registrationButtonClicked() {

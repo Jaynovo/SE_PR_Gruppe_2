@@ -2,6 +2,7 @@ package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.ui.UIUtils;
+import at.jku.se.gruppe2.model.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;

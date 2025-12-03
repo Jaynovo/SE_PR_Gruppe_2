@@ -53,7 +53,7 @@ public class LoginController {
         Session.setCurrentUser(user.orElse(null)); // User speichern für Dashboard
 
         try {
-            MainApp.setRoot("house_dashboard_page");
+            MainApp.setRoot("dashboard_page");
         } catch (Exception e) {
             e.printStackTrace();
             errorLabel.setText("Error loading dashboard.");

@@ -1,10 +1,13 @@
 package at.jku.se.gruppe2.model;
 
+import java.util.List;
+
 public class Home {
     private int id;
     private String homeLabel;
     private int floors;
     private Address address;
+    private List<Room> rooms;
 
     public Home() {}
 

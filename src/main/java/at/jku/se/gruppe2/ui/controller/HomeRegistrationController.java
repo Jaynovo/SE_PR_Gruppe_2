@@ -32,49 +32,55 @@ public class HomeRegistrationController {
 
     @FXML
     private void saveButtonClicked(ActionEvent event) {
+        try {
+            //Validierung prüfen
+            if (!validateInputs()) {
+                UIUtils.styledAlert(
+                        Alert.AlertType.ERROR,
+                        "Please fill out all required fields!",
+                        ButtonType.OK
+                ).showAndWait();
+                return;
+            }
+            ;
 
-        if(!validateInputs()){
-            UIUtils.styledAlert(
-                    Alert.AlertType.ERROR,
-                    "Please fill out all required fields!",
+            //Location currently without implementation, needs to be changed
+            Location location = new Location(
+                    10.5, 11
+            );
+
+            Address address = new Address(
+                    street.getText(),
+                    streetNumber.getText(),
+                    postalCode.getText(),
+                    city.getText(),
+                    country.getSelectionModel().getSelectedItem(),
+                    48, 16
+            );
+
+            Home home = new Home(
+                    homeLabel.getText(),
+                    floorLevels.getValue(),
+                    address
+            );
+
+            if (homeRepo != null) {
+                homeRepo.createHomeInDatabase(home);
+            }
+
+            Alert alert = UIUtils.styledAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Home has been created successfully!",
                     ButtonType.OK
-            ).showAndWait();
-            return;
-        };
+            );
 
-        //Location currently without implementation, needs to be changed
-        Location location= new Location(
-                10.5, 11
-        );
-
-        Address address= new Address(
-                street.getText(),
-                streetNumber.getText(),
-                postalCode.getText(),
-                city.getText(),
-                country.getSelectionModel().getSelectedItem(),
-                48, 16
-                );
-
-        Home home= new Home(
-                homeLabel.getText(),
-                floorLevels.getValue(),
-                address
-        );
-
-        if(homeRepo != null){
-            homeRepo.createHomeInDatabase(home);
-        }
-
-        Alert alert = UIUtils.styledAlert(
-                Alert.AlertType.INFORMATION,
-                "Home has been created successfully!",
-                ButtonType.OK
-        );
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            goToHouseDashboard();
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                goToHouseDashboard();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "","Error",  ButtonType.OK);
         }
     }
 
