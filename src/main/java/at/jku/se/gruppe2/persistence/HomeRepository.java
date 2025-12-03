@@ -54,7 +54,6 @@ public class HomeRepository {
         String request = """
             INSERT INTO home (floors, label, address_information)
             VALUES (?, ?, ?)
-            RETURNING id
             """;
         Optional<Integer> idOptional = JdbcTemplate.queryForObject(
                 request,
@@ -82,6 +81,7 @@ public class HomeRepository {
                     ps.setInt(1, home.getFloors());
                     ps.setString(2, home.getHomeLabel());
                     ps.setInt(3, home.getAddress().getId());
+                    ps.setInt(4, home.getId());
                 }
             );
     }

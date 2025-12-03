@@ -43,11 +43,13 @@ public class UserRepository {
 
     public Optional<User> findUserByEmail(String email) {
         String request = "SELECT * FROM user_information WHERE e_mail = ?";
-        return JdbcTemplate.queryForObject(
+        System.out.println("Hello, this is finding the User by Email: " + email);
+        Optional<User> userByEmail = JdbcTemplate.queryForObject(
                 request,
                 ps -> ps.setString(1, email),
                 this::mapUser
         );
+        return userByEmail;
     }
 
     //Quick check whether an email is already taken
@@ -61,13 +63,14 @@ public class UserRepository {
         ).isEmpty();
     }
 
+    //Returns the User ID
     public int createUserInDatabase(User user) {
-        String request =
-                "INSERT INTO user_information (first_name, last_name, e_mail, password, home_info) " +
-                        "VALUES (?, ?, ?, ?, ?)";
+        String request = """
+                INSERT INTO user_information (first_name, last_name, e_mail, password, home_info)
+                VALUES (?, ?, ?, ?, ?)
+                RETURNING ID""";
 
-        // This returns an integer of how many rows were affected. In case we need it.
-        int success = JdbcTemplate.executeUpdate(
+        Optional<Integer> userIdOptional = JdbcTemplate.queryForValue(
                 request,
                 ps -> {
                     ps.setString(1, user.getFirstName());
@@ -80,10 +83,12 @@ public class UserRepository {
                     } else {
                         ps.setNull(5, Types.INTEGER);
                     }
-                }
+                },
+                rs -> rs.getInt("id")
         );
-        System.out.println("Success in createUserInDB: " + success);
-        return success;
+        int userId = userIdOptional.orElseThrow(() -> new IllegalStateException("User not created!"));
+        user.setId(userId);
+        return userId;
     }
 
     public void updatePassword(User user, String password) {
@@ -138,6 +143,7 @@ public class UserRepository {
         user.setFirstName(rs.getString("first_name"));
         user.setLastName(rs.getString("last_name"));
         user.setEmail(rs.getString("e_mail"));
+        user.setPassword(rs.getString("password"));
 
         int home_id = rs.getInt("home_info");
         if (rs.wasNull()) {

@@ -29,6 +29,7 @@
             </Label>
             <TextField fx:id="emailField" promptText="E-Mail: " />
             <PasswordField fx:id="passwordField" promptText="Password: " />
+            <Label fx:id="errorLabel" text="" styleClass="error-label"/>
             <Button fx:id="registerButton" text="Register new User" onAction="#registerButtonClicked" />
             <Button fx:id="loginButton" text="Login" onAction="#handleLoginButton" />
 
