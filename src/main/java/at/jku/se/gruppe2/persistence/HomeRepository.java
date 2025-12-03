@@ -59,11 +59,12 @@ public class HomeRepository {
         );
     }
 
-    // Returns 1 if creation was successful, 0 if not
+    // Returns created id
     public int createHomeInDatabase(Home home) {
         String request = """
             INSERT INTO home (floors, label, address_information)
             VALUES (?, ?, ?)
+            RETURNING id;
             """;
         Optional<Integer> idOptional = JdbcTemplate.queryForObject(
                 request,
@@ -76,6 +77,7 @@ public class HomeRepository {
         );
 
         int id = idOptional.orElseThrow(() -> new IllegalStateException("No id found"));
+        System.out.println("Home id after creation: " + id);
         home.setId(id);
         return id;
     }

@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.service;
 
 import at.jku.se.gruppe2.model.Address;
+import at.jku.se.gruppe2.persistence.AddressRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

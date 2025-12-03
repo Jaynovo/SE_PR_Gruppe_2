@@ -1,8 +1,11 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
-import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.model.Address;
+import at.jku.se.gruppe2.model.Home;
+import at.jku.se.gruppe2.model.Location;
+import at.jku.se.gruppe2.persistence.AddressRepository;
+import at.jku.se.gruppe2.persistence.HomeRepository;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
 import javafx.event.ActionEvent;
@@ -24,7 +27,8 @@ public class HomeRegistrationController {
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
 
-    private HomeRepository homeRepo;
+    private HomeRepository homeRepo = new HomeRepository();
+    AddressRepository addressRepo = new AddressRepository();
 
     public void setHomeRepo(HomeRepository homeRepo) {
         this.homeRepo= homeRepo;
@@ -32,49 +36,63 @@ public class HomeRegistrationController {
 
     @FXML
     private void saveButtonClicked(ActionEvent event) {
+        try {
+            //Validierung prÃ¼fen
+            if (!validateInputs()) {
+                UIUtils.styledAlert(
+                        Alert.AlertType.ERROR,
+                        "Please fill out all required fields!",
+                        ButtonType.OK
+                ).showAndWait();
+                return;
+            }
+            ;
 
-        if(!validateInputs()){
-            UIUtils.styledAlert(
-                    Alert.AlertType.ERROR,
-                    "Please fill out all required fields!",
+            //Location currently without implementation, needs to be changed
+            Location location = new Location(
+                    10.5, 11
+            );
+
+            Address newAddress = new Address(
+                    street.getText(),
+                    streetNumber.getText(),
+                    postalCode.getText(),
+                    city.getText(),
+                    country.getSelectionModel().getSelectedItem(),
+                    48, 16
+            );
+
+            int addressId= addressRepo.createAddressInDatabase(newAddress);
+            newAddress.setId(addressId);
+
+            Home newHome = new Home(
+                    homeLabel.getText(),
+                    floorLevels.getValue(),
+                    newAddress
+            );
+
+            if (homeRepo != null) {
+                homeRepo.createHomeInDatabase(newHome);
+            }
+
+
+
+            Alert alert = UIUtils.styledAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Home has been created successfully!",
                     ButtonType.OK
-            ).showAndWait();
-            return;
-        };
+            );
 
-        //Location currently without implementation, needs to be changed
-        Location location= new Location(
-                10.5, 11
-        );
-
-        Address address= new Address(
-                street.getText(),
-                streetNumber.getText(),
-                postalCode.getText(),
-                city.getText(),
-                country.getSelectionModel().getSelectedItem(),
-                48, 16
-                );
-
-        Home home= new Home(
-                homeLabel.getText(),
-                floorLevels.getValue(),
-                address
-        );
-
-        if(homeRepo != null){
-            homeRepo.createHomeInDatabase(home);
-        }
-
-        Alert alert = UIUtils.styledAlert(
-                Alert.AlertType.INFORMATION,
-                "Home has been created successfully!",
-                ButtonType.OK
-        );
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            goToHouseDashboard();
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                goToHouseDashboard();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Alert alert = UIUtils.styledAlert(
+                    Alert.AlertType.ERROR,
+                    "An unexpected error occurred: " + ex.getMessage(),
+                    ButtonType.OK);
         }
     }
 

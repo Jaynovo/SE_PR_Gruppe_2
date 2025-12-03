@@ -1,8 +1,9 @@
 package at.jku.se.gruppe2.persistence;
 
 
-import javax.xml.crypto.Data;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class JdbcTemplate {
@@ -91,6 +92,52 @@ public class JdbcTemplate {
                 }
                 return Optional.of(rowMapper.apply(rs));
             }
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Executes a SQL query expected to return *multiple objects* (one object per row).
+     * This is the general-purpose helper for any "findAll", "search", or list-style repository methods.
+     *
+     * @param query         The SQL query to execute (may contain ? placeholders).
+     * @param sqlConsumer   Lambda that sets PreparedStatement parameters.
+     * @param rowMapper     Lambda that maps a single ResultSet row into an object (e.g. rs -> new User(...)).
+     * @param <T>           Type of the objects returned in the list.
+     *
+     * @return Optional containing a List of mapped objects.
+     *         Returns Optional.of(emptyList) if the query produced no rows.
+     *
+     * Usage example:
+     *
+     *     queryForMultipleObjects(
+     *         "SELECT * FROM user WHERE active = ?",
+     *         ps -> ps.setBoolean(1, true),
+     *         this::mapUser  // a method that turns a row into a User object
+     *     );
+     */
+
+    public static <T> Optional<List<T>> queryForMultipleObjects(
+            String query,
+            SqlConsumer<PreparedStatement> sqlConsumer,
+            SqlFunction<ResultSet, T> rowMapper) {
+        try (
+        Connection conn = Database.getConnection();
+        PreparedStatement ps = conn.prepareStatement(query)) {
+
+            sqlConsumer.accept(ps);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                List<T> results = new ArrayList<>();
+
+                while (rs.next()) {
+                    T object = rowMapper.apply(rs);
+                    results.add(object);
+                }
+                return Optional.of(results);
+            }
+
         } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
