@@ -63,7 +63,7 @@ public class LoginController {
                 System.out.println("User Address: " + newUser.getHome().getAddress().getStreet() + ", " + newUser.getHome().getAddress().getHouseNumber() + ", " + newUser.getHome().getAddress().getPostalCode());
             }
             // <<< TESTCODE
-            MainApp.setRoot("house_dashboard_page");
+            MainApp.setRoot("dashboard_page");
         } catch (Exception e) {
             e.printStackTrace();
             errorLabel.setText("Error loading dashboard.");
