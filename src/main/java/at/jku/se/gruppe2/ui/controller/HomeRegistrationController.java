@@ -54,7 +54,7 @@ public class HomeRegistrationController {
 
             //Location currently without implementation, needs to be changed
             Location location = new Location(
-                    10.5, 11
+                    0, 0
             );
 
             Address newAddress = new Address(
@@ -63,7 +63,7 @@ public class HomeRegistrationController {
                     postalCode.getText(),
                     city.getText(),
                     countryBox.getSelectionModel().getSelectedItem(),
-                    48, 16
+                    0, 0
             );
 
             int addressId= addressRepo.createAddressInDatabase(newAddress);
@@ -94,7 +94,7 @@ public class HomeRegistrationController {
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.isPresent() && result.get() == ButtonType.OK) {
-                goToHouseDashboard();
+                goToHomeDashboard();
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -171,9 +171,9 @@ public class HomeRegistrationController {
         }
     }
 
-    private void goToHouseDashboard() {
+    private void goToHomeDashboard() {
         try {
-            MainApp.setRoot("house_dashboard_page");
+            MainApp.setRoot("home_dashboard_page");
         } catch (Exception e) {
             e.printStackTrace();
         }
