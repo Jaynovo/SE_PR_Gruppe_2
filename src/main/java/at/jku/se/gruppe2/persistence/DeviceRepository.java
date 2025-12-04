@@ -1,6 +1,6 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.model.Device;
+import at.jku.se.gruppe2.model.*;
 
 import java.util.Optional;
 

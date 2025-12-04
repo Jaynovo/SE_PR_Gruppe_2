@@ -5,6 +5,7 @@ import at.jku.se.gruppe2.model.Address;
 import at.jku.se.gruppe2.model.User;
 import at.jku.se.gruppe2.persistence.AddressRepository;
 import at.jku.se.gruppe2.persistence.UserRepository;
+import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.PasswordUtils;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.fxml.FXML;
@@ -50,15 +51,14 @@ public class ProfileController {
 
     @FXML
     public void initialize() throws IOException {
+
         User current = Session.getCurrentUser();
         if (current == null) {
             MainApp.setRoot("login_page");
             return;
         }
 
-        //TODO: auf Thomas seine Methode ändern
-        countryComboBox.getItems().addAll("Austria", "Germany", "Swizerland", "France", "Italy", "Spain", "United Kingdom", "United States", "Canada", "Brazil");
-
+        UIUtils.setupCountryComboBox(countryComboBox);
 
         //Userdaten in die Felder laden
         firstNameField.setText(current.getFirstName());
@@ -184,7 +184,7 @@ public class ProfileController {
             userRepository.updateUserInDatabase(current);
             showAlert(Alert.AlertType.INFORMATION, "Success", "Profile has been updated and saved.");
 
-            MainApp.setRoot("house_dashboard_page");
+            MainApp.setRoot("home_dashboard_page");
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Could not save profile");
@@ -194,7 +194,7 @@ public class ProfileController {
     @FXML
     private void onCancel() {
         try {
-            MainApp.setRoot("house_dashboard_page");
+            MainApp.setRoot("home_dashboard_page");
         } catch (Exception e) {
             e.printStackTrace();
         }

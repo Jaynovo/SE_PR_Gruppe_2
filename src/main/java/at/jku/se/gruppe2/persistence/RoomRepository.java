@@ -45,7 +45,7 @@ public class RoomRepository {
         return JdbcTemplate.executeUpdate(
                 request,
                 ps -> {
-                    ps.setString(1, room.getLabel());
+                    ps.setString(1, room.getRoomLabel());
                     ps.setDouble(2, room.getArea());
                     ps.setInt(3, room.getId());
                 }
@@ -61,7 +61,7 @@ public class RoomRepository {
         Optional<Integer> id = JdbcTemplate.queryForValue(
                 request,
                 ps -> {
-                    ps.setString(1, room.getLabel());
+                    ps.setString(1, room.getRoomLabel());
                     ps.setInt(2, home.getId());
                     ps.setDouble(3, room.getArea());
                 },
@@ -77,7 +77,7 @@ public class RoomRepository {
     private Room mapRoom(ResultSet rs) throws SQLException {
         Room room = new Room();
         room.setId(rs.getInt("id"));
-        room.setLabel(rs.getString("label"));
+        room.setRoomLabel(rs.getString("label"));
         room.setArea(rs.getDouble("area"));
         // Home is not saved within the Room in Objects
         room.setDevices(new ArrayList<>());
