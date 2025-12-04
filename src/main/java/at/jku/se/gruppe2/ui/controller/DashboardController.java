@@ -1,26 +1,28 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
-import at.jku.se.gruppe2.model.Address;
-import at.jku.se.gruppe2.model.Home;
-import at.jku.se.gruppe2.model.User;
+import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.service.GeoCodingService;
 import at.jku.se.gruppe2.service.WeatherService;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class DashboardController implements Initializable {
 
-    @FXML
-    private Label temperatureLabel;
+    @FXML private BorderPane homeCard;
+    @FXML private Label homeNameLabel;
+    @FXML private Label homeAddressLabel;
+    @FXML private Label homeFloorsLabel;
+
+    @FXML private Label temperatureLabel;
+
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -76,6 +78,8 @@ public class DashboardController implements Initializable {
             throw new RuntimeException(ex);
         }
     }
+
+    public void deleteHouseButtonClicked(ActionEvent actionEvent) {}
 
     public void handleUserProfile(ActionEvent actionEvent) {
         try {

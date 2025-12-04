@@ -9,7 +9,8 @@ public class Home {
     private Address address;
     private List<Room> rooms;
 
-    public Home() {}
+    public Home() {
+    }
 
     public Home(String homeLabel, int floors, Address address) {
         if (homeLabel == null || homeLabel.isBlank() || homeLabel.length() < 4)
@@ -29,6 +30,7 @@ public class Home {
     public String getHomeLabel() {
         return homeLabel;
     }
+
     public void setHomeLabel(String homeLabel) {
         this.homeLabel = homeLabel;
     }
@@ -40,6 +42,7 @@ public class Home {
     public void setFloors(int floors) {
         this.floors = floors;
     }
+
     public Address getAddress() {
         return address;
 

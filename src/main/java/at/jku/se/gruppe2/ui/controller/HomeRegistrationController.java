@@ -5,6 +5,7 @@ import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
+import at.jku.se.gruppe2.utils.Session;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -19,7 +20,7 @@ public class HomeRegistrationController {
     @FXML private TextField streetNumber;
     @FXML private TextField postalCode;
     @FXML private TextField city;
-    @FXML private ComboBox<String> country;
+    @FXML private ComboBox<String> countryBox;
 
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
@@ -29,6 +30,12 @@ public class HomeRegistrationController {
 
     public void setHomeRepo(HomeRepository homeRepo) {
         this.homeRepo= homeRepo;
+    }
+
+
+    @FXML
+    public void initialize (){
+        UIUtils.setupCountryComboBox(countryBox);
     }
 
     @FXML
@@ -55,7 +62,7 @@ public class HomeRegistrationController {
                     streetNumber.getText(),
                     postalCode.getText(),
                     city.getText(),
-                    country.getSelectionModel().getSelectedItem(),
+                    countryBox.getSelectionModel().getSelectedItem(),
                     48, 16
             );
 
@@ -71,6 +78,13 @@ public class HomeRegistrationController {
             if (homeRepo != null) {
                 homeRepo.createHomeInDatabase(newHome);
             }
+
+            UserRepository userRepo = new UserRepository();
+            User currentUser = Session.getCurrentUser();
+
+            currentUser.setHome(newHome);
+            userRepo.updateHome(currentUser, newHome);
+
 
             Alert alert = UIUtils.styledAlert(
                     Alert.AlertType.INFORMATION,
@@ -121,7 +135,7 @@ public class HomeRegistrationController {
             errors.append("- City is required.\n");
         }
 
-        if (country.getSelectionModel().getSelectedItem().isBlank()) {
+        if (countryBox.getSelectionModel().getSelectedItem().isBlank()) {
             errors.append("- Country is required.\n");
         }
 
