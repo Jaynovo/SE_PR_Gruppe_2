@@ -12,19 +12,31 @@ import java.util.Optional;
 
 public class RegistrationController {
 
-    @FXML private TextField firstNameField;
-    @FXML private TextField lastNameField;
-    @FXML private TextField streetNameField;
-    @FXML private TextField streetNumberField;
-    @FXML private TextField cityField;
-    @FXML private TextField postalCodeField;
-    @FXML private ComboBox<String> countryBox;
-    @FXML private TextField emailField;
-    @FXML private PasswordField passwordField;
-    @FXML private PasswordField confirmPasswordField;
-    @FXML private Button registrationButton;
+    @FXML
+    private TextField firstNameField;
+    @FXML
+    private TextField lastNameField;
+    @FXML
+    private TextField streetNameField;
+    @FXML
+    private TextField streetNumberField;
+    @FXML
+    private TextField cityField;
+    @FXML
+    private TextField postalCodeField;
+    @FXML
+    private ComboBox<String> countryBox;
+    @FXML
+    private TextField emailField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private PasswordField confirmPasswordField;
+    @FXML
+    private Button registrationButton;
 
     private final UserRepository userRepository = new UserRepository();
+    private final AddressRepository addressRepository = new AddressRepository();
 
     @FXML
     public void initialize (){
@@ -33,40 +45,59 @@ public class RegistrationController {
 
     @FXML
     private void registrationButtonClicked() {
+
+        //User
+        String firstName = firstNameField.getText();
+        String lastName = lastNameField.getText();
+        String email = emailField.getText().toLowerCase();
+        String password = passwordField.getText();
+        String confirmPassword = confirmPasswordField.getText();
+
+        //Address
+        String streetName = streetNameField.getText();
+        String streetNumber = streetNumberField.getText();
+        String city = cityField.getText();
+        String postalCode = postalCodeField.getText();
+        String country = countryBox.getValue();
+
+        //Addresse bereitgestellt? Wenn ja, dann address Objekt erstellen
+        boolean addressProvided =
+                !streetName.isEmpty()
+                || !streetNumber.isEmpty()
+                || !city.isEmpty()
+                || !postalCode.isEmpty()
+                || (country !=  null && !country.isEmpty());
+
+        //Basic Validierung
+        if (!validateInput(firstName,lastName,email,password,confirmPassword,streetName,streetNumber,city,postalCode,country)) {
+            return;
+        }
+        //Check ob Email-vergeben
+        if (userRepository.existsUserByEmail(email)) {
+            showAlert(Alert.AlertType.ERROR, "Registration failed", "E-Mail-Adresse already taken.");
+            return;
+        }
+
         try {
-            //Validierung prüfen
-            if (!validateInput()) {
-                showAlert(Alert.AlertType.ERROR, "Invalid data", "Please fill in all fields correctly.");
-                return;
-            }
-
-            //Passwort prüfen
-            if (!passwordField.getText().equals(confirmPasswordField.getText())) {
-                showAlert(Alert.AlertType.WARNING, "Password mismatch",
-                        "The passwords do not match. Please try again.");
-                return;
-            }
-
             //Address-Objekt erstellen
-            /**
-             * Needs to be implemented with new separate user and home adress logic
-             */
-            Address address = new Address(
-                    streetNameField.getText(),
-                    streetNumberField.getText(),
-                    postalCodeField.getText(),
-                    cityField.getText(),
-                    countryBox.getValue(),
-                    0.0, // longitude (dummy)
-                    0.0  // latitude
-            );
+            if(addressProvided) {
+                Address address = new Address(
+                        streetNameField.getText(),
+                        streetNumberField.getText(),
+                        postalCodeField.getText(),
+                        cityField.getText(),
+                        countryBox.getValue(),
+                        0.0, 0.0
+                ); //long und lat bei Registrierung mit 0 speichern, wird beim login geo gecoded
+                addressRepository.createAddressInDatabase(address); //ACHTUNG kein FK zu User (sondern nur Home)
+            }
 
             //User-Objekt erstellen
             User newUser = new User(
-                    firstNameField.getText(),
-                    lastNameField.getText(),
-                    emailField.getText(),
-                    PasswordUtils.hashPassword(passwordField.getText()) // NICHT Klartext speichern!
+                    firstName,
+                    lastName,
+                    email,
+                    PasswordUtils.hashPassword(password) // PW gehasht speichern
             );
 
             //In DB speichern
@@ -74,7 +105,7 @@ public class RegistrationController {
 
             if (userId > 0) {
                 Alert successAlert = new Alert(Alert.AlertType.CONFIRMATION,
-                        "Account created successfully! Go to Login?",
+                        "Account created successfully! You can log in now.",
                         ButtonType.OK, ButtonType.CANCEL);
 
                 Optional<ButtonType> result = successAlert.showAndWait();
@@ -90,17 +121,38 @@ public class RegistrationController {
         }
     }
 
-    //Validierung
-    private boolean validateInput() {
-        return !firstNameField.getText().isEmpty() &&
-                !lastNameField.getText().isEmpty() &&
-                !emailField.getText().isEmpty() &&
-                !passwordField.getText().isEmpty();
-    }
 
-    private void showAlert(Alert.AlertType type, String title, String message) {
-        Alert alert = new Alert(type, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.showAndWait();
+        //Validierung
+        private boolean validateInput (String firstName, String lastName, String email, String password,
+                                       String confirmPassword, String streetName, String streetNumber,
+                                       String city, String postalCode, String country) {
+
+            if (firstName.isEmpty() || lastName.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Registration failed", "First name or last name is empty.");
+                return false;
+            }
+            if (email.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Registration failed", "Email is empty.");
+                return false;
+            }
+            if (!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+                showAlert(Alert.AlertType.ERROR, "Invalid Email", "Please enter a valid email address.");
+                return false;
+            }
+            if(password.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Registration failed", "Password is empty.");
+                return false;
+            }
+            if (!password.equals(confirmPassword)) {
+                showAlert(Alert.AlertType.ERROR, "Passwords dont match", "Password and confirm Password must be the same");
+                return false;
+            }
+            return true;
+        }
+
+        private void showAlert (Alert.AlertType type, String title, String message){
+            Alert alert = new Alert(type, message, ButtonType.OK);
+            alert.setTitle(title);
+            alert.showAndWait();
+        }
     }
-}
