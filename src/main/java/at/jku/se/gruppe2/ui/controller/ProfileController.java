@@ -112,7 +112,7 @@ public class ProfileController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Profile has been saved", ButtonType.OK);
         alert.showAndWait();
         try {
-            MainApp.setRoot("dashboard_page");
+            MainApp.setRoot("house_dashboard_page");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -121,7 +121,7 @@ public class ProfileController {
     @FXML
     private void onCancel() {
         try {
-            MainApp.setRoot("dashboard_page");
+            MainApp.setRoot("house_dashboard_page");
         } catch (Exception e) {
             e.printStackTrace();
         }
