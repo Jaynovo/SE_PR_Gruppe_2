@@ -8,6 +8,7 @@ import at.jku.se.gruppe2.persistence.AddressRepository;
 import at.jku.se.gruppe2.persistence.HomeRepository;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
+import at.jku.se.gruppe2.utils.Session;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -22,7 +23,7 @@ public class HomeRegistrationController {
     @FXML private TextField streetNumber;
     @FXML private TextField postalCode;
     @FXML private TextField city;
-    @FXML private ComboBox<String> country;
+    @FXML private ComboBox<String> countryBox;
 
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
@@ -34,10 +35,16 @@ public class HomeRegistrationController {
         this.homeRepo= homeRepo;
     }
 
+
+    @FXML
+    public void initialize (){
+        UIUtils.setupCountryComboBox(countryBox);
+    }
+
     @FXML
     private void saveButtonClicked(ActionEvent event) {
         try {
-            //Validierung prÃ¼fen
+            //Validierung prüfen
             if (!validateInputs()) {
                 UIUtils.styledAlert(
                         Alert.AlertType.ERROR,
@@ -50,7 +57,7 @@ public class HomeRegistrationController {
 
             //Location currently without implementation, needs to be changed
             Location location = new Location(
-                    10.5, 11
+                    0, 0
             );
 
             Address newAddress = new Address(
@@ -58,8 +65,8 @@ public class HomeRegistrationController {
                     streetNumber.getText(),
                     postalCode.getText(),
                     city.getText(),
-                    country.getSelectionModel().getSelectedItem(),
-                    48, 16
+                    countryBox.getSelectionModel().getSelectedItem(),
+                    0, 0
             );
 
             int addressId= addressRepo.createAddressInDatabase(newAddress);
@@ -75,6 +82,11 @@ public class HomeRegistrationController {
                 homeRepo.createHomeInDatabase(newHome);
             }
 
+            UserRepository userRepo = new UserRepository();
+            User currentUser = Session.getCurrentUser();
+
+            currentUser.setHome(newHome);
+            userRepo.updateHome(currentUser, newHome);
 
 
             Alert alert = UIUtils.styledAlert(
@@ -85,7 +97,7 @@ public class HomeRegistrationController {
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.isPresent() && result.get() == ButtonType.OK) {
-                goToHouseDashboard();
+                goToHomeDashboard();
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -126,7 +138,7 @@ public class HomeRegistrationController {
             errors.append("- City is required.\n");
         }
 
-        if (country.getSelectionModel().getSelectedItem().isBlank()) {
+        if (countryBox.getSelectionModel().getSelectedItem().isBlank()) {
             errors.append("- Country is required.\n");
         }
 
@@ -162,9 +174,9 @@ public class HomeRegistrationController {
         }
     }
 
-    private void goToHouseDashboard() {
+    private void goToHomeDashboard() {
         try {
-            MainApp.setRoot("house_dashboard_page");
+            MainApp.setRoot("home_dashboard_page");
         } catch (Exception e) {
             e.printStackTrace();
         }

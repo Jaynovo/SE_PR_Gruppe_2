@@ -101,18 +101,17 @@ public class HomeRepository {
     // Returns 1 if Deletion was successful, 0 if not
     public int deleteHomeInDatabase(int id) {
         String request = """
-                DELETE home
-                FROM home
+                DELETE FROM home
                 WHERE id = ?
         """;
-        int del = JdbcTemplate.executeUpdate(
+
+        // 1 if successful, 0 if not
+        return JdbcTemplate.executeUpdate(
                 request,
                 ps -> {
             ps.setInt(1, id);
             }
         );
-        // 1 if successful, 0 if not
-        return del;
     }
 
     private Home mapHome(ResultSet rs) throws SQLException {

@@ -5,7 +5,7 @@ INSERT INTO home(floors, label, address_information)
 VALUES (3, 'Mustermanns home', 1);
 
 INSERT INTO user_information(first_name, last_name, e_mail, password, home_info)
-VALUES ('Max', 'Mustermann', 'Max.Mustermann@example.com',
+VALUES ('Max', 'Mustermann', 'max.mustermann@example.com',
         '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8',  1
        );
 
