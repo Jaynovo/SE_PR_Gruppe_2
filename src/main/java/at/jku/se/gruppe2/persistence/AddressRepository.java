@@ -34,7 +34,7 @@ public class AddressRepository {
         return Optional.empty();
     }
 
-    // Returns 1 if creation was successful, 0 if not
+    // Returns the created id
     public int createAddressInDatabase(Address address) {
         String request = """
                 INSERT INTO address_information (street, house_nr, post_code, city, country, longitude, latitude)
