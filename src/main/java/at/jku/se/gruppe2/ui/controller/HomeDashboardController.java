@@ -10,9 +10,8 @@ import javafx.scene.layout.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class HouseDashboardController {
+public class HomeDashboardController {
     @FXML private FlowPane cardsFlow;
     @FXML private MenuButton userMenu;
 

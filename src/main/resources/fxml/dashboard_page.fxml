@@ -23,17 +23,41 @@
     </top>
 
     <center>
-        <FlowPane>
-            <Label text="Your Houses:" styleClass="title">
-            </Label>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+
+            <Label text="Your Home:" styleClass="title" />
+
             <Label fx:id="temperatureLabel" text="Loading weather..." style="-fx-font-size: 14;" />
-        </FlowPane>
+
+            <!-- Home display area -->
+            <BorderPane fx:id="homeCard" visible="false" style="-fx-border-radius: 8;">
+                <left>
+                    <VBox spacing="8">
+
+                        <Label text="Home Name: " />
+                        <Label fx:id="homeName" text="Home Name: "/>
+                        <Label fx:id="homeAddress" text="Address: "/>
+                        <Label fx:id="homeFloors" text="Floor number of your home: " />
+
+                    </VBox>
+                </left>
+
+                <right>
+                    <Button fx:id="openHome" text="Open Home"  onAction="#openHomeDetails"/>
+                </right>
+
+            </BorderPane>
+
+        </VBox>
     </center>
 
     <bottom>
         <FlowPane alignment="CENTER" >
-            <Button fx:id="addHouseButton" text="Add a new house" onAction="#addHouseButtonClicked"/>
-            <Button fx:id="deleteHouseButton" text="Delete a house" />
+            <Button fx:id="addHomeButton" text="Add a new home" onAction="#addHomeButtonClicked"/>
+            <Button fx:id="deleteHomeButton" text="Delete a home" onAction="#deleteHomeButtonClicked" />
         </FlowPane>
     </bottom>
 </BorderPane>

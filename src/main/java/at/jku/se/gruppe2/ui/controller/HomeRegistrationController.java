@@ -5,6 +5,7 @@ import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
+import at.jku.se.gruppe2.utils.Session;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -19,62 +20,88 @@ public class HomeRegistrationController {
     @FXML private TextField streetNumber;
     @FXML private TextField postalCode;
     @FXML private TextField city;
-    @FXML private ComboBox<String> country;
+    @FXML private ComboBox<String> countryBox;
 
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
 
-    private HomeRepository homeRepo;
+    private HomeRepository homeRepo = new HomeRepository();
+    AddressRepository addressRepo = new AddressRepository();
 
     public void setHomeRepo(HomeRepository homeRepo) {
         this.homeRepo= homeRepo;
     }
 
+
+    @FXML
+    public void initialize (){
+        UIUtils.setupCountryComboBox(countryBox);
+    }
+
     @FXML
     private void saveButtonClicked(ActionEvent event) {
+        try {
+            //Validierung prüfen
+            if (!validateInputs()) {
+                UIUtils.styledAlert(
+                        Alert.AlertType.ERROR,
+                        "Please fill out all required fields!",
+                        ButtonType.OK
+                ).showAndWait();
+                return;
+            }
+            ;
 
-        if(!validateInputs()){
-            UIUtils.styledAlert(
-                    Alert.AlertType.ERROR,
-                    "Please fill out all required fields!",
+            //Location currently without implementation, needs to be changed
+            Location location = new Location(
+                    0, 0
+            );
+
+            Address newAddress = new Address(
+                    street.getText(),
+                    streetNumber.getText(),
+                    postalCode.getText(),
+                    city.getText(),
+                    countryBox.getSelectionModel().getSelectedItem(),
+                    0, 0
+            );
+
+            int addressId= addressRepo.createAddressInDatabase(newAddress);
+            newAddress.setId(addressId);
+
+            Home newHome = new Home(
+                    homeLabel.getText(),
+                    floorLevels.getValue(),
+                    newAddress
+            );
+
+            if (homeRepo != null) {
+                homeRepo.createHomeInDatabase(newHome);
+            }
+
+            UserRepository userRepo = new UserRepository();
+            User currentUser = Session.getCurrentUser();
+
+            currentUser.setHome(newHome);
+            userRepo.updateHome(currentUser, newHome);
+
+
+            Alert alert = UIUtils.styledAlert(
+                    Alert.AlertType.INFORMATION,
+                    "Home has been created successfully!",
                     ButtonType.OK
-            ).showAndWait();
-            return;
-        };
+            );
 
-        //Location currently without implementation, needs to be changed
-        Location location= new Location(
-                10.5, 11
-        );
-
-        Address address= new Address(
-                street.getText(),
-                streetNumber.getText(),
-                postalCode.getText(),
-                city.getText(),
-                country.getSelectionModel().getSelectedItem(),
-                48, 16
-                );
-
-        Home home= new Home(
-                homeLabel.getText(),
-                floorLevels.getValue(),
-                address
-        );
-
-        if(homeRepo != null){
-            homeRepo.createHomeInDatabase(home);
-        }
-
-        Alert alert = UIUtils.styledAlert(
-                Alert.AlertType.INFORMATION,
-                "Home has been created successfully!",
-                ButtonType.OK
-        );
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            goToHouseDashboard();
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                goToHomeDashboard();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Alert alert = UIUtils.styledAlert(
+                    Alert.AlertType.ERROR,
+                    "An unexpected error occurred: " + ex.getMessage(),
+                    ButtonType.OK);
         }
     }
 
@@ -108,7 +135,7 @@ public class HomeRegistrationController {
             errors.append("- City is required.\n");
         }
 
-        if (country.getSelectionModel().getSelectedItem().isBlank()) {
+        if (countryBox.getSelectionModel().getSelectedItem().isBlank()) {
             errors.append("- Country is required.\n");
         }
 
@@ -144,9 +171,9 @@ public class HomeRegistrationController {
         }
     }
 
-    private void goToHouseDashboard() {
+    private void goToHomeDashboard() {
         try {
-            MainApp.setRoot("house_dashboard_page");
+            MainApp.setRoot("home_dashboard_page");
         } catch (Exception e) {
             e.printStackTrace();
         }

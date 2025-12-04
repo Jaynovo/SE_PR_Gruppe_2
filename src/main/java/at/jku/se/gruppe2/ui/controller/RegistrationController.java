@@ -3,6 +3,7 @@ package at.jku.se.gruppe2.ui.controller;
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.PasswordUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -26,6 +27,11 @@ public class RegistrationController {
     private final UserRepository userRepository = new UserRepository();
 
     @FXML
+    public void initialize (){
+        UIUtils.setupCountryComboBox(countryBox);
+    }
+
+    @FXML
     private void registrationButtonClicked() {
         try {
             //Validierung prüfen
@@ -42,6 +48,9 @@ public class RegistrationController {
             }
 
             //Address-Objekt erstellen
+            /**
+             * Needs to be implemented with new separate user and home adress logic
+             */
             Address address = new Address(
                     streetNameField.getText(),
                     streetNumberField.getText(),
