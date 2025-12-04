@@ -25,11 +25,13 @@
     <center>
         <ScrollPane fitToWidth="true" pannable="true">
             <content>
+
                 <FlowPane fx:id="cardsFlow" hgap="16" vgap="16">
                     <padding>
                         <Insets top="16" right="16" bottom="16" left="16"/>
                     </padding>
                 </FlowPane>
+
             </content>
         </ScrollPane>
     </center>

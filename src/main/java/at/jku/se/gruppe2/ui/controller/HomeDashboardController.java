@@ -1,60 +1,61 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
+import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.ui.UIUtils;
+import at.jku.se.gruppe2.utils.Session;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 
 public class HomeDashboardController {
+
     @FXML private FlowPane cardsFlow;
-    @FXML private MenuButton userMenu;
 
-    public static class Room {
-        public final long id;
-        public final String name;
-        public boolean isLightOn;
-        public double temperature;
-        public double humidity;
+    private Home home;
+    private List<Room> rooms;
 
-        public Room(long id, String name, boolean isLightOn, double temperature, double humidity) {
-            this.id = id;
-            this.name = name;
-            this.isLightOn = isLightOn;
-            this.temperature = temperature;
-            this.humidity = humidity;
-        }
-    }
-
-    public static class House {
-        public final long id;
-        public final String name;
-        public List<Room> rooms;
-
-        public House (long id, String name, List<Room> rooms) {
-            this.id = id;
-            this.name = name;
-            this.rooms = rooms;
-        }
-    }
-
-    private List<Room> rooms = new ArrayList<>();
-    private House house = new House(1, "Haus", rooms);
+    private final HomeRepository homeRepo = new HomeRepository();
+    private final RoomRepository roomRepo = new RoomRepository();
+    private final DeviceRepository deviceRepo = new DeviceRepository();
 
     @FXML
     public void initialize() {
-        rooms.clear();
-        rooms.add(new Room(1L, "Room 1", true, 0.5, 0.0));
-        rooms.add(new Room(2L, "Room 2", true, 20, 42.0));
-        rooms.add(new Room(3L, "Room 3", false, 30, 69.0));
-        rooms.add(new Room(4L, "Room 4", true, -40, 80.0));
+        int userId= Session.getCurrentUser().getId();
+        Optional<Home> homeOptional = homeRepo.getHomeByUserId(userId);
 
+        if (homeOptional.isEmpty()) {
+            redirectToHomeRegistration();
+            return;
+        }
+
+        home = homeOptional.get();
+        loadRooms();
         renderCards();
+    }
+
+    private void redirectToHomeRegistration() {
+        try {
+            MainApp.setRoot("home_registration_page");
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot load home registration page", e);
+        }
+    }
+
+    private void loadRooms() {
+        rooms= roomRepo.getRoomsByHomeId(home.getId());
+
+        //Load devices for each room
+        for (Room room : rooms) {
+            List<Device> devices = deviceRepo.getDevicesByRoomId(room.getId());
+            room.setDevices(devices);
+        }
     }
 
     private void renderCards() {
@@ -71,7 +72,7 @@ public class HomeDashboardController {
         label.getStyleClass().add("muted");
 
         Label valueLabel = new Label(valueText);
-        label.getStyleClass().add("metric-value");
+        valueLabel.getStyleClass().add("metric-value");
 
         vBox.getChildren().addAll(label, valueLabel);
         vBox.getStyleClass().add("metric");
@@ -85,49 +86,50 @@ public class HomeDashboardController {
         card.setPrefWidth(240);
         card.setPadding(new Insets(10));
 
-        HBox hBox = new HBox(10);
-        Label name = new Label(room.name);
+        //top bar
+        HBox topBar = new HBox(10);
+        Label name = new Label(room.getRoomLabel());
         name.getStyleClass().add("card-title");
-
-        Label light = new Label(room.isLightOn ? "Light: ON" : "Light: OFF");
-        light.getStyleClass().addAll("badge", room.isLightOn ? "badge-on" : "badge-off");
-
-        // Make badge clickable
-        light.setOnMouseClicked(event -> {
-            // Toggle the state
-            room.isLightOn = !room.isLightOn;
-
-            // Update badge text
-            light.setText(room.isLightOn ? "Light: ON" : "Light: OFF");
-
-            // Update CSS style classes
-            light.getStyleClass().removeAll("badge-on", "badge-off");
-            light.getStyleClass().add(room.isLightOn ? "badge-on" : "badge-off");
-        });
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        hBox.getChildren().addAll(name, spacer, light);
 
+        //Future Box for devices
+        HBox deviceBox = new HBox(10);
+
+        for (Device device : room.getDevices()) {
+            //add device types here with if logic
+        }
+
+        topBar.getChildren().addAll(name, spacer, deviceBox);
+
+        //Metrics
         HBox metrics = new HBox(12);
         metrics.getChildren().addAll(
-                metricPill("Temp ", String.valueOf(room.temperature)),
-                metricPill("Humidity ", String.valueOf(room.humidity))
+                metricPill("Area", String.valueOf(room.getArea()))
         );
 
-        card.getChildren().addAll(hBox, metrics);
+        card.getChildren().addAll(topBar, metrics);
         return card;
     }
 
-    public void handleCreateRoom(ActionEvent actionEvent) {
-        TextInputDialog dialog = UIUtils.styledTextInputDialog("Please enter a room name:");
+    /* TODO create Badges for actuators and toggle device methods */
 
+
+
+    public void handleCreateRoom(ActionEvent actionEvent) {
+        TextInputDialog dialog = UIUtils.styledTextInputDialog(
+                "Please enter a room name:");
         dialog.setTitle("Create Room");
 
         dialog.showAndWait().ifPresent(name -> {
             if (!name.isBlank()) {
-                long id = (long) (Math.random() * 1000);
-                rooms.add(new Room(id, name, true, 0.5, 0.0)); // avoid "Room Room X"
+                Room room = new Room();
+                room.setRoomLabel(name);
+                room.setHome(home);
+
+                roomRepo.createRoom(room);
+                loadRooms();
                 renderCards();
             }
         });

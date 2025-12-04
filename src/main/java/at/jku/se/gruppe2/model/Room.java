@@ -1,14 +1,17 @@
 package at.jku.se.gruppe2.model;
 
+import java.util.*;
+
 public class Room {
     private int id;
     private String roomLabel;
     private double length;
     private double width;
     private double area;
-    //private List<Sensor> sensors;
-    //private List<Actuator> actuators;
-    /*Todo Uncomment when classes are created*/
+
+    private Home home;
+
+    private List<Device> devices = new ArrayList<>();
 
     public Room() {}
 
@@ -58,5 +61,21 @@ public class Room {
 
     public void setArea(double area) {
         this.area = area;
+    }
+
+    public Home getHome() {
+        return home;
+    }
+
+    public void setHome(Home home) {
+        this.home = home;
+    }
+
+    public List<Device> getDevices() {
+        return devices;
+    }
+
+    public void setDevices(List<Device> devices) {
+        this.devices = devices;
     }
 }
