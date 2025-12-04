@@ -9,8 +9,8 @@ public class Address {
     private String postalCode;
     private String country;
 
-    private double longitude;
-    private double latitude;
+    private Double longitude;
+    private Double latitude;
 
     public Address() {}
 

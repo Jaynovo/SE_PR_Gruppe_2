@@ -1,6 +1,6 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.domain.*;
+import at.jku.se.gruppe2.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -58,8 +58,8 @@ public class UserRepositoryTest {
 
         User loadedUser = userOptional.get();
         assertEquals(e_mail, loadedUser.getEmail());
-        assertEquals("Max", loadedUser.getFirst_name());
-        assertEquals("Mustermann", loadedUser.getLast_name());
+        assertEquals("Max", loadedUser.getFirstName());
+        assertEquals("Mustermann", loadedUser.getLastName());
 
         assertNull(loadedUser.getHome(), "This home should be Null");
     }

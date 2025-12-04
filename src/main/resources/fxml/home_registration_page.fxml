@@ -23,13 +23,13 @@
                 <Insets top="20" right="20" bottom="20" left="20" />
             </padding>
 
-            <Label text="Add a new House">
+            <Label text="Add a new Home">
                 <font>
                     <Font size="20" />
                 </font>
             </Label>
 
-            <TextField fx:id="homeLabel" promptText="Name your House:" />
+            <TextField fx:id="homeLabel" promptText="Name your Home:" />
             <IntegerField fx:id="floorLevels" promptText="Number of floors:" />
 
             <HBox spacing="10">
@@ -42,27 +42,14 @@
                 <TextField fx:id="city" promptText="City:" HBox.hgrow="ALWAYS" />
             </HBox>
 
-            <ComboBox fx:id="country" promptText="Choose Country:" prefWidth="Infinity">
-                <items>
-                    <FXCollections fx:factory="observableArrayList">
-                        <String fx:value="Austria" />
-                        <String fx:value="Germany" />
-                        <String fx:value="Switzerland" />
-                        <String fx:value="France" />
-                        <String fx:value="Italy" />
-                        <String fx:value="Spain" />
-                        <String fx:value="United Kingdom" />
-                        <String fx:value="United States" />
-                        <String fx:value="Canada" />
-                        <String fx:value="Brazil" />
-                    </FXCollections>
-                </items>
+            <ComboBox fx:id="countryBox" promptText="Choose Country:" prefWidth="Infinity">
+
             </ComboBox>
             <!-- BUTTON ROW -->
             <HBox alignment="CENTER_RIGHT"
                   spacing="10">
                 <Button fx:id="cancelButton" text="Cancel" onAction="#cancelButtonClicked"/>
-                <Button fx:id="saveButton" text="Save House" onAction="#saveButtonClicked"/>
+                <Button fx:id="saveButton" text="Save Home" onAction="#saveButtonClicked"/>
             </HBox>
         </VBox>
     </children>
