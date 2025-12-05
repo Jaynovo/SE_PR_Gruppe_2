@@ -27,11 +27,11 @@
                 </font>
             </Label>
 
-            <TextField fx:id="firstNameField" promptText="First label:" />
-            <TextField fx:id="lastNameField" promptText="Last label:" />
+            <TextField fx:id="firstNameField" promptText="First Name:" />
+            <TextField fx:id="lastNameField" promptText="Last Name:" />
 
             <HBox spacing="10">
-                <TextField fx:id="streetNameField" promptText="Street label:" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="streetNameField" promptText="Street Name:" HBox.hgrow="ALWAYS"/>
                 <IntegerField fx:id="streetNumberField" promptText="Number:" prefWidth="100"/>
             </HBox>
 
@@ -41,20 +41,6 @@
             </HBox>
 
             <ComboBox fx:id="countryBox" promptText="Choose Country:" prefWidth="Infinity">
-<!--                <items>-->
-<!--                    <FXCollections fx:factory="observableArrayList">-->
-<!--                        <String fx:value="Austria" />-->
-<!--                        <String fx:value="Germany" />-->
-<!--                        <String fx:value="Switzerland" />-->
-<!--                        <String fx:value="France" />-->
-<!--                        <String fx:value="Italy" />-->
-<!--                        <String fx:value="Spain" />-->
-<!--                        <String fx:value="United Kingdom" />-->
-<!--                        <String fx:value="United States" />-->
-<!--                        <String fx:value="Canada" />-->
-<!--                        <String fx:value="Brazil" />-->
-<!--                    </FXCollections>-->
-<!--                </items>-->
             </ComboBox>
 
             <TextField fx:id="emailField" promptText="E-Mail:"/>
