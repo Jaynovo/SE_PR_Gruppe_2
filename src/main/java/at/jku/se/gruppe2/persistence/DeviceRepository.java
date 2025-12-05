@@ -5,6 +5,7 @@ import at.jku.se.gruppe2.model.*;
 import java.sql.*;
 import java.util.*;
 
+/* TODO CHANGE: currently generated class to allow adding rooms*/
 public class DeviceRepository {
     /**
      * Fetch all devices belonging to a given room.

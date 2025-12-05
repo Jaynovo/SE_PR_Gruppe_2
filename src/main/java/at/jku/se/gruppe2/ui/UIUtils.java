@@ -57,25 +57,26 @@ public class UIUtils {
         return countryList;
     }
 
+    /** Setup Method for the countries called from the corresponding controller*/
     public static void setupCountryComboBox(ComboBox<String> comboBox) {
 
-        ObservableList<String> items = FXCollections.observableArrayList(getCountryList());
+        ObservableList<String> allCountries =
+                FXCollections.observableArrayList(getCountryList());
 
-        comboBox.setItems(items);
+        comboBox.setItems(allCountries);
         comboBox.setEditable(true); //allows search for countries
 
         comboBox.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
 
-            if (!comboBox.isShowing()) {
-                comboBox.show();
-            }
+            if (!comboBox.isFocused()) return;
 
             List<String> filtered = getCountryList().stream()
                     .filter(country -> country.toLowerCase().startsWith(newValue.toLowerCase()))
                     .collect(Collectors.toList());
 
-            comboBox.setItems(FXCollections.observableArrayList(filtered));
-        });
+            comboBox.getItems().setAll(filtered);
+            comboBox.show();
+           });
     }
 
 }
