@@ -52,7 +52,7 @@ create table room (
     label VARCHAR(100),
     home_info INTEGER NOT NULL REFERENCES home (id) ON DELETE CASCADE,
     area numeric(5,2),
-    UNIQUE(home_info, label)                               -- Each name is unique within each Home
+    UNIQUE(home_info, label)                               -- Each label is unique within each Home
 );
 
 create table device (
@@ -63,7 +63,7 @@ create table device (
 
 create table sensor_type (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL, -- "Thermometer", "Humidity Sensor", "Light sensor", etc.
+    label VARCHAR(50) UNIQUE NOT NULL, -- "Thermometer", "Humidity Sensor", "Light sensor", etc.
     unit VARCHAR(50),
     min_value NUMERIC(6,3) DEFAULT 0,
     max_value NUMERIC(6,3) DEFAULT 0
@@ -78,7 +78,7 @@ create table sensor
 create table actuator_type
 (
     id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
+    label VARCHAR(50) UNIQUE NOT NULL,
     unit VARCHAR(20)
 );
 

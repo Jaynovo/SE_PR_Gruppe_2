@@ -29,7 +29,7 @@ public class LoginController {
     }
     @FXML
     private void handleLoginButton() {
-        String email = emailField.getText().trim();
+        String email = emailField.getText().trim().toLowerCase();
         String password = passwordField.getText().trim();
 
         if (email.isEmpty() || password.isEmpty()) {

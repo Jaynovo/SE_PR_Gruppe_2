@@ -27,11 +27,11 @@
                 </font>
             </Label>
 
-            <TextField fx:id="firstNameField" promptText="First name:" />
-            <TextField fx:id="lastNameField" promptText="Last name:" />
+            <TextField fx:id="firstNameField" promptText="First label:" />
+            <TextField fx:id="lastNameField" promptText="Last label:" />
 
             <HBox spacing="10">
-                <TextField fx:id="streetNameField" promptText="Street name:" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="streetNameField" promptText="Street label:" HBox.hgrow="ALWAYS"/>
                 <IntegerField fx:id="streetNumberField" promptText="Number:" prefWidth="100"/>
             </HBox>
 

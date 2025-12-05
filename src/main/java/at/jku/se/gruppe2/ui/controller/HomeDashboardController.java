@@ -19,7 +19,7 @@ public class HomeDashboardController {
     @FXML private FlowPane cardsFlow;
 
     private Home home;
-    private List<Room> rooms;
+    private Optional<List<Room>> rooms;
 
     private final HomeRepository homeRepo = new HomeRepository();
     private final RoomRepository roomRepo = new RoomRepository();
@@ -49,10 +49,10 @@ public class HomeDashboardController {
     }
 
     private void loadRooms() {
-        rooms= roomRepo.getRoomsByHomeId(home.getId());
+        rooms= roomRepo.getAllRoomsByHome(home);
 
         //Load devices for each room
-        for (Room room : rooms) {
+        for (Room room : rooms.orElse(null)) {
             List<Device> devices = deviceRepo.getDevicesByRoomId(room.getId());
             room.setDevices(devices);
         }
@@ -60,7 +60,7 @@ public class HomeDashboardController {
 
     private void renderCards() {
         cardsFlow.getChildren().clear();
-        for (Room room : rooms) {
+        for (Room room : rooms.orElse(null)) {
             cardsFlow.getChildren().add(createRoomCard(room));
         }
     }
@@ -128,7 +128,7 @@ public class HomeDashboardController {
                 room.setRoomLabel(name);
                 room.setHome(home);
 
-                roomRepo.createRoom(room);
+                roomRepo.createRoomInDatabase(room, home);
                 loadRooms();
                 renderCards();
             }

@@ -33,7 +33,7 @@
             <IntegerField fx:id="floorLevels" promptText="Number of floors:" />
 
             <HBox spacing="10">
-                <TextField fx:id="street" promptText="Street name:" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="street" promptText="Street label:" HBox.hgrow="ALWAYS"/>
                 <IntegerField fx:id="streetNumber" promptText="Number:" prefWidth="100"/>
             </HBox>
 

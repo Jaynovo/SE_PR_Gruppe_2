@@ -5,7 +5,7 @@ INSERT INTO home(floors, label, address_information)
 VALUES (3, 'Mustermanns home', 1);
 
 INSERT INTO user_information(first_name, last_name, e_mail, password, home_info)
-VALUES ('Max', 'Mustermann', 'Max.Mustermann@example.com',
+VALUES ('Max', 'Mustermann', 'max.mustermann@example.com',
         '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8',  1
        );
 
@@ -17,12 +17,12 @@ VALUES ('Bedroom', 1, 32);
 
 
 -- Generic Types of Thermometer and Sensor. Expand later with other sensors
-INSERT INTO sensor_type(name, unit)
+INSERT INTO sensor_type(label, unit)
 VALUES  ('Thermometer', '°C'),
         ('Humidity Sensor', '%');
 
 -- Generic actuators, expand later
-INSERT INTO actuator_type(name, unit)
+INSERT INTO actuator_type(label, unit)
 VALUES ('Light Switch', NULL),
        ('Heating', '%');
 
@@ -77,7 +77,7 @@ VALUES
                   JOIN room r ON d.room_id = r.id
          WHERE d.label = 'Living Room Thermometer'
            AND r.label = 'Living Room'),
-        (SELECT id FROM sensor_type WHERE name = 'Thermometer')
+        (SELECT id FROM sensor_type WHERE label = 'Thermometer')
     ),
     (
         (SELECT d.id
@@ -85,7 +85,7 @@ VALUES
                   JOIN room r ON d.room_id = r.id
          WHERE d.label = 'Living Room Humidity Sensor'
            AND r.label = 'Living Room'),
-        (SELECT id FROM sensor_type WHERE name = 'Humidity Sensor')
+        (SELECT id FROM sensor_type WHERE label = 'Humidity Sensor')
     );
 
 -- Bedroom sensors
@@ -97,7 +97,7 @@ VALUES
                   JOIN room r ON d.room_id = r.id
          WHERE d.label = 'Bedroom Thermometer'
            AND r.label = 'Bedroom'),
-        (SELECT id FROM sensor_type WHERE name = 'Thermometer')
+        (SELECT id FROM sensor_type WHERE label = 'Thermometer')
     );
 
 -- Living Room actuators
@@ -106,7 +106,7 @@ INSERT INTO actuator (device_id, actuator_type_id)
 SELECT d.id, at.id
 FROM device d
          JOIN room r ON d.room_id = r.id
-         JOIN actuator_type at ON at.name = 'Light Switch'
+         JOIN actuator_type at ON at.label = 'Light Switch'
 WHERE d.label = 'Living Room Ceiling Light'
   AND r.label = 'Living Room';
 
@@ -115,7 +115,7 @@ INSERT INTO actuator (device_id, actuator_type_id)
 SELECT d.id, at.id
 FROM device d
          JOIN room r ON d.room_id = r.id
-         JOIN actuator_type at ON at.name = 'Heating'
+         JOIN actuator_type at ON at.label = 'Heating'
 WHERE d.label = 'Living Room Radiator Valve'
   AND r.label = 'Living Room';
 
@@ -124,7 +124,7 @@ INSERT INTO actuator (device_id, actuator_type_id)
 SELECT d.id, at.id
 FROM device d
          JOIN room r ON d.room_id = r.id
-         JOIN actuator_type at ON at.name = 'Light Switch'
+         JOIN actuator_type at ON at.label = 'Light Switch'
 WHERE d.label = 'Bedroom Ceiling Light'
   AND r.label = 'Bedroom';
 
