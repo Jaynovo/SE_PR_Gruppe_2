@@ -27,29 +27,23 @@
             <Button fx:id="changeAvatarButton" maxWidth="125" minWidth="-Infinity" onAction="#onChangeAvatar" prefHeight="25.0" prefWidth="90.0" text="Profilbild ändern" />
 
             <!-- Formular -->
+            <!-- TODO change signature of text fields, add description-->
             <VBox alignment="CENTER_LEFT" maxWidth="300" spacing="8">
-                <Label text="First Name:" />
+
                 <TextField fx:id="firstNameField" promptText="First Name" />
 
-                <Label text="Last Name:" />
                 <TextField fx:id="lastNameField" promptText="Last Name" />
 
-                <Label text="E-Mail:" />
                 <TextField fx:id="emailField" editable="false" promptText="E-Mail (Änderung der Email nicht möglich)" />
 
-                <Label text="Street:" />
                 <TextField fx:id="streetField" promptText="Address" />
 
-                <Label text="Number:" />
                 <TextField fx:id="streetNumberField" promptText="Nr:" />
 
-                <Label text="Postal code:" />
                 <TextField fx:id="postalCodeField" promptText="Postal Code" />
 
-                <Label text="City:" />
                 <TextField fx:id="cityField" promptText="City" />
 
-                <Label text="Country:" />
                 <ComboBox fx:id="countryComboBox" promptText="Country" />
 
                 <Button fx:id="changePasswordButton" alignment="CENTER" maxWidth="Infinity" onAction="#onChangePassword" prefHeight="25.0" prefWidth="156.0" text="Passwort ändern" />
