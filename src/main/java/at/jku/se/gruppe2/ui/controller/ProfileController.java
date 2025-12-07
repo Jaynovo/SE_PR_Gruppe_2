@@ -33,6 +33,9 @@ public class ProfileController {
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
 
+    private final UserRepository userRepository = new UserRepository();
+    private final AddressRepository addressRepository = new AddressRepository();
+
     @FXML
     public void initialize() throws IOException {
         System.out.println("ProfileController initialized!");

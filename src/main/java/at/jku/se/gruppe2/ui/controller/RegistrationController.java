@@ -12,17 +12,28 @@ import java.util.Optional;
 
 public class RegistrationController {
 
-    @FXML private TextField firstNameField;
-    @FXML private TextField lastNameField;
-    @FXML private TextField streetNameField;
-    @FXML private TextField streetNumberField;
-    @FXML private TextField cityField;
-    @FXML private TextField postalCodeField;
-    @FXML private ComboBox<String> countryBox;
-    @FXML private TextField emailField;
-    @FXML private PasswordField passwordField;
-    @FXML private PasswordField confirmPasswordField;
-    @FXML private Button registrationButton;
+    @FXML
+    private TextField firstNameField;
+    @FXML
+    private TextField lastNameField;
+    @FXML
+    private TextField streetNameField;
+    @FXML
+    private TextField streetNumberField;
+    @FXML
+    private TextField cityField;
+    @FXML
+    private TextField postalCodeField;
+    @FXML
+    private ComboBox<String> countryBox;
+    @FXML
+    private TextField emailField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private PasswordField confirmPasswordField;
+    @FXML
+    private Button registrationButton;
 
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
