@@ -2,10 +2,8 @@ package at.jku.se.gruppe2.ui;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextInputDialog;
+import javafx.collections.transformation.FilteredList;
+import javafx.scene.control.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -63,20 +61,34 @@ public class UIUtils {
         ObservableList<String> allCountries =
                 FXCollections.observableArrayList(getCountryList());
 
-        comboBox.setItems(allCountries);
-        comboBox.setEditable(true); //allows search for countries
+        FilteredList<String> filtered =
+                new FilteredList<>(allCountries, s -> true);
 
-        comboBox.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+        comboBox.setItems(filtered);
+        comboBox.setEditable(true);
+
+        comboBox.getEditor().textProperty().addListener((obs, old, text) -> {
 
             if (!comboBox.isFocused()) return;
 
-            List<String> filtered = getCountryList().stream()
-                    .filter(country -> country.toLowerCase().startsWith(newValue.toLowerCase()))
-                    .collect(Collectors.toList());
+            // Store selected index BEFORE filtering
+            int oldIndex = comboBox.getSelectionModel().getSelectedIndex();
 
-            comboBox.getItems().setAll(filtered);
+            // Clear selection BEFORE filtering — prevents IndexOutOfBounds
+            comboBox.getSelectionModel().clearSelection();
+
+            // Update filter
+            filtered.setPredicate(item ->
+                    item.toLowerCase().startsWith(text.toLowerCase())
+            );
+
+            // Restore selection if possible
+            if (oldIndex >= 0 && oldIndex < filtered.size()) {
+                comboBox.getSelectionModel().select(oldIndex);
+            }
+
             comboBox.show();
-           });
+        });
     }
 
 }
