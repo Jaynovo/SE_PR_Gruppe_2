@@ -86,8 +86,9 @@ public class DeviceRepository {
     /**
      * Maps a database row into a Device object.
      */
+    /*TODO Implement with Generics*/
     private Device mapDevice(ResultSet rs) throws SQLException {
-        Device device = new Device();
+        Device device = new Device() {}; //THIS!!!
         device.setId(rs.getInt("id"));
         device.setLabel(rs.getString("label"));
         return device;
