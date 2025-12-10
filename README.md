@@ -10,7 +10,7 @@ tbd
 
 Zeitaufzeichnung:  
 "| time xxh" bedeutet, dass alle Gruppenmitglieder an den Commit gearbeitet haben.  
-"| [name] xxh" bedeutet, dass nur "name" an den Commit gearbeitet hat.  
+"| [label] xxh" bedeutet, dass nur "label" an den Commit gearbeitet hat.  
 
 Priority:
 Descending; P0 is the most important, P2 the least important

@@ -8,11 +8,10 @@ public class Room {
     private double length;
     private double width;
     private double area;
-    //private List<Sensor> sensors;
-    //private List<Actuator> actuators;
 
-    private List<Device> devices;
-    /*Todo Uncomment when classes are created*/
+    private Home home;
+
+    private List<Device> devices = new ArrayList<>();
 
     public Room() {}
 
@@ -62,6 +61,14 @@ public class Room {
 
     public void setArea(double area) {
         this.area = area;
+    }
+
+    public Home getHome() {
+        return home;
+    }
+
+    public void setHome(Home home) {
+        this.home = home;
     }
 
     public List<Device> getDevices() {

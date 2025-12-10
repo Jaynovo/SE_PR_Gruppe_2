@@ -2,9 +2,7 @@ package at.jku.se.gruppe2.persistence;
 
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class JdbcTemplate {
     @FunctionalInterface

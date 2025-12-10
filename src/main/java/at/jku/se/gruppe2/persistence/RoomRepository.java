@@ -1,13 +1,9 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.model.Home;
-import at.jku.se.gruppe2.model.Room;
+import at.jku.se.gruppe2.model.*;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.sql.*;
+import java.util.*;
 
 public class RoomRepository {
 

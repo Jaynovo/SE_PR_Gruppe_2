@@ -1,56 +1,44 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
-import at.jku.se.gruppe2.model.Address;
-import at.jku.se.gruppe2.model.User;
-import at.jku.se.gruppe2.persistence.AddressRepository;
-import at.jku.se.gruppe2.persistence.UserRepository;
+import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.ui.UIUtils;
-import at.jku.se.gruppe2.utils.PasswordUtils;
-import at.jku.se.gruppe2.utils.Session;
+import at.jku.se.gruppe2.utils.*;
+
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
+import javafx.geometry.*;
+import javafx.scene.canvas.*;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.WritableImage;
+import javafx.scene.image.*;
+import javafx.scene.text.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.image.ImageView;
-import javafx.scene.text.Text;
 
 import java.io.IOException;
 import java.util.Optional;
 
 public class ProfileController {
 
-    @FXML
-    private TextField firstNameField;
-    @FXML
-    private TextField lastNameField;
-    @FXML
-    private TextField emailField;
-    @FXML
-    private TextField streetField;
-    @FXML
-    private TextField streetNumberField;
-    @FXML
-    private TextField cityField;
-    @FXML
-    private TextField postalCodeField;
-    @FXML
-    private ComboBox<String> countryComboBox;
-    @FXML
-    private ImageView avatarImage;
+    @FXML private TextField firstNameField;
+    @FXML private TextField lastNameField;
+    @FXML private TextField emailField;
+    @FXML private TextField streetField;
+    @FXML private TextField streetNumberField;
+    @FXML private TextField cityField;
+    @FXML private TextField postalCodeField;
+    @FXML private ComboBox<String> countryComboBox;
+    @FXML private ImageView avatarImage;
+
+    private final UserRepository userRepository = new UserRepository();
+    private final AddressRepository addressRepository = new AddressRepository();
 
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
 
     @FXML
     public void initialize() throws IOException {
+        System.out.println("ProfileController initialized!");
 
         User current = Session.getCurrentUser();
         if (current == null) {

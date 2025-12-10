@@ -6,8 +6,7 @@
 <?import javafx.geometry.Insets?>
 <?import at.jku.se.gruppe2.ui.custom.IntegerField?>
 
-<?import javafx.collections.FXCollections?>
-<?import java.lang.String?>
+
 <StackPane prefHeight="600.0"
            prefWidth="640.0"
            xmlns="http://javafx.com/javafx"
@@ -33,7 +32,7 @@
             <IntegerField fx:id="floorLevels" promptText="Number of floors:" />
 
             <HBox spacing="10">
-                <TextField fx:id="street" promptText="Street name:" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="street" promptText="Street Name:" HBox.hgrow="ALWAYS"/>
                 <IntegerField fx:id="streetNumber" promptText="Number:" prefWidth="100"/>
             </HBox>
 

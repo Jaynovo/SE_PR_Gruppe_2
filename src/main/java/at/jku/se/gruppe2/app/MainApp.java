@@ -2,7 +2,7 @@ package at.jku.se.gruppe2.app;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
+import javafx.scene.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -22,8 +22,19 @@ public class MainApp extends Application {
     }
 
     public static void setRoot(String fxml) throws IOException {
-        primaryStage.getScene().setRoot(FXMLLoader.load(MainApp.class.getResource("/fxml/" + fxml + ".fxml")));
+        FXMLLoader loader = new FXMLLoader(MainApp.class.getResource("/fxml/" + fxml + ".fxml"));
+        Parent newRoot = loader.load();
+        Scene scene = primaryStage.getScene();
+
+        if (scene == null) {
+            scene = new Scene(newRoot);
+            scene.getStylesheets().add(MainApp.class.getResource("/css/app.css").toExternalForm());
+            primaryStage.setScene(scene);
+        } else {
+            scene.setRoot(newRoot);
+        }
     }
+
 
     public static void main(String[] args) {
         launch(args);

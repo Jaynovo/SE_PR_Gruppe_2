@@ -6,6 +6,7 @@ import at.jku.se.gruppe2.persistence.AddressRepository;
 import at.jku.se.gruppe2.persistence.HomeRepository;
 import at.jku.se.gruppe2.service.GeoCodingService;
 import at.jku.se.gruppe2.service.WeatherService;
+import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -129,6 +130,14 @@ public class DashboardController implements Initializable {
             showInfo("Error",  "No user logged in");
             return;
         }
+
+
+        /* TODO restyle Alerts, example below*/
+//        UIUtils.styledAlert(
+//                Alert.AlertType.CONFIRMATION,
+//                "Please fill out all required fields!",
+//                ButtonType.OK
+//        ).showAndWait();
 
         //Confirm with the user if the home should be deleted
         Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
