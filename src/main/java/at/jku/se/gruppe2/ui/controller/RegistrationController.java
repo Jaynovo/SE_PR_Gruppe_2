@@ -1,6 +1,5 @@
 package at.jku.se.gruppe2.ui.controller;
 
-import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.NavigationService;

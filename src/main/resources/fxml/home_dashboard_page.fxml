@@ -31,7 +31,7 @@
             <HBox spacing="10" alignment="CENTER_RIGHT">
                 <Button text="+ New Room" onAction="#handleCreateRoom"/>
                 <Separator orientation="VERTICAL"/>
-                <MenuButton text="User" fx:id="userMenu">
+                <MenuButton text="User">
                     <items>
                         <MenuItem text="Profile" onAction="#handleUserProfile"/>
                         <MenuItem text="Logout" onAction="#handleLogout"/>
@@ -45,15 +45,13 @@
 
     <center>
         <ScrollPane fitToWidth="true" pannable="true">
-            <content>
 
-                <FlowPane fx:id="cardsFlow" hgap="16" vgap="16">
-                    <padding>
-                        <Insets top="16" right="16" bottom="16" left="16"/>
-                    </padding>
-                </FlowPane>
+            <FlowPane fx:id="cardsFlow" hgap="16" vgap="16">
+                <padding>
+                    <Insets top="16" right="16" bottom="16" left="16"/>
+                </padding>
+            </FlowPane>
 
-            </content>
         </ScrollPane>
     </center>
 </BorderPane>
