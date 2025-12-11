@@ -139,6 +139,7 @@ public class HomeDashboardController {
     }
 
     public void handleUserProfile() {
+        Session.setPreviousPage("home_dashboard_page");
         navigate.goTo("profile_page");
     }
 

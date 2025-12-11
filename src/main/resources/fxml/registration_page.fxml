@@ -46,7 +46,12 @@
             <TextField fx:id="emailField" promptText="E-Mail:"/>
             <PasswordField fx:id="passwordField" promptText="Password:" />
             <PasswordField fx:id="confirmPasswordField" promptText="Confirm Password:" />
-            <Button fx:id="registrationButton" text="Register" onAction="#registrationButtonClicked"/>
+
+            <HBox alignment="TOP_CENTER"
+                  spacing="10">
+                <Button text="Return to Login" onAction="#handleToLogin"/>
+                <Button text="Register" onAction="#registrationButtonClicked"/>
+            </HBox>
 
         </VBox>
     </children>

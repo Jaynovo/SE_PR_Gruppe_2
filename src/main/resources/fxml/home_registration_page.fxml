@@ -13,7 +13,7 @@
             fx:controller="at.jku.se.gruppe2.ui.controller.HomeRegistrationController">
 
     <top>
-        <HBox alignment="TOP_LEFT"
+        <HBox
               spacing="10"
               styleClass="card">
 

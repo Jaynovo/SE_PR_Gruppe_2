@@ -5,6 +5,7 @@ import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.AddressRepository;
 import at.jku.se.gruppe2.persistence.HomeRepository;
 import at.jku.se.gruppe2.service.GeoCodingService;
+import at.jku.se.gruppe2.service.NavigationService;
 import at.jku.se.gruppe2.service.WeatherService;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.Session;
@@ -27,6 +28,7 @@ public class DashboardController implements Initializable {
     @FXML private Label temperatureLabel;
 
     private final HomeRepository homeRepo = new HomeRepository();
+    private final NavigationService navigate = new NavigationService();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -109,19 +111,11 @@ public class DashboardController implements Initializable {
 
     @FXML
     private void openHomeDetails(ActionEvent event) {
-        try{
-            MainApp.setRoot("home_dashboard_page");
-        } catch (Exception e){
-            throw new RuntimeException(e);
-        }
+        navigate.goTo("home_dashboard_page");
     }
     
     public void addHomeButtonClicked(ActionEvent actionEvent) {
-        try {
-            MainApp.setRoot("home_registration_page");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        navigate.goTo("home_registration_page");
     }
 
     public void deleteHomeButtonClicked(ActionEvent actionEvent) {
@@ -171,20 +165,13 @@ public class DashboardController implements Initializable {
     }
 
     public void handleUserProfile(ActionEvent actionEvent) {
-        try {
-            MainApp.setRoot("profile_page");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        Session.setPreviousPage("dashboard_page");
+        navigate.goTo("profile_page");
     }
 
     public void handleLogout(ActionEvent actionEvent) {
         showInfo("Logout", "You have been logged out.");
-        try {
-            MainApp.setRoot("login_page");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        navigate.goTo("login_page");
     }
 
     private void showInfo(String title, String message) {

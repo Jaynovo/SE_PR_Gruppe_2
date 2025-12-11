@@ -37,7 +37,7 @@ public class HomeRegistrationController {
     }
 
     @FXML
-    private void saveButtonClicked(ActionEvent event) {
+    private void saveButtonClicked() {
 
         String validationErrors = validateInputs();
 
@@ -129,7 +129,7 @@ public class HomeRegistrationController {
         }
 
 
-        return errors.length() == 0 ? null : errors.toString();
+        return errors.isEmpty() ? null : errors.toString();
 
 //        // If no errors it is valid
 //        if (errors.length() == 0) {
@@ -147,7 +147,7 @@ public class HomeRegistrationController {
     }
 
     @FXML
-    private void cancelButtonClicked(ActionEvent event) {
+    private void cancelButtonClicked() {
         Alert alert = UIUtils.styledAlert(
                 Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to cancel?",
