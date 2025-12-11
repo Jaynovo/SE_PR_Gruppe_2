@@ -11,4 +11,16 @@ public class DialogService {
         alert.setTitle(title);
         alert.showAndWait();
     }
+
+    public void info(String title, String message, ButtonType buttonType) {
+        Alert alert= UIUtils.styledAlert(Alert.AlertType.INFORMATION, message, buttonType);
+        alert.setTitle(title);
+        alert.showAndWait();
+    }
+
+    public void error(String title, String message, ButtonType buttonType) {
+        Alert alert= UIUtils.styledAlert(Alert.AlertType.INFORMATION, message, buttonType);
+        alert.setTitle(title);
+        alert.showAndWait();
+    }
 }

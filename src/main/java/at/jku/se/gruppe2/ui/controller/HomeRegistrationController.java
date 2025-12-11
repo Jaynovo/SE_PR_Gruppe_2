@@ -1,15 +1,14 @@
 package at.jku.se.gruppe2.ui.controller;
 
-import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-
 import java.util.Optional;
 
 public class HomeRegistrationController {
@@ -22,11 +21,10 @@ public class HomeRegistrationController {
     @FXML private TextField city;
     @FXML private ComboBox<String> countryBox;
 
-    @FXML private Button saveButton;
-    @FXML private Button cancelButton;
-
     private HomeRepository homeRepo = new HomeRepository();
-    AddressRepository addressRepo = new AddressRepository();
+    private final AddressRepository addressRepo = new AddressRepository();
+    private final NavigationService navigate = new NavigationService();
+    private final DialogService dialog = new DialogService();
 
     public void setHomeRepo(HomeRepository homeRepo) {
         this.homeRepo= homeRepo;
@@ -40,17 +38,18 @@ public class HomeRegistrationController {
 
     @FXML
     private void saveButtonClicked(ActionEvent event) {
+
+        String validationErrors = validateInputs();
+
+        //Validierung prüfen
+        if (validationErrors != null) {
+            dialog.error("Missing Fields", "Please fill out all required fields!\n\n" +
+                            "You are missing the following fields:\n" + validationErrors,
+                    ButtonType.OK);
+            return;
+        }
+
         try {
-            //Validierung prüfen
-            if (!validateInputs()) {
-                UIUtils.styledAlert(
-                        Alert.AlertType.ERROR,
-                        "Please fill out all required fields!",
-                        ButtonType.OK
-                ).showAndWait();
-                return;
-            }
-            ;
 
             //Location currently without implementation, needs to be changed
             Location location = new Location(
@@ -85,27 +84,16 @@ public class HomeRegistrationController {
             currentUser.setHome(newHome);
             userRepo.updateHome(currentUser, newHome);
 
+            dialog.info("Bestätigung", "Home has been created successfully!", ButtonType.OK);
+            navigate.goTo("dashboard_page");
 
-            Alert alert = UIUtils.styledAlert(
-                    Alert.AlertType.INFORMATION,
-                    "Home has been created successfully!",
-                    ButtonType.OK
-            );
-
-            Optional<ButtonType> result = alert.showAndWait();
-            if (result.isPresent() && result.get() == ButtonType.OK) {
-                goToHomeDashboard();
-            }
         } catch (Exception ex) {
             ex.printStackTrace();
-            Alert alert = UIUtils.styledAlert(
-                    Alert.AlertType.ERROR,
-                    "An unexpected error occurred: " + ex.getMessage(),
-                    ButtonType.OK);
+            dialog.info("Error", "An unexpected error occurred: " + ex.getMessage());
         }
     }
 
-    private boolean validateInputs() {
+    private String validateInputs() {
         StringBuilder errors = new StringBuilder();
 
         //Check for all possible errors
@@ -135,28 +123,31 @@ public class HomeRegistrationController {
             errors.append("- City is required.\n");
         }
 
-        if (countryBox.getSelectionModel().getSelectedItem().isBlank()) {
+        if (countryBox.getSelectionModel().getSelectedItem() == null ||
+                countryBox.getSelectionModel().getSelectedItem().isBlank()) {
             errors.append("- Country is required.\n");
         }
 
-        // If no errors it is valid
-        if (errors.length() == 0) {
-            return true;
-        }
 
-        // Show all errors in a single alert
-        UIUtils.styledAlert(
-                Alert.AlertType.ERROR,
-                "You are missing the following inputs:\n\n" + errors.toString(),
-                ButtonType.OK
-        ).showAndWait();
+        return errors.length() == 0 ? null : errors.toString();
 
-        return false;
+//        // If no errors it is valid
+//        if (errors.length() == 0) {
+//            return true;
+//        }
+//
+//        // Show all errors in a single alert
+//        UIUtils.styledAlert(
+//                Alert.AlertType.ERROR,
+//                "You are missing the following inputs:\n\n" + errors,
+//                ButtonType.OK
+//        ).showAndWait();
+//
+//        return false;
     }
 
     @FXML
     private void cancelButtonClicked(ActionEvent event) {
-
         Alert alert = UIUtils.styledAlert(
                 Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to cancel?",
@@ -167,23 +158,11 @@ public class HomeRegistrationController {
         Optional<ButtonType> result = alert.showAndWait();
 
         if (result.isPresent() && result.get() == ButtonType.YES) {
-            goToDashboard();
+            navigate.goTo("dashboard_page");
         }
     }
 
-    private void goToHomeDashboard() {
-        try {
-            MainApp.setRoot("home_dashboard_page");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void goToDashboard() {
-        try {
-            MainApp.setRoot("dashboard_page");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void handleDashboard() {
+        navigate.goTo("dashboard_page");
     }
 }
