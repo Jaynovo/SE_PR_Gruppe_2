@@ -6,7 +6,6 @@ import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class UIUtils {
     /** Creates an Alert that automatically uses the global app stylesheet. */

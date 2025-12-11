@@ -10,8 +10,11 @@
             fx:controller="at.jku.se.gruppe2.ui.controller.HomeDashboardController">
    <top>
        <ToolBar BorderPane.alignment="CENTER">
-           <Label text="Home Dashboard" styleClass="title"/>
+           <Button text="Dashboard" onAction="#handleDashboard"/>
+
+           <Label text="Home Dashboard" styleClass="title" BorderPane.alignment="TOP_CENTER"/>
            <Pane HBox.hgrow="ALWAYS"/>
+
            <Button text =" + New Room" onAction="#handleCreateRoom"/>
            <Separator orientation="VERTICAL"/>
            <MenuButton text="User" fx:id="userMenu">

@@ -3,6 +3,7 @@ package at.jku.se.gruppe2.ui.controller;
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.event.ActionEvent;
@@ -25,6 +26,9 @@ public class HomeDashboardController {
     private final RoomRepository roomRepo = new RoomRepository();
     private final DeviceRepository deviceRepo = new DeviceRepository();
 
+    private final NavigationService navigate = new NavigationService();
+    private final DialogService dialog = new DialogService();
+
     @FXML
     public void initialize() {
         int userId= Session.getCurrentUser().getId();
@@ -38,14 +42,6 @@ public class HomeDashboardController {
         home = homeOptional.get();
         loadRooms();
         renderCards();
-    }
-
-    private void redirectToHomeRegistration() {
-        try {
-            MainApp.setRoot("home_registration_page");
-        } catch (IOException e) {
-            throw new RuntimeException("Cannot load home registration page", e);
-        }
     }
 
     private void loadRooms() {
@@ -136,26 +132,23 @@ public class HomeDashboardController {
     }
 
 
-    public void handleUserProfile(ActionEvent actionEvent) {
-        try {
-            MainApp.setRoot("profile_page");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    //All navigation methodes below
+
+    private void redirectToHomeRegistration() {
+        navigate.goTo("home_registration_page");
     }
 
-    public void handleLogout(ActionEvent actionEvent) {
-        showInfo("Logout", "You have been logged out.");
-        try {
-            MainApp.setRoot("login_page");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public void handleUserProfile() {
+        navigate.goTo("profile_page");
     }
 
-    private void showInfo(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.CLOSE);
-        alert.setTitle(title);
-        alert.showAndWait();
+    public void handleDashboard() {
+        navigate.goTo("dashboard_page");
     }
+
+    public void handleLogout() {
+        dialog.info("Logout", "You have been logged out.");
+        navigate.goTo("login_page");
+    }
+
 }
