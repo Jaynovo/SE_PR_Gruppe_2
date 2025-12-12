@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
+import at.jku.se.gruppe2.service.NavigationService;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import at.jku.se.gruppe2.model.User;
@@ -18,14 +19,11 @@ public class LoginController {
     @FXML private Label errorLabel;
 
     private final UserRepository userRepository = new UserRepository();
+    private final NavigationService navigate = new NavigationService();
 
     @FXML
     private void registerButtonClicked() {
-        try {
-            MainApp.setRoot("registration_page");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        navigate.goTo("registration_page");
     }
     @FXML
     private void handleLoginButton() {
