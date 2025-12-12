@@ -27,6 +27,3 @@ Story Points:
 Based on Sizes, provide a clearer estimate of hours
 
 Database access is objectoriented; Pass along objects!
-
-
-
