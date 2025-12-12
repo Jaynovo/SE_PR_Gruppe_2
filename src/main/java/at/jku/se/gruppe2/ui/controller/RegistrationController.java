@@ -1,8 +1,8 @@
 package at.jku.se.gruppe2.ui.controller;
 
-import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.service.NavigationService;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.PasswordUtils;
 import javafx.fxml.FXML;
@@ -12,23 +12,33 @@ import java.util.Optional;
 
 public class RegistrationController {
 
-    @FXML    private TextField firstNameField;
-    @FXML    private TextField lastNameField;
-    @FXML    private TextField streetNameField;
-    @FXML    private TextField streetNumberField;
-    @FXML    private TextField cityField;
-    @FXML    private TextField postalCodeField;
-    @FXML    private ComboBox<String> countryBox;
-    @FXML    private TextField emailField;
-    @FXML    private PasswordField passwordField;
-    @FXML    private PasswordField confirmPasswordField;
-    @FXML    private Button registrationButton;
+    @FXML
+    private TextField firstNameField;
+    @FXML
+    private TextField lastNameField;
+    @FXML
+    private TextField streetNameField;
+    @FXML
+    private TextField streetNumberField;
+    @FXML
+    private TextField cityField;
+    @FXML
+    private TextField postalCodeField;
+    @FXML
+    private ComboBox<String> countryBox;
+    @FXML
+    private TextField emailField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private PasswordField confirmPasswordField;
 
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
+    private final NavigationService navigate = new NavigationService();
 
     @FXML
-    public void initialize (){
+    public void initialize() {
         UIUtils.setupCountryComboBox(countryBox);
     }
 
@@ -52,13 +62,13 @@ public class RegistrationController {
         //Addresse bereitgestellt? Wenn ja, dann address Objekt erstellen
         boolean addressProvided =
                 !streetName.isEmpty()
-                || !streetNumber.isEmpty()
-                || !city.isEmpty()
-                || !postalCode.isEmpty()
-                || (country !=  null && !country.isEmpty());
+                        || !streetNumber.isEmpty()
+                        || !city.isEmpty()
+                        || !postalCode.isEmpty()
+                        || (country != null && !country.isEmpty());
 
         //Basic Validierung
-        if (!validateInput(firstName,lastName,email,password,confirmPassword,streetName,streetNumber,city,postalCode,country)) {
+        if (!validateInput(firstName, lastName, email, password, confirmPassword, streetName, streetNumber, city, postalCode, country)) {
             return;
         }
         //Check ob Email-vergeben
@@ -69,7 +79,7 @@ public class RegistrationController {
 
         try {
             //Address-Objekt erstellen
-            if(addressProvided) {
+            if (addressProvided) {
                 Address address = new Address(
                         streetNameField.getText(),
                         streetNumberField.getText(),
@@ -99,7 +109,7 @@ public class RegistrationController {
 
                 Optional<ButtonType> result = successAlert.showAndWait();
                 if (result.isPresent() && result.get() == ButtonType.OK) {
-                    MainApp.setRoot("login_page");
+                    navigate.goTo("login_page");
                 }
             } else {
                 showAlert(Alert.AlertType.ERROR, "Registration failed", "Could not save user.");
@@ -111,37 +121,41 @@ public class RegistrationController {
     }
 
 
-        //Validierung
-        private boolean validateInput (String firstName, String lastName, String email, String password,
-                                       String confirmPassword, String streetName, String streetNumber,
-                                       String city, String postalCode, String country) {
+    //Validierung
+    private boolean validateInput(String firstName, String lastName, String email, String password,
+                                  String confirmPassword, String streetName, String streetNumber,
+                                  String city, String postalCode, String country) {
 
-            if (firstName.isEmpty() || lastName.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Registration failed", "First name or last name is empty.");
-                return false;
-            }
-            if (email.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Registration failed", "Email is empty.");
-                return false;
-            }
-            if (!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
-                showAlert(Alert.AlertType.ERROR, "Invalid Email", "Please enter a valid email address.");
-                return false;
-            }
-            if(password.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Registration failed", "Password is empty.");
-                return false;
-            }
-            if (!password.equals(confirmPassword)) {
-                showAlert(Alert.AlertType.ERROR, "Passwords dont match", "Password and confirm Password must be the same");
-                return false;
-            }
-            return true;
+        if (firstName.isEmpty() || lastName.isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Registration failed", "First name or last name is empty.");
+            return false;
         }
-
-        private void showAlert (Alert.AlertType type, String title, String message){
-            Alert alert = new Alert(type, message, ButtonType.OK);
-            alert.setTitle(title);
-            alert.showAndWait();
+        if (email.isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Registration failed", "Email is empty.");
+            return false;
         }
+        if (!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+            showAlert(Alert.AlertType.ERROR, "Invalid Email", "Please enter a valid email address.");
+            return false;
+        }
+        if (password.isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Registration failed", "Password is empty.");
+            return false;
+        }
+        if (!password.equals(confirmPassword)) {
+            showAlert(Alert.AlertType.ERROR, "Passwords dont match", "Password and confirm Password must be the same");
+            return false;
+        }
+        return true;
     }
+
+    public void handleToLogin () {
+        navigate.goTo("login_page");
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type, message, ButtonType.OK);
+        alert.setTitle(title);
+        alert.showAndWait();
+    }
+}

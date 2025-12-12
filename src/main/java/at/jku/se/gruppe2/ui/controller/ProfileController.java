@@ -3,6 +3,7 @@ package at.jku.se.gruppe2.ui.controller;
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.service.NavigationService;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.*;
 
@@ -32,6 +33,7 @@ public class ProfileController {
 
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
+    private final NavigationService navigate = new NavigationService();
 
 
     @FXML
@@ -170,7 +172,8 @@ public class ProfileController {
             userRepository.updateUserInDatabase(current);
             showAlert(Alert.AlertType.INFORMATION, "Success", "Profile has been updated and saved.");
 
-            MainApp.setRoot("home_dashboard_page");
+            goTo();
+
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Could not save profile");
@@ -179,11 +182,7 @@ public class ProfileController {
 
     @FXML
     private void onCancel() {
-        try {
-            MainApp.setRoot("home_dashboard_page");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        goTo();
     }
 
     @FXML
@@ -253,5 +252,20 @@ public class ProfileController {
         Alert alert = new Alert(type, message, ButtonType.OK);
         alert.setTitle(title);
         alert.showAndWait();
+    }
+
+    private void goTo(){
+        try {
+            String previous = Session.getPreviousPage();
+
+            if (previous != null) {
+                navigate.goTo(previous);
+            } else {
+                navigate.goTo("dashboard_page"); // fallback
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

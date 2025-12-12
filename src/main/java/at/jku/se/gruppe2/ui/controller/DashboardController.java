@@ -1,12 +1,11 @@
 package at.jku.se.gruppe2.ui.controller;
 
-import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.AddressRepository;
 import at.jku.se.gruppe2.persistence.HomeRepository;
 import at.jku.se.gruppe2.service.GeoCodingService;
+import at.jku.se.gruppe2.service.NavigationService;
 import at.jku.se.gruppe2.service.WeatherService;
-import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -27,6 +26,7 @@ public class DashboardController implements Initializable {
     @FXML private Label temperatureLabel;
 
     private final HomeRepository homeRepo = new HomeRepository();
+    private final NavigationService navigate = new NavigationService();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -108,23 +108,15 @@ public class DashboardController implements Initializable {
     }
 
     @FXML
-    private void openHomeDetails(ActionEvent event) {
-        try{
-            MainApp.setRoot("home_dashboard_page");
-        } catch (Exception e){
-            throw new RuntimeException(e);
-        }
+    private void openHomeDetails() {
+        navigate.goTo("home_dashboard_page");
     }
     
-    public void addHomeButtonClicked(ActionEvent actionEvent) {
-        try {
-            MainApp.setRoot("home_registration_page");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+    public void addHomeButtonClicked() {
+        navigate.goTo("home_registration_page");
     }
 
-    public void deleteHomeButtonClicked(ActionEvent actionEvent) {
+    public void deleteHomeButtonClicked() {
         User user = Session.getCurrentUser();
         if (user == null) {
             showInfo("Error",  "No user logged in");
@@ -170,21 +162,14 @@ public class DashboardController implements Initializable {
         }
     }
 
-    public void handleUserProfile(ActionEvent actionEvent) {
-        try {
-            MainApp.setRoot("profile_page");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public void handleUserProfile() {
+        Session.setPreviousPage("dashboard_page");
+        navigate.goTo("profile_page");
     }
 
-    public void handleLogout(ActionEvent actionEvent) {
+    public void handleLogout() {
         showInfo("Logout", "You have been logged out.");
-        try {
-            MainApp.setRoot("login_page");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        navigate.goTo("login_page");
     }
 
     private void showInfo(String title, String message) {
