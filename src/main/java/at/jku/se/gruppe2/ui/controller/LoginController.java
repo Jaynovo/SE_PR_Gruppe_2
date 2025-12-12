@@ -4,6 +4,7 @@ import at.jku.se.gruppe2.app.MainApp;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import at.jku.se.gruppe2.model.User;
+import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.persistence.UserRepository;
 import at.jku.se.gruppe2.utils.PasswordUtils;
 import at.jku.se.gruppe2.utils.Session;
@@ -18,6 +19,7 @@ public class LoginController {
     @FXML private Label errorLabel;
 
     private final UserRepository userRepository = new UserRepository();
+    private final UserBuildingService UserBuildingService = new  UserBuildingService();
 
     @FXML
     private void registerButtonClicked() {
@@ -50,7 +52,8 @@ public class LoginController {
             return;
         }
 
-        Session.setCurrentUser(user.orElse(null)); // User speichern für Dashboard
+        Session.setCurrentUser(UserBuildingService.buildUserByEmail(email));
+        //Session.setCurrentUser(user.orElse(null)); // User speichern für Dashboard
 
         try {
             // TESTCODE >>>

@@ -43,6 +43,14 @@ public class Home {
         this.floors = floors;
     }
 
+    public List<Room> getRooms() {
+        return rooms;
+    }
+
+    public void setRooms(List<Room> rooms) {
+        this.rooms = rooms;
+    }
+
     public Address getAddress() {
         return address;
 
