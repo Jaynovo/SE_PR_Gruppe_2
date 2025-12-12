@@ -28,6 +28,13 @@
     -fx-font-weight: 700;
 }
 
+.room-card {
+    -fx-background-color: -fx-card;
+    -fx-background-radius: 12;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 18, 0.15, 0, 6);
+}
+
 /* Badges */
 .badge {
     -fx-background-radius: 999;

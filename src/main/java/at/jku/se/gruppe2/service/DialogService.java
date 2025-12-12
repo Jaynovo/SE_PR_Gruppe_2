@@ -23,4 +23,8 @@ public class DialogService {
         alert.setTitle(title);
         alert.showAndWait();
     }
+
+    public void chooseDevice(){
+
+    }
 }

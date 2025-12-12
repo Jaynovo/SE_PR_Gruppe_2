@@ -102,13 +102,16 @@ public class HomeDashboardController {
         metrics.getChildren().addAll(
                 metricPill("Area", String.valueOf(room.getArea()))
         );
+        
+        Button manageRoom = new Button("Manage Room");
+        manageRoom.setOnAction(e -> handleManageRoom(room));
 
-        card.getChildren().addAll(topBar, metrics);
+
+        card.getChildren().addAll(topBar, metrics, manageRoom);
         return card;
     }
 
     /* TODO create Badges for actuators and toggle device methods */
-
 
 
     public void handleCreateRoom(ActionEvent actionEvent) {
@@ -129,7 +132,6 @@ public class HomeDashboardController {
         });
     }
 
-
     //All navigation methodes below
 
     private void redirectToHomeRegistration() {
@@ -148,6 +150,11 @@ public class HomeDashboardController {
     public void handleLogout() {
         dialog.info("Logout", "You have been logged out.");
         navigate.goTo("login_page");
+    }
+
+    public void handleManageRoom(Room room) {
+        Session.setSelectedRoom(room);
+        navigate.goTo("room_dashboard_page");
     }
 
 }

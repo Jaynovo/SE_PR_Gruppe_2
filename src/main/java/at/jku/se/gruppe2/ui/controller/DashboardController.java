@@ -3,17 +3,20 @@ package at.jku.se.gruppe2.ui.controller;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.AddressRepository;
 import at.jku.se.gruppe2.persistence.HomeRepository;
+import at.jku.se.gruppe2.persistence.RoomRepository;
+import at.jku.se.gruppe2.service.DialogService;
 import at.jku.se.gruppe2.service.GeoCodingService;
 import at.jku.se.gruppe2.service.NavigationService;
 import at.jku.se.gruppe2.service.WeatherService;
 import at.jku.se.gruppe2.utils.Session;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.*;
 
 import java.net.URL;
+import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class DashboardController implements Initializable {
@@ -23,10 +26,17 @@ public class DashboardController implements Initializable {
     @FXML private Label homeAddress;
     @FXML private Label homeFloors;
 
+    @FXML private FlowPane cardsFlow;
+    private Home home;
+    private Optional<List<Room>> rooms;
+
     @FXML private Label temperatureLabel;
 
     private final HomeRepository homeRepo = new HomeRepository();
+    private final RoomRepository roomRepo = new RoomRepository();
+
     private final NavigationService navigate = new NavigationService();
+    private final DialogService dialog = new DialogService();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -48,7 +58,7 @@ public class DashboardController implements Initializable {
 
         //Add the home info
         homeName.setText(home.getHomeLabel());
-        homeFloors.setText("The floor number is "+ home.getFloors());
+        homeFloors.setText("The number of floors is "+ home.getFloors());
 
 
         Address address = home.getAddress();
@@ -78,13 +88,6 @@ public class DashboardController implements Initializable {
                         + " and LON= " + address.getLongitude());
         }
 
-//        Wurde eigentlich mit den obigen beiden Funktionen ersetzt und verbessert
-//        Nur geocode, wenn noch keine Koordinaten vorhanden sind
-//        if ((address.getLatitude() == 0.0 && address.getLongitude() == 0.0) ||
-//                (Double.isNaN(address.getLatitude()) || Double.isNaN(address.getLongitude()))) {
-//
-//            GeoCodingService.enrichWithCoordinates(address);
-//        }
 
         //Retrieve weather from service
         double temp = WeatherService.getCurrentTemperature(
@@ -98,13 +101,34 @@ public class DashboardController implements Initializable {
             temperatureLabel.setText(String.format("Current temperature: %.1f °C", temp));
         }
 
-//        Redundant and misleading code
+        this.home = home;
+        loadRooms();
+        renderCards();
 
-//        System.out.println("LAT = " + address.getLatitude() + ", LON = " + address.getLongitude());
-//        System.out.println("Before geocoding: LAT=" + address.getLatitude() + ", LON=" + address.getLongitude());
-//        GeoCodingService.enrichWithCoordinates(address);
-//        System.out.println("After geocoding:  LAT=" + address.getLatitude() + ", LON=" + address.getLongitude());
+    }
 
+    private void loadRooms() {
+        rooms= roomRepo.getAllRoomsByHome(home);
+    }
+
+    private void renderCards() {
+        cardsFlow.getChildren().clear();
+
+        if (rooms.isEmpty()) return;
+
+        for (Room room : rooms.get()) {
+
+            VBox roomCard = new VBox();
+            roomCard.getStyleClass().add("room-card");
+            roomCard.setSpacing(5);
+            roomCard.setPrefWidth(150);
+
+            Label name= new Label(room.getRoomLabel());
+
+            roomCard.getChildren().addAll(name);
+
+            cardsFlow.getChildren().add(roomCard);
+        }
     }
 
     @FXML
@@ -113,6 +137,13 @@ public class DashboardController implements Initializable {
     }
     
     public void addHomeButtonClicked() {
+        if (home.getId() > 0) {
+           dialog.info("Information","Home creation not possible!\n\n " +
+                   "You are not allowed more than one home at the same time.\n " +
+                   "Please first delete your home if you want to add a new home.",
+                   ButtonType.OK);
+           return;
+        }
         navigate.goTo("home_registration_page");
     }
 

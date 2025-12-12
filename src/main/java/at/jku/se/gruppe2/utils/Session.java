@@ -1,11 +1,12 @@
 package at.jku.se.gruppe2.utils;
 
-import at.jku.se.gruppe2.model.User;
+import at.jku.se.gruppe2.model.*;
 
 public class Session {
 
     private static User currentUser;
     private static String previousPage;
+    private static Room selectedRoom;
 
     public static User getCurrentUser() {
         return currentUser;
@@ -25,5 +26,13 @@ public class Session {
 
     public static void clear() {
         currentUser = null;
+    }
+
+    public static void setSelectedRoom(Room room) {
+        selectedRoom= room;
+    }
+
+    public static Room getSelectedRoom() {
+        return selectedRoom;
     }
 }

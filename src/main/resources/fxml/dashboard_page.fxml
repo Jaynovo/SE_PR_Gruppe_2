@@ -10,16 +10,16 @@
             fx:controller="at.jku.se.gruppe2.ui.controller.DashboardController">
 
     <top>
-            <ToolBar BorderPane.alignment="CENTER">
-                <Label text="Smart Home Dashboard" styleClass="title"/>
-                <Pane HBox.hgrow="ALWAYS"/>
-                <MenuButton text="Manage User" fx:id="userMenu">
-                    <items>
-                        <MenuItem text="Profile" onAction="#handleUserProfile"/>
-                        <MenuItem text="Logout" onAction="#handleLogout"/>
-                    </items>
-                </MenuButton>
-            </ToolBar>
+        <ToolBar BorderPane.alignment="CENTER">
+            <Label text="Smart Home Dashboard" styleClass="title"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <MenuButton text="Manage User">
+                <items>
+                    <MenuItem text="Profile" onAction="#handleUserProfile"/>
+                    <MenuItem text="Logout" onAction="#handleLogout"/>
+                </items>
+            </MenuButton>
+        </ToolBar>
     </top>
 
     <center>
@@ -40,14 +40,28 @@
                         <Label text="Home Name: " />
                         <Label fx:id="homeName" text="Home Name: "/>
                         <Label fx:id="homeAddress" text="Address: "/>
-                        <Label fx:id="homeFloors" text="Floor number of your home: " />
+                        <Label fx:id="homeFloors" text="Number of floors of your home: " />
 
                     </VBox>
                 </left>
 
                 <right>
-                    <Button fx:id="openHome" text="Open Home"  onAction="#openHomeDetails"/>
+                    <Button text="Open Home"  onAction="#openHomeDetails"/>
                 </right>
+
+<!--                Here a list of the rooms should be displayed-->
+                <bottom>
+                    <ScrollPane fitToWidth="true" pannable="true">
+
+                        <FlowPane fx:id="cardsFlow" hgap="16" vgap="16">
+                            <padding>
+                                <Insets top="16" right="16" bottom="16" left="16"/>
+                            </padding>
+
+                        </FlowPane>
+
+                    </ScrollPane>
+                </bottom>
 
             </BorderPane>
 
@@ -56,8 +70,8 @@
 
     <bottom>
         <FlowPane alignment="CENTER" >
-            <Button fx:id="addHomeButton" text="Add a new home" onAction="#addHomeButtonClicked"/>
-            <Button fx:id="deleteHomeButton" text="Delete a home" onAction="#deleteHomeButtonClicked" />
+            <Button text="Add a new home" onAction="#addHomeButtonClicked"/>
+            <Button text="Delete a home" onAction="#deleteHomeButtonClicked" />
         </FlowPane>
     </bottom>
 </BorderPane>
