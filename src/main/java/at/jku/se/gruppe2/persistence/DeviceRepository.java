@@ -7,9 +7,7 @@ import java.util.*;
 
 /* TODO CHANGE: currently generated class to allow adding rooms*/
 public class DeviceRepository {
-    /**
-     * Fetch all devices belonging to a given room.
-     */
+
     public List<Device> getDevicesByRoomId(int roomId) {
         String sql = """
                 SELECT id, label
@@ -27,9 +25,6 @@ public class DeviceRepository {
         return devicesOpt.orElse(Collections.emptyList());
     }
 
-    /**
-     * Insert a new device for a room.
-     */
     public int createDevice(Device device, Room room) {
         String sql = """
                 INSERT INTO device (room_id, label)
@@ -52,9 +47,7 @@ public class DeviceRepository {
         return id.orElse(0);
     }
 
-    /**
-     * Update the device label.
-     */
+
     public int updateDevice(Device device) {
         String sql = """
                 UPDATE device
@@ -71,9 +64,6 @@ public class DeviceRepository {
         );
     }
 
-    /**
-     * Delete device by ID.
-     */
     public int deleteDevice(int deviceId) {
         String sql = "DELETE FROM device WHERE id = ?";
 
@@ -83,11 +73,9 @@ public class DeviceRepository {
         );
     }
 
-    /**
-     * Maps a database row into a Device object.
-     */
-    /*TODO Implement with Generics*/
     private Device mapDevice(ResultSet rs) throws SQLException {
+        String type = rs.getString("");
+
         Device device = new Device() {}; //THIS!!!
         device.setId(rs.getInt("id"));
         device.setLabel(rs.getString("label"));

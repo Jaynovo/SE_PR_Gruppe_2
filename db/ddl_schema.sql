@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS location_information CASCADE;
-DROP TABLE IF EXISTS  address_information CASCADE;
+DROP TABLE IF EXISTS address_information CASCADE;
+DROP TYPE IF EXISTS device_category CASCADE;
 DROP TABLE IF EXISTS home, user_information, home_user, room, device, sensor_type, sensor, actuator_type, actuator, sensor_reading, actuator_state CASCADE;
 
 create table address_information (
@@ -54,6 +55,8 @@ create table room (
     area numeric(5,2),
     UNIQUE(home_info, label)                               -- Each label is unique within each Home
 );
+
+create type device_category as enum ('SENSOR', 'ACTUATOR');
 
 create table device (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

@@ -35,6 +35,10 @@ public class User {
         this.password = password;
     }
 
+    public boolean userHasHome() {
+        return (home != null);
+    }
+
     //Getter und Setter
     public int getId() {
         return id;
