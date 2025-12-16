@@ -16,33 +16,33 @@ INSERT INTO room(label, home_info, area)
 VALUES ('Bedroom', 1, 32);
 
 
--- Generic Types of Thermometer and Sensor. Expand later with other sensors
-INSERT INTO sensor_type(label, unit)
-VALUES  ('Thermometer', '°C'),
-        ('Humidity Sensor', '%');
+INSERT INTO device_type (category, label, unit)
+VALUES  ('SENSOR',   'Thermometer',      '°C'),
+        ('SENSOR',   'Humidity Sensor',  '%'),
+        ('ACTUATOR', 'Light Switch',     NULL),
+        ('ACTUATOR', 'Heating',          '%');
 
--- Generic actuators, expand later
-INSERT INTO actuator_type(label, unit)
-VALUES ('Light Switch', NULL),
-       ('Heating', '%');
 
 -- Living Room devices
 INSERT INTO device(room_id, label)
 VALUES (
            (SELECT id
             FROM room
-            WHERE label = 'Living Room' AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
+            WHERE label = 'Living Room'
+              AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
            'Living Room Thermometer'
        ),
        (
            (SELECT id
             FROM room
-            WHERE label = 'Living Room' AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
+            WHERE label = 'Living Room'
+              AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
            'Living Room Humidity Sensor'
        ),
        (
            (SELECT id FROM room
-            WHERE label = 'Living Room' AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
+            WHERE label = 'Living Room'
+              AND home_info = (SELECT id FROM home WHERE label = 'Mustermanns home')),
            'Living Room Ceiling Light'
        ),
        (
@@ -68,6 +68,7 @@ VALUES
         'Bedroom Ceiling Light'
     );
 
+
 -- Living Room sensors
 INSERT INTO sensor (device_id, sensor_type_id)
 VALUES
@@ -77,7 +78,9 @@ VALUES
                   JOIN room r ON d.room_id = r.id
          WHERE d.label = 'Living Room Thermometer'
            AND r.label = 'Living Room'),
-        (SELECT id FROM sensor_type WHERE label = 'Thermometer')
+        (SELECT id FROM device_type
+         WHERE label = 'Thermometer'
+           AND category = 'SENSOR')
     ),
     (
         (SELECT d.id
@@ -85,7 +88,9 @@ VALUES
                   JOIN room r ON d.room_id = r.id
          WHERE d.label = 'Living Room Humidity Sensor'
            AND r.label = 'Living Room'),
-        (SELECT id FROM sensor_type WHERE label = 'Humidity Sensor')
+        (SELECT id FROM device_type
+         WHERE label = 'Humidity Sensor'
+           AND category = 'SENSOR')
     );
 
 -- Bedroom sensors
@@ -97,34 +102,43 @@ VALUES
                   JOIN room r ON d.room_id = r.id
          WHERE d.label = 'Bedroom Thermometer'
            AND r.label = 'Bedroom'),
-        (SELECT id FROM sensor_type WHERE label = 'Thermometer')
+        (SELECT id FROM device_type
+         WHERE label = 'Thermometer'
+           AND category = 'SENSOR')
     );
+
 
 -- Living Room actuators
 -- Light Switch
 INSERT INTO actuator (device_id, actuator_type_id)
-SELECT d.id, at.id
+SELECT d.id, dt.id
 FROM device d
          JOIN room r ON d.room_id = r.id
-         JOIN actuator_type at ON at.label = 'Light Switch'
+         JOIN device_type dt
+              ON dt.label = 'Light Switch'
+                  AND dt.category = 'ACTUATOR'
 WHERE d.label = 'Living Room Ceiling Light'
   AND r.label = 'Living Room';
 
 -- Heating
 INSERT INTO actuator (device_id, actuator_type_id)
-SELECT d.id, at.id
+SELECT d.id, dt.id
 FROM device d
          JOIN room r ON d.room_id = r.id
-         JOIN actuator_type at ON at.label = 'Heating'
+         JOIN device_type dt
+              ON dt.label = 'Heating'
+                  AND dt.category = 'ACTUATOR'
 WHERE d.label = 'Living Room Radiator Valve'
   AND r.label = 'Living Room';
 
 -- Bedroom actuators
 INSERT INTO actuator (device_id, actuator_type_id)
-SELECT d.id, at.id
+SELECT d.id, dt.id
 FROM device d
          JOIN room r ON d.room_id = r.id
-         JOIN actuator_type at ON at.label = 'Light Switch'
+         JOIN device_type dt
+              ON dt.label = 'Light Switch'
+                  AND dt.category = 'ACTUATOR'
 WHERE d.label = 'Bedroom Ceiling Light'
   AND r.label = 'Bedroom';
 

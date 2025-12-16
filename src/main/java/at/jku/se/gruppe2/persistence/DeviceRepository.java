@@ -10,10 +10,16 @@ public class DeviceRepository {
 
     public List<Device> getDevicesByRoomId(int roomId) {
         String sql = """
-                SELECT id, label
-                FROM device
-                WHERE room_id = ?
-                ORDER BY id;
+                SELECT  d.id,
+                        d.label,
+                        dt.label AS type_label,
+                        dt.category AS type_category
+                FROM device d
+                LEFT JOIN sensor s ON s.device_id = d.id
+                LEFT JOIN actuator a ON a.device_id = d.id
+                LEFT JOIN device_type dt ON dt.id = s.sensor_type_id OR dt.id = a.actuator_type_id
+                WHERE d.room_id = ?
+                ORDER BY d.id;
                 """;
 
         Optional<List<Device>> devicesOpt = JdbcTemplate.queryForMultipleObjects(
@@ -74,11 +80,41 @@ public class DeviceRepository {
     }
 
     private Device mapDevice(ResultSet rs) throws SQLException {
-        String type = rs.getString("");
+        int id =  rs.getInt("id");
+        String label =  rs.getString("label");
 
-        Device device = new Device() {}; //THIS!!!
-        device.setId(rs.getInt("id"));
-        device.setLabel(rs.getString("label"));
+        String typeLabel = rs.getString("type_label");
+        String typeCategory = rs.getString("type_category");
+
+        Device device;
+
+        if (typeLabel == null) {
+            // No type assigned, empty device
+            // hacky solution but since we control the input...
+            device = new Device() {};
+        } else if (typeCategory.equals("SENSOR")) {
+            device = createSensor(typeLabel);
+        } else if (typeCategory.equals("ACTUATOR")) {
+            device = createActuator(typeLabel);
+        } else {
+            device = new Device() {}; //Don't understand why this is necessary but ok
+        }
+        device.setId(id);
+        device.setLabel(label);
         return device;
+    }
+
+    //TODO: Create more new classes to add here
+    private Sensor createSensor(String typeLabel) {
+        return switch (typeLabel) {
+            case "Thermometer" -> new Thermometer();
+            default -> new Sensor() {}; // fallback
+        };
+    }
+
+    private Actuator createActuator(String typeLabel) {
+        return switch (typeLabel) {
+            default -> new Actuator() {}; //fallback
+        };
     }
 }

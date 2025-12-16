@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS location_information CASCADE;
 DROP TABLE IF EXISTS address_information CASCADE;
 DROP TYPE IF EXISTS device_category CASCADE;
 DROP TABLE IF EXISTS home, user_information, home_user, room, device, sensor_type, sensor, actuator_type, actuator, sensor_reading, actuator_state CASCADE;
+DROP TABLE IF EXISTS device_type CASCADE;
 
 create table address_information (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -58,37 +59,30 @@ create table room (
 
 create type device_category as enum ('SENSOR', 'ACTUATOR');
 
+create table device_type (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    category device_category NOT NULL,
+    label VARCHAR(50) NOT NULL,
+    unit VARCHAR(50),
+    UNIQUE (category, label)
+);
+
 create table device (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     room_id INTEGER NOT NULL REFERENCES room(id) ON DELETE CASCADE,
     label VARCHAR(100)
 );
 
-create table sensor_type (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    label VARCHAR(50) UNIQUE NOT NULL, -- "Thermometer", "Humidity Sensor", "Light sensor", etc.
-    unit VARCHAR(50),
-    min_value NUMERIC(6,3) DEFAULT 0,
-    max_value NUMERIC(6,3) DEFAULT 0
-);
-
 create table sensor
 (
     device_id      INTEGER PRIMARY KEY REFERENCES device (id) ON DELETE CASCADE,
-    sensor_type_id INTEGER NOT NULL REFERENCES sensor_type (id)
-);
-
-create table actuator_type
-(
-    id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    label VARCHAR(50) UNIQUE NOT NULL,
-    unit VARCHAR(20)
+    sensor_type_id INTEGER NOT NULL REFERENCES device_type (id)
 );
 
 create table actuator
 (
     device_id        INTEGER PRIMARY KEY REFERENCES device (id) ON DELETE CASCADE,
-    actuator_type_id INTEGER NOT NULL REFERENCES actuator_type (id)
+    actuator_type_id INTEGER NOT NULL REFERENCES device_type (id)
 );
 
 create table sensor_reading
@@ -104,5 +98,5 @@ create table actuator_state
     id          BIGSERIAL PRIMARY KEY,
     actuator_id INTEGER REFERENCES actuator (device_id) ON DELETE CASCADE,
     time        TIMESTAMP NOT NULL DEFAULT now(),
-    state       jsonb
+    state       VARCHAR(50)
 );
