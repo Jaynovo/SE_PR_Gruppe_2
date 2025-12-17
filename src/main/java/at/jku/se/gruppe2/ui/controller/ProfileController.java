@@ -3,6 +3,7 @@ package at.jku.se.gruppe2.ui.controller;
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.service.GeoCodingService;
 import at.jku.se.gruppe2.service.NavigationService;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.*;
@@ -155,6 +156,9 @@ public class ProfileController {
                 address.setCity(city);
                 address.setPostalCode(postalCode);
                 address.setCountry(country);
+                address.setLatitude(Double.NaN);
+                address.setLongitude(Double.NaN);
+                GeoCodingService.enrichWithCoordinates(address);
                 addressRepository.updateAddressInDatabase(address);
 
             } else {
@@ -163,10 +167,9 @@ public class ProfileController {
                         streetNumber,
                         postalCode,
                         city,
-                        country,
-                        0.0,
-                        0.0
+                        country
                 );
+                GeoCodingService.enrichWithCoordinates(address);
                 addressRepository.createAddressInDatabase(address);
             }
             userRepository.updateUserInDatabase(current);

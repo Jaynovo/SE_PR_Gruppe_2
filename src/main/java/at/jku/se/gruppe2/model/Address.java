@@ -35,6 +35,16 @@ public class Address {
         this.latitude = latitude;
     }
 
+    public Address(String street, String houseNumber, String postalCode, String city, String country) {
+        this.street = street;
+        this.houseNumber = houseNumber;
+        this.postalCode = postalCode;
+        this.city = city;
+        this.country = country;
+        this.longitude = Double.NaN;
+        this.latitude = Double.NaN;
+    }
+
     //Getter und Setter
     public String getStreet() {
         return street;
@@ -75,13 +85,13 @@ public class Address {
         this.id = id;
     }
 
-    public double getLongitude() {
+    public Double getLongitude() {
         return longitude;
     }
     public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
-    public double getLatitude() {
+    public Double getLatitude() {
         return latitude;
     }
     public void setLatitude(double latitude) {

@@ -11,18 +11,10 @@ create table address_information (
     post_code VARCHAR(15),
     city VARCHAR(200),
     country VARCHAR(50),
-    longitude REAL,
-    latitude REAL
+    longitude DOUBLE PRECISION,
+    latitude DOUBLE PRECISION
 );
 
-/* honestly, unnecessary. Could be used if we stumble on issues with address-related look-ups
-   Not deleting because the wrapper could be important.
-   To be used in user_information as a field
-create table addresses (
-    id SERIAL PRIMARY KEY,
-    info address_information NOT NULL
-);
-*/
 create table home
 (
     id                  INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -90,7 +82,7 @@ create table sensor_reading
     id        BIGSERIAL PRIMARY KEY,
     sensor_id INTEGER REFERENCES sensor (device_id) ON DELETE CASCADE,
     time      TIMESTAMP NOT NULL DEFAULT now(),
-    value     REAL
+    value     DOUBLE PRECISION
 );
 
 create table actuator_state

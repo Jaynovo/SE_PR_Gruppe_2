@@ -1,5 +1,5 @@
-INSERT INTO address_information(street, house_nr, post_code, city, country)
-VALUES ('Stephansplatz', '3', '1010', 'Vienna', 'Austria');
+INSERT INTO address_information(street, house_nr, post_code, city, country, longitude, latitude)
+VALUES ('Stephansplatz', '3', '1010', 'Vienna', 'Austria', 16.373401, 48.2082);
 
 INSERT INTO home(floors, label, address_information)
 VALUES (3, 'Mustermanns home', 1);
