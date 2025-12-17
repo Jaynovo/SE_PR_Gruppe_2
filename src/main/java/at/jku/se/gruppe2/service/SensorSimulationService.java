@@ -69,6 +69,13 @@ public class SensorSimulationService {
         exec.shutdownNow();
     }
 
+    public void clearRoom(int roomId) {
+        co2ByRoom.remove(roomId);
+        noiseByRoom.remove(roomId);
+        co2Baseline.remove(roomId);
+        noiseBaseline.remove(roomId);
+    }
+
     private void tick() {
         if (!running) return;
 
