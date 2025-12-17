@@ -4,10 +4,11 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
+
 <BorderPane prefHeight="600.0" prefWidth="640.0"
-            xmlns="http://javafx.com/javafx/17.0.12"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="at.jku.se.gruppe2.ui.controller.HomeDashboardController">
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="at.jku.se.gruppe2.ui.controller.RoomDashboardController">
 
     <top>
         <ToolBar BorderPane.alignment="CENTER">
@@ -21,7 +22,7 @@
 
             <!-- CENTERED LABEL -->
             <HBox spacing="10" alignment="CENTER">
-                <Label text="Home Dashboard" styleClass="title"/>
+                <Label fx:id="roomLabel" text="" styleClass="title"/>
             </HBox>
 
             <!-- SPACER -->
@@ -29,7 +30,7 @@
 
             <!-- RIGHT SIDE -->
             <HBox spacing="10" alignment="CENTER_RIGHT">
-                <Button text="+ New Room" onAction="#handleCreateRoom"/>
+                <Button text="+ Add Device" onAction="#handleAddDevice"/>
                 <Separator orientation="VERTICAL"/>
                 <MenuButton text="User">
                     <items>
@@ -52,11 +53,12 @@
                 </padding>
 
                 <Button alignment="BOTTOM_RIGHT"
-                        text="Manage Room"
+                        text="Manage Device"
                 />
 
             </FlowPane>
 
         </ScrollPane>
     </center>
+
 </BorderPane>
