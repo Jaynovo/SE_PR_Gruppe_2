@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.model.sensor.Sensor;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;

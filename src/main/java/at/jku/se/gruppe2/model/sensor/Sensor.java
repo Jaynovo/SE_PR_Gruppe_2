@@ -1,6 +1,7 @@
-package at.jku.se.gruppe2.model;
+package at.jku.se.gruppe2.model.sensor;
 
-import javafx.scene.control.Alert;
+import at.jku.se.gruppe2.model.Device;
+import at.jku.se.gruppe2.model.Readings;
 
 import java.util.List;
 

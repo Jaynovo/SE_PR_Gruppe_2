@@ -1,4 +1,4 @@
-package at.jku.se.gruppe2.model;
+package at.jku.se.gruppe2.model.actuator;
 
 public class VentilationActuator extends Actuator {
 

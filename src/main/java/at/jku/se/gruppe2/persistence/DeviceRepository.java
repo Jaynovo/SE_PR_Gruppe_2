@@ -1,6 +1,13 @@
 package at.jku.se.gruppe2.persistence;
 
 import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.model.actuator.Actuator;
+import at.jku.se.gruppe2.model.actuator.AlarmSystemActuator;
+import at.jku.se.gruppe2.model.actuator.VentilationActuator;
+import at.jku.se.gruppe2.model.sensor.CO2Sensor;
+import at.jku.se.gruppe2.model.sensor.NoiseSensor;
+import at.jku.se.gruppe2.model.sensor.Sensor;
+import at.jku.se.gruppe2.model.sensor.Thermometer;
 
 import java.sql.*;
 import java.util.*;

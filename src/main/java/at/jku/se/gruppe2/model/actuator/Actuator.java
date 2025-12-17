@@ -1,4 +1,6 @@
-package at.jku.se.gruppe2.model;
+package at.jku.se.gruppe2.model.actuator;
+
+import at.jku.se.gruppe2.model.Device;
 
 public abstract class Actuator extends Device {
     private String state;

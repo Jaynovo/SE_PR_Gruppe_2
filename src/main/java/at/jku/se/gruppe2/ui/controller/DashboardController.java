@@ -137,13 +137,15 @@ public class DashboardController implements Initializable {
     }
     
     public void addHomeButtonClicked() {
-        if (home.getId() > 0) {
-           dialog.info("Information","Home creation not possible!\n\n " +
-                   "You are not allowed more than one home at the same time.\n " +
-                   "Please first delete your home if you want to add a new home.",
-                   ButtonType.OK);
-           return;
-        }
+        /* TODO  new Home logic validation not more than one home*/
+        // needs to be changed to check if userinformation homeinfo is not null
+        //if (home.getId() > 0) {
+//           dialog.info("Information","Home creation not possible!\n\n " +
+//                   "You are not allowed more than one home at the same time.\n " +
+//                   "Please first delete your home if you want to add a new home.",
+//                   ButtonType.OK);
+//           return;
+//        }
         navigate.goTo("home_registration_page");
     }
 
