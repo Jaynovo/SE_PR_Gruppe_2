@@ -1,11 +1,9 @@
 package at.jku.se.gruppe2.model;
 
-
 public abstract class Device {
     private int id;
     private String label;
-    private DeviceCategory category;
-
+    private DeviceType type; //statt typeLabel/unit/category
 
     public int getId() {
         return id;
@@ -23,8 +21,25 @@ public abstract class Device {
         this.label = label;
     }
 
-    public enum DeviceCategory {
-        SENSOR,
-        ACTUATOR
+    public DeviceType getType() {
+        return type;
     }
+
+    public void setType(DeviceType type) {
+        this.type = type;
+    }
+
+    public DeviceCategory getCategory() {
+        return type != null ? type.getCategory() : null;
+    }
+
+    public String getTypeLabel() {
+        return type != null ? type.getLabel() : null;
+    }
+
+    public String getUnit() {
+        return type != null ? type.getUnit() : null;
+    }
+
+    public enum DeviceCategory {SENSOR, ACTUATOR}
 }

@@ -10,6 +10,8 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import at.jku.se.gruppe2.app.MainApp;
+
 
 import java.util.*;
 
@@ -26,6 +28,8 @@ public class HomeDashboardController {
 
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
+
+    private final SensorSimulationService sensorSim = MainApp.getSensorSim();
 
     @FXML
     public void initialize() {
@@ -46,9 +50,17 @@ public class HomeDashboardController {
         rooms= roomRepo.getAllRoomsByHome(home);
 
         //Load devices for each room
-        for (Room room : rooms.orElse(null)) {
+        for (Room room : rooms.orElse(Collections.emptyList())) {
             List<Device> devices = deviceRepo.getDevicesByRoomId(room.getId());
             room.setDevices(devices);
+
+            sensorSim.clearRoom(room.getId()); //clears the room so the simulation doesnt register duplicate devices in a room
+
+            for (Device device : devices) {
+                if(device instanceof Sensor sensor) {
+                    sensorSim.registerSensor(room.getId(), sensor);
+                }
+            }
         }
     }
 
