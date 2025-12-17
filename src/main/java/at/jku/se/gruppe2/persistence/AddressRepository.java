@@ -1,9 +1,11 @@
 package at.jku.se.gruppe2.persistence;
 
 import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.service.GeoCodingService;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +32,6 @@ public class AddressRepository {
                     this::mapAddress
             );
         }
-        System.out.println("Address for user not found.");
         return Optional.empty();
     }
 
@@ -48,8 +49,8 @@ public class AddressRepository {
                     ps.setString(3, address.getPostalCode());
                     ps.setString(4, address.getCity());
                     ps.setString(5, address.getCountry());
-                    ps.setDouble(6, address.getLongitude());
-                    ps.setDouble(7, address.getLatitude());
+                    ps.setObject(6, address.getLongitude(), Types.DOUBLE);
+                    ps.setObject(7, address.getLatitude(), Types.DOUBLE);
                 },
                 rs -> rs.getInt("id")
         );
@@ -60,6 +61,8 @@ public class AddressRepository {
 
     // Returns 1 if Update was successful, 0 if not
     public int updateAddressInDatabase(Address address) {
+        GeoCodingService.enrichWithCoordinates(address);
+
         String request = """
                 UPDATE address_information\s
                 SET street = ?, house_nr = ?, post_code = ?, city = ?, country = ?, longitude = ?, latitude = ?
@@ -73,24 +76,12 @@ public class AddressRepository {
                     ps.setString(3, address.getPostalCode());
                     ps.setString(4, address.getCity());
                     ps.setString(5, address.getCountry());
-                    ps.setDouble(6, address.getLongitude());
-                    ps.setDouble(7, address.getLatitude());
+                    ps.setObject(6, address.getLongitude(), Types.DOUBLE);
+                    ps.setObject(7, address.getLatitude(), Types.DOUBLE);
                     ps.setInt(8, address.getId());
                 }
         );
         return success;
-    }
-
-    public Optional<Location> getLongitudeLatitudeByAddress(Address address) {
-        String request = "SELECT longitude, latitude FROM address_information WHERE id = ?";
-        return JdbcTemplate.queryForObject(
-                request,
-                ps -> ps.setInt(1, address.getId()),
-                rs -> new Location(
-                        rs.getDouble("longitude"),
-                        rs.getDouble("latitude")
-                )
-        );
     }
 
     private Address mapAddress(ResultSet rs) throws SQLException {
@@ -101,8 +92,8 @@ public class AddressRepository {
         address.setPostalCode(rs.getString("post_code"));
         address.setCity(rs.getString("city"));
         address.setCountry(rs.getString("country"));
-        address.setLongitude(rs.getDouble("longitude"));
-        address.setLatitude(rs.getDouble("latitude"));
+        address.setLongitude(rs.getObject("longitude", Double.class));
+        address.setLatitude(rs.getObject("latitude", Double.class));
         return address;
     }
 }
