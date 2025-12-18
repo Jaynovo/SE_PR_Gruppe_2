@@ -2,8 +2,8 @@ package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.model.actuator.VentilationConfig;
-import at.jku.se.gruppe2.model.sensor.Sensor;
+import at.jku.se.gruppe2.model.actuator.*;
+import at.jku.se.gruppe2.model.sensor.*;
 import at.jku.se.gruppe2.persistence.DeviceRepository;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;
@@ -28,6 +28,7 @@ public class RoomDashboardController {
     private final DialogService dialog = new DialogService();
     private final DeviceRepository deviceRepository = new DeviceRepository();
     private final ActuatorService actuatorService = new ActuatorService();
+    private final ActuatorConfigService actuatorCfg = new ActuatorConfigService();
 
     private final SensorSimulationService sensorSim = MainApp.getSensorSim();
     private Timeline liveRefresh;
@@ -256,8 +257,6 @@ public class RoomDashboardController {
     public void setDevices(List<Device> devices) {
         this.devices = devices;
     }
-
-    private final ActuatorConfigService actuatorCfg = new ActuatorConfigService();
 
     private void showVentilationConfig(Device actuatorDevice) {
         Dialog<ButtonType> dialog = new Dialog<>();

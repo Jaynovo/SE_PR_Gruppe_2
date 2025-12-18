@@ -92,3 +92,16 @@ create table actuator_state
     time        TIMESTAMP NOT NULL DEFAULT now(),
     state       VARCHAR(50)
 );
+
+
+-- ADD Permanent Device below --
+
+INSERT INTO device_type (category, label, unit)
+VALUES  ('SENSOR',   'Thermometer',      '°C'),
+        ('SENSOR',   'Humidity Sensor',  '%'),
+        ('ACTUATOR', 'Light Switch',     NULL),
+        ('ACTUATOR', 'Heating',          '%'),
+        ('SENSOR',   'CO2Sensor',   'ppm'),
+        ('SENSOR',   'NoiseSensor', 'dB'),
+        ('ACTUATOR', 'Ventilation', NULL),
+        ('ACTUATOR', 'AlarmSystem',       NULL);

@@ -16,16 +16,6 @@ INSERT INTO room(label, home_info, area)
 VALUES ('Bedroom', 1, 32);
 
 
-INSERT INTO device_type (category, label, unit)
-VALUES  ('SENSOR',   'Thermometer',      '°C'),
-        ('SENSOR',   'Humidity Sensor',  '%'),
-        ('ACTUATOR', 'Light Switch',     NULL),
-        ('ACTUATOR', 'Heating',          '%'),
-        ('SENSOR',   'CO2Sensor',   'ppm'),
-        ('SENSOR',   'NoiseSensor', 'dB'),
-        ('ACTUATOR', 'Ventilation', NULL),
-        ('ACTUATOR', 'AlarmSystem',       NULL);
-
 -- Living Room devices
 INSERT INTO device(room_id, label)
 VALUES (
