@@ -143,3 +143,22 @@
 .menu, .menu .label, .menu-item .label {
     -fx-text-fill: -fx-text;
 }
+
+/* Base Toggle */
+.actuator-toggle {
+    -fx-background-radius: 20;
+    -fx-padding: 6 18 6 18;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+
+/* OFF state */
+.actuator-toggle {
+    -fx-background-color: #9f0b0b;
+}
+
+/* ON state */
+.actuator-toggle:selected {
+    -fx-background-color: #077530;
+}

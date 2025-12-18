@@ -90,4 +90,24 @@ public class UIUtils {
         });
     }
 
+    public static <T> ChoiceDialog<T> styledChoiceDialog(T defaultChoice, List<T> choices, String prompt) {
+        ChoiceDialog<T> dialog = new ChoiceDialog<>(defaultChoice, choices);
+        dialog.setContentText(prompt);
+
+        dialog.setHeaderText(null);
+        dialog.setGraphic(null);
+
+        dialog.getDialogPane().getStylesheets().add(
+                UIUtils.class.getResource("/css/app.css").toExternalForm()
+        );
+
+        return dialog;
+    }
+
+    public static Alert styledConfirm(String message) {
+        Alert alert = styledAlert(Alert.AlertType.CONFIRMATION, message, ButtonType.OK, ButtonType.CANCEL);
+        return alert;
+    }
+
+
 }

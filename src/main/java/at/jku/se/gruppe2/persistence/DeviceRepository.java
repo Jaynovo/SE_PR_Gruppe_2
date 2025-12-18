@@ -148,4 +148,89 @@ public class DeviceRepository {
             }; //fallback
         };
     }
+
+    public List<DeviceType> getDeviceTypesByCategory(Device.DeviceCategory category) {
+        String sql = """
+        SELECT id, category, label, unit
+        FROM device_type
+        WHERE category = CAST(? AS device_category)
+        ORDER BY label;
+    """;
+
+        Optional<List<DeviceType>> typesOpt = JdbcTemplate.queryForMultipleObjects(
+                sql,
+                ps -> ps.setString(1, category.name()),
+                rs -> {
+                    DeviceType dt = new DeviceType();
+                    dt.setId(rs.getInt("id"));
+                    dt.setCategory(Device.DeviceCategory.valueOf(rs.getString("category")));
+                    dt.setLabel(rs.getString("label"));
+                    dt.setUnit(rs.getString("unit"));
+                    return dt;
+                }
+        );
+
+        return typesOpt.orElse(java.util.Collections.emptyList());
+    }
+
+    public int attachSensor(int deviceId, int sensorTypeId) {
+        String sql = """
+        INSERT INTO sensor (device_id, sensor_type_id)
+        VALUES (?, ?);
+    """;
+
+        return JdbcTemplate.executeUpdate(
+                sql,
+                ps -> {
+                    ps.setInt(1, deviceId);
+                    ps.setInt(2, sensorTypeId);
+                }
+        );
+    }
+
+    public int attachActuator(int deviceId, int actuatorTypeId) {
+        String sql = """
+        INSERT INTO actuator (device_id, actuator_type_id)
+        VALUES (?, ?);
+    """;
+
+        return JdbcTemplate.executeUpdate(
+                sql,
+                ps -> {
+                    ps.setInt(1, deviceId);
+                    ps.setInt(2, actuatorTypeId);
+                }
+        );
+    }
+
+    public Optional<String> getLatestActuatorState(int actuatorDeviceId) {
+        String sql = """
+        SELECT state
+        FROM actuator_state
+        WHERE actuator_id = ?
+        ORDER BY time DESC
+        LIMIT 1
+    """;
+
+        return JdbcTemplate.queryForValue(
+                sql,
+                ps -> ps.setInt(1, actuatorDeviceId),
+                rs -> rs.getString("state")
+        );
+    }
+
+    public int insertActuatorState(int actuatorDeviceId, String state) {
+        String sql = """
+        INSERT INTO actuator_state (actuator_id, state)
+        VALUES (?, ?)
+    """;
+
+        return JdbcTemplate.executeUpdate(
+                sql,
+                ps -> {
+                    ps.setInt(1, actuatorDeviceId);
+                    ps.setString(2, state);
+                }
+        );
+    }
 }
