@@ -1,8 +1,8 @@
 package at.jku.se.gruppe2.service;
 
-import at.jku.se.gruppe2.model.CO2Sensor;
-import at.jku.se.gruppe2.model.NoiseSensor;
-import at.jku.se.gruppe2.model.Sensor;
+import at.jku.se.gruppe2.model.sensor.CO2Sensor;
+import at.jku.se.gruppe2.model.sensor.NoiseSensor;
+import at.jku.se.gruppe2.model.sensor.Sensor;
 
 import java.util.Map;
 import java.util.Random;
