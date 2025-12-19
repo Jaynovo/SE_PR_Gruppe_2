@@ -70,6 +70,28 @@ public class RoomRepository {
         return 0;
     }
 
+    public int deleteRoom(int roomId) {
+        //First delete all Devices belonging to this room
+        deviceRepository.deleteDevicesByRoomId(roomId);
+
+        String request = """
+                DELETE FROM room
+                WHERE id = ?;
+                """;
+
+        return JdbcTemplate.executeUpdate(
+                request,
+                ps -> ps.setInt(1, roomId)
+        );
+    }
+
+    public int deleteRoom(Room room) {
+        if (room == null) {
+            return 0;
+        }
+        return deleteRoom(room.getId());
+    }
+
     private Room mapRoom(ResultSet rs) throws SQLException {
         Room room = new Room();
         room.setId(rs.getInt("id"));

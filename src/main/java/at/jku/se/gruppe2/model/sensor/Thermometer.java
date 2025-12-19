@@ -1,27 +1,36 @@
 package at.jku.se.gruppe2.model.sensor;
 
 public class Thermometer extends Sensor {
-
-    private MeasureUnit unit;
+    private TemperatureUnit temperatureUnit = TemperatureUnit.CELSIUS;
 
     public Thermometer() {
-        this.unit = MeasureUnit.CELSIUS; // default
+        // default constructor
     }
 
-    public Thermometer(double initialDegree) {
+    public Thermometer(double initialValue) {
         this();
-        setValue(initialDegree);
+        setValue(initialValue);
     }
 
+    public TemperatureUnit getTemperatureUnit() {
+        return temperatureUnit;
+    }
 
+    public void setTemperatureUnit(TemperatureUnit temperatureUnit) {
+        this.temperatureUnit = temperatureUnit;
+    }
 
-    public enum MeasureUnit {
+    public String getDisplayUnit() {
+        return temperatureUnit.getSymbol();
+    }
+
+    public enum TemperatureUnit {
         CELSIUS("°C"),
         FAHRENHEIT("°F");
 
         private final String symbol;
 
-        MeasureUnit(String symbol) {
+        TemperatureUnit(String symbol) {
             this.symbol = symbol;
         }
 

@@ -1,22 +1,68 @@
+/* =========================================================
+   1) DESIGN TOKENS (Theme variables)
+   ========================================================= */
+
 .root {
+    /* Typography */
     -fx-font-family: "Segoe UI", "Inter", system-ui, sans-serif;
 
-    /* Colours */
-    -fx-bg:            #0f172a;  /* Hintergrund */
-    -fx-surface:       #111827;  /* dunkle Fläche */
-    -fx-card:          #1f2937;  /* Kartenfläche */
-    -fx-text:          #e5e7eb;  /* Primärtext */
-    -fx-muted:         #9ca3af;  /* Sekundärtext */
-    -fx-primary:       #cc4f29;  /* Primär */
-    -fx-primary-weak:  #c96b4f;  /* Hover */
+    /* Color palette */
+    -fx-bg:            #0f172a;
+    -fx-surface:       #111827;
+    -fx-card:          #1f2937;
+    -fx-text:          #e5e7eb;
+    -fx-muted:         #9ca3af;
+    -fx-primary:       #cc4f29;
+    -fx-primary-weak:  #c96b4f;
 
-    /* BG-colours */
-    -fx-background-color: -fx-bg, linear-gradient(from 0% 100% to 0% 0%, #0f172a 0%, #282f57 100%);
+    /* Global background */
+    -fx-background-color:
+            -fx-bg,
+            linear-gradient(from 0% 100% to 0% 0%, #0f172a 0%, #282f57 100%);
     -fx-text-fill: -fx-text;
 }
 
-/* Cards */
-.card {
+
+/* =========================================================
+   2) LAYOUT & CONTAINERS
+   ========================================================= */
+
+.stack-pane,
+.border-pane,
+.vbox {
+    -fx-alignment: center;
+}
+
+.scroll-pane,
+.flow-pane,
+.tool-bar,
+.menu-button,
+.menu-item,
+.combo-box {
+    -fx-background-color:
+            -fx-bg,
+            linear-gradient(from 0% 100% to 0% 100%,
+            #1f293700 0%,
+            #1F2937 45%,
+            #1F2937 55%);
+}
+
+.scroll-pane .viewport {
+    -fx-background-color:
+            -fx-bg,
+            linear-gradient(from 0% 100% to 0% 100%,
+            #1f293700 0%,
+            #1F2937 45%,
+            #1F2937 55%);
+}
+
+
+/* =========================================================
+   3) CARDS
+   ========================================================= */
+
+.card,
+.room-card {
     -fx-background-color: -fx-card;
     -fx-background-radius: 12;
     -fx-padding: 16;
@@ -28,84 +74,14 @@
     -fx-font-weight: 700;
 }
 
-.room-card {
-    -fx-background-color: -fx-card;
-    -fx-background-radius: 12;
-    -fx-padding: 16;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 18, 0.15, 0, 6);
-}
 
-/* Badges */
-.badge {
-    -fx-background-radius: 999;
-    -fx-padding: 4 10 4 10;
-    -fx-font-size: 11px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #f5f5ff;
-}
-.badge-on {
-    -fx-background-color: #24a211;
-}
-.badge-off {
-    -fx-background-color: #e54848;
-}
-.badge {
-    -fx-cursor: hand;
-}
+/* =========================================================
+   4) TYPOGRAPHY
+   ========================================================= */
 
-
-/* Buttons */
-.button {
-    -fx-background-color: -fx-primary;
-    -fx-text-fill: white;
-    -fx-font-weight: 600;
-    -fx-background-radius: 10;
-    -fx-padding: 10 16 10 16;
-    -fx-cursor: hand;
-}
-
-.button:hover {
-    -fx-background-color: -fx-primary-weak;
-}
-
-
-/* Textfields */
-.text-field, .password-field {
-    -fx-background-color: -fx-surface;
-    -fx-text-fill: -fx-text;
-    -fx-prompt-text-fill: -fx-muted;
-    -fx-background-radius: 10;
-    -fx-padding: 10 12 10 12;
-    -fx-border-color: transparent;
-    -fx-border-radius: 10;
-}
-
-.text-field:focused, .password-field:focused {
-    -fx-border-color: -fx-primary;
-    -fx-border-width: 1;
-}
-
-.stack-pane, .border-pane, .vbox{
-    -fx-alignment: center;
-}
-
-.scroll-pane, .flow-pane, .tool-bar, .menu-button, .menu-item, .combo-box {
-    -fx-background-color: -fx-bg, linear-gradient(from 0% 100% to 0% 100%, #1f293700 0%, #1F2937 45%, #1F2937 55%);
-}
-
-.scroll-pane .viewport {
-    -fx-background-color: -fx-bg, linear-gradient(from 0% 100% to 0% 100%, #1f293700 0%, #1F2937 45%, #1F2937 55%);
-}
-
-/* Labels  */
 .label {
     -fx-text-fill: -fx-text;
-    -fx-padding: 5 5 5 5;
-}
-
-.error-label {
-    -fx-text-fill: #e54848; /* or -fx-primary if you prefer */
-    -fx-font-weight: 600;
+    -fx-padding: 5;
 }
 
 .title {
@@ -113,52 +89,146 @@
     -fx-font-weight: 700;
 }
 
-/* Metric pills */
+.muted {
+    -fx-text-fill: -fx-muted;
+    -fx-font-size: 11px;
+}
+
+.error-label {
+    -fx-text-fill: #e54848;
+    -fx-font-weight: 600;
+}
+
+
+/* =========================================================
+   5) FORM CONTROLS
+   ========================================================= */
+
+.text-field,
+.password-field {
+    -fx-background-color: -fx-surface;
+    -fx-text-fill: -fx-text;
+    -fx-prompt-text-fill: -fx-muted;
+    -fx-background-radius: 10;
+    -fx-padding: 10 12;
+    -fx-border-color: transparent;
+    -fx-border-radius: 10;
+}
+
+.text-field:focused,
+.password-field:focused {
+    -fx-border-color: -fx-primary;
+    -fx-border-width: 1;
+}
+
+
+/* =========================================================
+   6) BUTTONS
+   ========================================================= */
+
+.button {
+    -fx-background-color: -fx-primary;
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-background-radius: 10;
+    -fx-padding: 10 16;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: -fx-primary-weak;
+}
+
+/* Button variants */
+.button.danger {
+    -fx-background-color: #ff4d4f;
+}
+
+.button.danger:hover {
+    -fx-background-color: #d9363e;
+}
+
+.button.icon-button {
+    -fx-background-color: transparent;
+    -fx-font-size: 14px;
+}
+
+
+/* =========================================================
+   7) BADGES
+   ========================================================= */
+
+.badge {
+    -fx-background-radius: 999;
+    -fx-padding: 4 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #f5f5ff;
+    -fx-cursor: hand;
+}
+
+.badge-on {
+    -fx-background-color: #24a211;
+}
+
+.badge-off {
+    -fx-background-color: #e54848;
+}
+
+
+/* =========================================================
+   8) METRICS / PILLS
+   ========================================================= */
+
 .metric {
     -fx-background-color: rgba(255,255,255,0.06);
     -fx-background-radius: 10;
-    -fx-padding: 10 12 10 12;
+    -fx-padding: 10 12;
 }
 
 .metric-value {
     -fx-text-fill: -fx-text;
-    -fx-font-size: 14;
+    -fx-font-size: 14px;
     -fx-font-weight: 600;
 }
 
-.muted { -fx-text-fill: -fx-muted; -fx-font-size: 11px; }
 
-/* Buttons */
-.button { -fx-background-radius: 10; }
+/* =========================================================
+   9) TOGGLES / ACTUATORS
+   ========================================================= */
 
-/* Toolbar */
-.tool-bar { -fx-padding: 8 12 8 12; }
+.actuator-toggle {
+    -fx-background-radius: 20;
+    -fx-padding: 6 18;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
 
-/* 6) Menüleiste dezenter */
-/* Should be deleted? */
+    /* OFF */
+    -fx-background-color: #9f0b0b;
+}
+
+.actuator-toggle:selected {
+    /* ON */
+    -fx-background-color: #077530;
+}
+
+
+/* =========================================================
+   10) MENUS & TOOLBARS
+   ========================================================= */
+
+.tool-bar {
+    -fx-padding: 8 12;
+}
+
+/* Menu bar intentionally minimal */
 .menu-bar {
     -fx-background-color: transparent;
 }
 
-.menu, .menu .label, .menu-item .label {
+.menu,
+.menu .label,
+.menu-item .label {
     -fx-text-fill: -fx-text;
-}
-
-/* Base Toggle */
-.actuator-toggle {
-    -fx-background-radius: 20;
-    -fx-padding: 6 18 6 18;
-    -fx-font-weight: bold;
-    -fx-text-fill: white;
-    -fx-cursor: hand;
-}
-
-/* OFF state */
-.actuator-toggle {
-    -fx-background-color: #9f0b0b;
-}
-
-/* ON state */
-.actuator-toggle:selected {
-    -fx-background-color: #077530;
 }

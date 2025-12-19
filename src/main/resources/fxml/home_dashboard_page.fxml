@@ -51,9 +51,16 @@
                     <Insets top="16" right="16" bottom="16" left="16"/>
                 </padding>
 
-                <Button alignment="BOTTOM_RIGHT"
-                        text="Manage Room"
-                />
+                <HBox>
+                    <Button alignment="BOTTOM_RIGHT"
+                            text="Manage Room"
+                    />
+                    <Button alignment="BOTTOM_LEFT"
+                            text="Delete Room"
+                    />
+                </HBox>
+
+
 
             </FlowPane>
 

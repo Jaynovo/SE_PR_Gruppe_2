@@ -6,17 +6,17 @@ import at.jku.se.gruppe2.model.Readings;
 import java.util.List;
 
 public abstract class Sensor extends Device {
-    private String unit;
+    //private String unit;
     private double value;
     private List<Readings> readings;//Possible future zusatzfeature
 
-    public String getUnit() {
-        return unit;
-    }
-
-    public void setUnit(String unit) {
-        this.unit = unit;
-    }
+//    public String getUnit() {
+//        return unit;
+//    }
+//
+//    public void setUnit(String unit) {
+//        this.unit = unit;
+//    }
 
     public double getValue() {
         return value;

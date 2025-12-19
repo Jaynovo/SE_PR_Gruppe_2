@@ -2,14 +2,14 @@ package at.jku.se.gruppe2.model.sensor;
 
 public class NoiseSensor extends Sensor {
 
-    public static final String DEFAULT_UNIT = "dB";
+  //  public static final String DEFAULT_UNIT = "dB";
 
     public NoiseSensor() {
-        setUnit(DEFAULT_UNIT);
+    //    setUnit(DEFAULT_UNIT);
     }
 
     public NoiseSensor(double initialDb) {
-        this();
+    //    this();
         setValue(initialDb);
     }
 

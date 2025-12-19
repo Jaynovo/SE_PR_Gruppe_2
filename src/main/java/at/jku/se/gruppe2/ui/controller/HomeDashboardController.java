@@ -90,7 +90,7 @@ public class HomeDashboardController {
     private Pane createRoomCard(Room room) {
         VBox card = new VBox(10);
         card.getStyleClass().add("card");
-        card.setPrefWidth(240);
+        card.setPrefWidth(250);
         card.setPadding(new Insets(10));
 
         //top bar
@@ -115,17 +115,25 @@ public class HomeDashboardController {
         metrics.getChildren().addAll(
                 metricPill("Area", String.valueOf(room.getArea()))
         );
-        
+
+        //HBox for Buttons
+        HBox buttonsBox = new HBox(10);
+
         Button manageRoom = new Button("Manage Room");
+        manageRoom.getStyleClass().add("muted");
         manageRoom.setOnAction(e -> handleManageRoom(room));
 
+        Button deleteRoom = new Button("Delete Room");
+        deleteRoom.getStyleClass().add("danger");
+        deleteRoom.setOnAction(e -> handleDeleteRoom(room));
 
-        card.getChildren().addAll(topBar, metrics, manageRoom);
+        buttonsBox.getChildren().addAll(manageRoom, deleteRoom);
+
+        card.getChildren().addAll(topBar, metrics, buttonsBox);
         return card;
     }
 
     /* TODO create Badges for actuators and toggle device methods */
-
 
     public void handleCreateRoom(ActionEvent actionEvent) {
         TextInputDialog dialog = UIUtils.styledTextInputDialog(
@@ -143,6 +151,30 @@ public class HomeDashboardController {
                 renderCards();
             }
         });
+    }
+
+    public void handleDeleteRoom(Room room) {
+        Alert confirm = UIUtils.styledConfirm(
+                "Delete \"" + room.getRoomLabel() + "\"?\nAll devices in this room will also be deleted."
+        );
+        confirm.setTitle("Delete Room");
+
+        confirm.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+
+                // deletes devices first ? Is our DB cascading?
+                for (Device device : room.getDevices()) {
+                    deviceRepo.deleteDevice(device.getId());
+                }
+
+                roomRepo.deleteRoom(room.getId());
+
+                loadRooms();
+                renderCards();
+
+            }
+        });
+
     }
 
     //All navigation methodes below

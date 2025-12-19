@@ -62,7 +62,6 @@ public class DeviceRepository {
         return id.orElse(0);
     }
 
-
     public int updateDevice(Device device) {
         String sql = """
                 UPDATE device
@@ -85,6 +84,18 @@ public class DeviceRepository {
         return JdbcTemplate.executeUpdate(
                 sql,
                 ps -> ps.setInt(1, deviceId)
+        );
+    }
+
+    public int deleteDevicesByRoomId(int roomId) {
+        String request = """
+            DELETE FROM device
+            WHERE room_id = ?;
+            """;
+
+        return JdbcTemplate.executeUpdate(
+                request,
+                ps -> ps.setInt(1, roomId)
         );
     }
 
