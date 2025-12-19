@@ -2,6 +2,7 @@ package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.AddressRepository;
+import at.jku.se.gruppe2.persistence.DeviceRepository;
 import at.jku.se.gruppe2.persistence.HomeRepository;
 import at.jku.se.gruppe2.persistence.RoomRepository;
 import at.jku.se.gruppe2.service.DialogService;
@@ -15,6 +16,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -34,13 +36,13 @@ public class DashboardController implements Initializable {
 
     private final HomeRepository homeRepo = new HomeRepository();
     private final RoomRepository roomRepo = new RoomRepository();
+    private final DeviceRepository deviceRepo = new DeviceRepository();
 
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
         User user = Session.getCurrentUser();
         if (user == null) {
             temperatureLabel.setText("No user logged in");
@@ -109,6 +111,12 @@ public class DashboardController implements Initializable {
 
     private void loadRooms() {
         rooms= roomRepo.getAllRoomsByHome(home);
+
+        //Load devices for each room
+        for (Room room : rooms.orElse(Collections.emptyList())) {
+            List<Device> devices = deviceRepo.getDevicesByRoomId(room.getId());
+            room.setDevices(devices);
+        }
     }
 
     private void renderCards() {
@@ -123,9 +131,18 @@ public class DashboardController implements Initializable {
             roomCard.setSpacing(5);
             roomCard.setPrefWidth(150);
 
+            //Room name
             Label name= new Label(room.getRoomLabel());
+            name.getStyleClass().add("card-title");
 
-            roomCard.getChildren().addAll(name);
+            //Device count
+            int deviceCount = room.getDevices() != null ? room.getDevices().size() : 0;
+            Label deviceInfo = new Label("There are currently " + deviceCount +
+                    " device" + (deviceCount == 1 ? "" : "s") + " registered in this room.");
+            deviceInfo.getStyleClass().add("muted");
+            deviceInfo.setWrapText(true); // wrap long text
+
+            roomCard.getChildren().addAll(name, deviceInfo);
 
             cardsFlow.getChildren().add(roomCard);
         }
@@ -138,14 +155,24 @@ public class DashboardController implements Initializable {
     
     public void addHomeButtonClicked() {
         /* TODO  new Home logic validation not more than one home*/
-        // needs to be changed to check if userinformation homeinfo is not null
-        //if (home.getId() > 0) {
-//           dialog.info("Information","Home creation not possible!\n\n " +
-//                   "You are not allowed more than one home at the same time.\n " +
-//                   "Please first delete your home if you want to add a new home.",
-//                   ButtonType.OK);
-//           return;
-//        }
+        User user = Session.getCurrentUser();
+        if (user == null) {
+            dialog.info("Error", "No user logged in.", ButtonType.OK);
+            return;
+        }
+
+        // Check if the user already has a home
+        Home existingHome = homeRepo.getHomeByUser(user).orElse(null);
+        if (existingHome != null) {
+            dialog.info("Information",
+                    "Home creation not possible!\n\n" +
+                            "You are not allowed more than one home at the same time.\n" +
+                            "Please first delete your home if you want to add a new home.",
+                    ButtonType.OK);
+            return;
+        }
+
+        // Navigate to home registration if no home exists
         navigate.goTo("home_registration_page");
     }
 

@@ -175,6 +175,21 @@
     -fx-background-color: #e54848;
 }
 
+.device-sensor {
+    -fx-background-color: #3b82f6; /* blue for sensors */
+    -fx-text-fill: white;
+    -fx-padding: 2 6;
+    -fx-background-radius: 4;
+    -fx-font-size: 11px;
+}
+
+.device-actuator {
+    -fx-background-color: #10b981; /* green for actuators */
+    -fx-text-fill: white;
+    -fx-padding: 2 6;
+    -fx-background-radius: 4;
+    -fx-font-size: 11px;
+}
 
 /* =========================================================
    8) METRICS / PILLS
