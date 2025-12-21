@@ -1,31 +1,77 @@
 Auswertungen
+
+ALLE auf einmal
+git log --all --pretty=format:"%ad %an %s" --date=format:"%Y-%m-%d %H:%M:%S" --graph --decorate |
+awk '
+BEGIN {
+    # persons to track
+    people["Thomas"]
+    people["Jason"]
+    people["Markus"]
+}
+
+{
+    sum = 0
+
+    # --- explicit person time ---
+    for (p in people) {
+        if (match($0, (p " ?([0-9]+([.,][0-9]+)?)[hH]?"), m)) {
+            val = m[1]
+            gsub(/,/, ".", val)
+            people[p] += val + 0
+            sum += val + 0
+            printf "Explizit für %s gezählt: %s => +%s\n", p, $0, val
+        }
+    }
+
+    # --- shared "time" ---
+    if (match($0, /time:? ?([0-9]+([.,][0-9]+)?)[hH]?/, t)) {
+        val = t[1]
+        gsub(/,/, ".", val)
+
+        for (p in people)
+            people[p] += val + 0
+
+        printf "Gemeinsam (time) für alle gezählt: %s => +%s\n", $0, val
+    }
+}
+
+END {
+    print "\n--- Summary ---"
+    for (p in people)
+        printf "%s: %.2f h\n", p, people[p]
+}'
+
+
+
 Thomas
 git log --all --pretty=format:"%ad %an %s" --date=format:"%Y-%m-%d %H:%M:%S" --graph --decorate |
 awk '
 {
   sum = 0
 
-  # Explizit "Thomas Xh":
-  n = match($0, /Thomas ?([0-9]+([.,][0-9]+)?)h/)
-  if(n) {
-      val = substr($0, RSTART+7, RLENGTH-8)
+  # Thomas <number>[h optional]
+  if (match($0, /Thomas ?([0-9]+([.,][0-9]+)?)[hH]?/, m)) {
+      val = m[1]
       gsub(/,/, ".", val)
-      sum += val+0
+      sum += val + 0
       printf "Explizit für Thomas gezählt: %s => +%s\n", $0, val
   }
 
-  # "time Xh" für alle:
-  n2 = match($0, /time:? ?([0-9]+([.,][0-9]+)?)h/)
-  if(n2) {
-      val = substr($0, RSTART+5, RLENGTH-6)
+  # time: <number>[h optional]
+  if (match($0, /time:? ?([0-9]+([.,][0-9]+)?)[hH]?/, t)) {
+      val = t[1]
       gsub(/,/, ".", val)
-      sum += val+0
+      sum += val + 0
       printf "Gemeinsam (time) für Thomas gezählt: %s => +%s\n", $0, val
   }
 
-  if(sum>0) thomas+=sum
+  if (sum > 0)
+      thomas += sum
 }
-END { printf "\nThomas: %.2f h\n", thomas }'
+END {
+  printf "\nThomas: %.2f h\n", thomas
+}'
 
 
 Jason
@@ -34,27 +80,28 @@ awk '
 {
   sum = 0
 
-  # Explizit "Jason Xh":
-  n = match($0, /Jason ?([0-9]+([.,][0-9]+)?)h/)
-  if(n) {
-      val = substr($0, RSTART+6, RLENGTH-7)
+  # Explizit "Jason X[h optional]"
+  if (match($0, /Jason ?([0-9]+([.,][0-9]+)?)[hH]?/, m)) {
+      val = m[1]
       gsub(/,/, ".", val)
-      sum += val+0
+      sum += val + 0
       printf "Explizit für Jason gezählt: %s => +%s\n", $0, val
   }
 
-  # "time Xh" für alle:
-  n2 = match($0, /time:? ?([0-9]+([.,][0-9]+)?)h/)
-  if(n2) {
-      val = substr($0, RSTART+5, RLENGTH-6)
+  # "time X[h optional]" für alle:
+  if (match($0, /time:? ?([0-9]+([.,][0-9]+)?)[hH]?/, t)) {
+      val = t[1]
       gsub(/,/, ".", val)
-      sum += val+0
+      sum += val + 0
       printf "Gemeinsam (time) für Jason gezählt: %s => +%s\n", $0, val
   }
 
-  if(sum>0) jason+=sum
+  if (sum > 0)
+      jason += sum
 }
-END { printf "\nJason: %.2f h\n", jason }'
+END {
+  printf "\nJason: %.2f h\n", jason
+}'
 
 
 
@@ -64,24 +111,25 @@ awk '
 {
   sum = 0
 
-  # Explizit "Markus Xh":
-  n = match($0, /Markus ?([0-9]+([.,][0-9]+)?)h/)
-  if(n) {
-      val = substr($0, RSTART+7, RLENGTH-8)
+  # Explizit "Markus X[h optional]"
+  if (match($0, /Markus ?([0-9]+([.,][0-9]+)?)[hH]?/, m)) {
+      val = m[1]
       gsub(/,/, ".", val)
-      sum += val+0
+      sum += val + 0
       printf "Explizit für Markus gezählt: %s => +%s\n", $0, val
   }
 
-  # "time Xh" für alle:
-  n2 = match($0, /time:? ?([0-9]+([.,][0-9]+)?)h/)
-  if(n2) {
-      val = substr($0, RSTART+5, RLENGTH-6)
+  # "time X[h optional]" für alle:
+  if (match($0, /time:? ?([0-9]+([.,][0-9]+)?)[hH]?/, t)) {
+      val = t[1]
       gsub(/,/, ".", val)
-      sum += val+0
+      sum += val + 0
       printf "Gemeinsam (time) für Markus gezählt: %s => +%s\n", $0, val
   }
 
-  if(sum>0) markus+=sum
+  if (sum > 0)
+      markus += sum
 }
-END { printf "\nMarkus: %.2f h\n", markus }'
+END {
+  printf "\nMarkus: %.2f h\n", markus
+}'
