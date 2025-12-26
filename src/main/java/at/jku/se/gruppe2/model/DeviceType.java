@@ -1,7 +1,6 @@
 package at.jku.se.gruppe2.model;
 
 public class DeviceType {
-
     private int id;
     private Device.DeviceCategory category; // SENSOR / ACTUATOR
     private String label;                  // z.B. "CO2Sensor", "Ventilation"

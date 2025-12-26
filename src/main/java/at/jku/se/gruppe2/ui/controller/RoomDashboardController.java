@@ -12,6 +12,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
@@ -92,13 +93,21 @@ public class RoomDashboardController {
         deviceCard.getChildren().addAll(title, type);
 
         if (device instanceof Sensor s) {
-            String unit = device.getUnit() != null ? device.getUnit() : "";
+
+            String unit = resolveDisplayUnit(device);
+            unit = (unit == null) ? "Not available!" : unit;
 
             String formattedValue = formatSensorValue(device.getTypeLabel(), s.getValue());
-            Label current = new Label("Current: " + formattedValue + (unit.isBlank() ? "" : " " + unit));
+            Label current = new Label(
+                    "Current: " + formattedValue + (unit.isBlank() ? "No measurement available!" : " " + unit)
+            );
             current.getStyleClass().add("muted");
 
             deviceCard.getChildren().add(current);
+
+            if (device instanceof Thermometer t) {
+                deviceCard.getChildren().add(createThermometerUnitToggle(t));
+            }
         }
 
         HBox actions = new HBox(8);
@@ -358,4 +367,43 @@ public class RoomDashboardController {
             actuatorService.setState(ventilation.getId(), "OFF");
         }
     }
+
+    private String resolveDisplayUnit(Device device) {
+        if (device instanceof Thermometer t) {
+            return t.getDisplayUnit(); // °C or °F (instance-specific)
+        }
+        return device.getUnit(); // default from DeviceType
+    }
+
+    private Node createThermometerUnitToggle(Thermometer t) {
+
+        ToggleGroup group = new ToggleGroup();
+
+        RadioButton celsius = new RadioButton("°C");
+        RadioButton fahrenheit = new RadioButton("°F");
+
+        celsius.setToggleGroup(group);
+        fahrenheit.setToggleGroup(group);
+
+        if (t.getTemperatureUnit() == Thermometer.TemperatureUnit.CELSIUS) {
+            celsius.setSelected(true);
+        } else {
+            fahrenheit.setSelected(true);
+        }
+
+        group.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == celsius) {
+                t.setTemperatureUnit(Thermometer.TemperatureUnit.CELSIUS);
+            } else if (newValue == fahrenheit) {
+                t.setTemperatureUnit(Thermometer.TemperatureUnit.FAHRENHEIT);
+            }
+            renderDevices(); // refreshes value display
+        });
+
+        HBox box = new HBox(8, new Label("Unit: "), celsius, fahrenheit);
+        box.getStyleClass().add("muted");
+
+        return box;
+    }
+
 }

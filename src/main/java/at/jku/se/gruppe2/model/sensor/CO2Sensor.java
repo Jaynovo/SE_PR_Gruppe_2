@@ -2,14 +2,14 @@ package at.jku.se.gruppe2.model.sensor;
 
 public class CO2Sensor extends Sensor {
 
-    public static final String DEFAULT_UNIT = "ppm";
+ //   public static final String DEFAULT_UNIT = "ppm";
 
     public CO2Sensor() {
-        setUnit(DEFAULT_UNIT);
+       // setUnit(DEFAULT_UNIT);
     }
 
     public CO2Sensor(double initialPpm) {
-        this();
+      //  this();
         setValue(initialPpm);
     }
 
