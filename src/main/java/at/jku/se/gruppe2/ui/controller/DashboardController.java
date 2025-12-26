@@ -1,27 +1,20 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.persistence.AddressRepository;
-import at.jku.se.gruppe2.persistence.DeviceRepository;
-import at.jku.se.gruppe2.persistence.HomeRepository;
-import at.jku.se.gruppe2.persistence.RoomRepository;
-import at.jku.se.gruppe2.service.DialogService;
-import at.jku.se.gruppe2.service.GeoCodingService;
-import at.jku.se.gruppe2.service.NavigationService;
-import at.jku.se.gruppe2.service.WeatherService;
+import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.service.*;
+import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
+import at.jku.se.gruppe2.ui.component.*;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
 import java.net.URL;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 
-public class DashboardController implements Initializable {
+public class DashboardController extends BaseController implements Initializable {
 
     @FXML private BorderPane homeCard;
     @FXML private Label homeName;
@@ -38,9 +31,13 @@ public class DashboardController implements Initializable {
     private final RoomRepository roomRepo = new RoomRepository();
     private final DeviceRepository deviceRepo = new DeviceRepository();
 
+    private final HomeCardFactory cardFactory = new HomeCardFactory();
+
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
 
+
+    /* TODO restyle card and dashboard layout*/
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         User user = Session.getCurrentUser();
@@ -110,49 +107,35 @@ public class DashboardController implements Initializable {
     }
 
     private void loadRooms() {
-        rooms= roomRepo.getAllRoomsByHome(home);
+        rooms = roomRepo.getAllRoomsByHome(home);
 
         //Load devices for each room
         for (Room room : rooms.orElse(Collections.emptyList())) {
             List<Device> devices = deviceRepo.getDevicesByRoomId(room.getId());
             room.setDevices(devices);
         }
+
+        // Set the rooms into the home so HomeCardFactory can access them
+        home.setRooms(rooms.orElse(Collections.emptyList()));
     }
+
 
     private void renderCards() {
         cardsFlow.getChildren().clear();
 
-        if (rooms.isEmpty()) return;
-
-        for (Room room : rooms.get()) {
-
-            VBox roomCard = new VBox();
-            roomCard.getStyleClass().add("room-card");
-            roomCard.setSpacing(5);
-            roomCard.setPrefWidth(150);
-
-            //Room name
-            Label name= new Label(room.getRoomLabel());
-            name.getStyleClass().add("card-title");
-
-            //Device count
-            int deviceCount = room.getDevices() != null ? room.getDevices().size() : 0;
-            Label deviceInfo = new Label("There are currently " + deviceCount +
-                    " device" + (deviceCount == 1 ? "" : "s") + " registered in this room.");
-            deviceInfo.getStyleClass().add("muted");
-            deviceInfo.setWrapText(true); // wrap long text
-
-            roomCard.getChildren().addAll(name, deviceInfo);
-
-            cardsFlow.getChildren().add(roomCard);
+        if (home != null) {
+            cardsFlow.getChildren().add(
+                    cardFactory.createHomeCard(
+                            home,
+                            h -> openHomeDetails(),
+                            h -> addHomeButtonClicked(), // wrapper to match Consumer<Home>
+                            h -> deleteHomeButtonClicked() // wrapper to match Consumer<Home>
+                    )
+            );
         }
     }
 
-    @FXML
-    private void openHomeDetails() {
-        navigate.goTo("home_dashboard_page");
-    }
-    
+
     public void addHomeButtonClicked() {
         /* TODO  new Home logic validation not more than one home*/
         User user = Session.getCurrentUser();
@@ -223,13 +206,7 @@ public class DashboardController implements Initializable {
     }
 
     public void handleUserProfile() {
-        Session.setPreviousPage("dashboard_page");
-        navigate.goTo("profile_page");
-    }
-
-    public void handleLogout() {
-        showInfo("Logout", "You have been logged out.");
-        navigate.goTo("login_page");
+        handleUserProfile(Page.HOME_DASHBOARD.fxml());
     }
 
     private void showInfo(String title, String message) {
