@@ -104,7 +104,7 @@ public class CreateRoomDialog extends Dialog<Void> {
                 Double w = parseOptionalPositive(widthField.getText());
 
                 if (l != null && w != null) {
-                    areaLabel.setText("Area: " + (l * w) + " m²");
+                    areaLabel.setText("Area: " + (double)Math.round((l*w) * 100d) / 100d + " m²");
                 } else {
                     areaLabel.setText("Area: -");
                 }
