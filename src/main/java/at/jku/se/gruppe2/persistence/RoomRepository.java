@@ -13,17 +13,13 @@ public class RoomRepository {
         this.deviceRepository = new DeviceRepository();
     }
 
-    public RoomRepository(DeviceRepository deviceRepository) {
-        this.deviceRepository = deviceRepository;
-    }
-
     public Optional<List<Room>> getAllRoomsByHome(Home home) {
         String request = """
                 SELECT *
                 FROM room
                 WHERE home_info = ?
                 ORDER BY id;
-               \s""";
+                """;
         return JdbcTemplate.queryForMultipleObjects(
                 request,
                 ps -> ps.setInt(1, home.getId()),
@@ -31,44 +27,73 @@ public class RoomRepository {
         );
     }
 
-    // Returns 1 if update was successful, otherwise returns 0
-    public int updateRoom(Room room) {
-        String request = """
-                UPDATE room
-                SET label = ?, area = ?
-                WHERE id = ?
-        """;
-        return JdbcTemplate.executeUpdate(
-                request,
-                ps -> {
-                    ps.setString(1, room.getRoomLabel());
-                    ps.setDouble(2, room.getArea());
-                    ps.setInt(3, room.getId());
-                }
-        );
-    }
-
     public int createRoomInDatabase(Room room, Home home) {
         String request = """
-                INSERT INTO room (label, home_info, area)
-                VALUES (?, ?, ?)
+                INSERT INTO room (label, home_info, floor, length, width)
+                VALUES (?, ?, ?, ?, ?)
                 RETURNING id;
-        """;
+                """;
+
         Optional<Integer> id = JdbcTemplate.queryForValue(
                 request,
                 ps -> {
                     ps.setString(1, room.getRoomLabel());
                     ps.setInt(2, home.getId());
-                    ps.setDouble(3, room.getArea());
+                    ps.setInt(3, room.getFloor());
+
+                    if (room.getLength() != null) {
+                        ps.setDouble(4, room.getLength());
+                    } else {
+                        ps.setNull(4, Types.DOUBLE);
+                    }
+
+                    if (room.getWidth() != null) {
+                        ps.setDouble(5, room.getWidth());
+                    } else {
+                        ps.setNull(5, Types.DOUBLE);
+                    }
                 },
                 rs -> rs.getInt("id")
         );
-        if (id.isPresent()) {
-            room.setId(id.get());
-            return id.get();
-        }
-        return 0;
+
+        id.ifPresent(room::setId);
+        return id.orElse(0);
     }
+
+    // Returns 1 if update was successful, otherwise returns 0
+    public int updateRoom(Room room) {
+        String request = """
+                UPDATE room
+                SET label = ?,
+                    floor = ?,
+                    length = ?,
+                    width = ?
+                WHERE id = ?;
+                """;
+
+        return JdbcTemplate.executeUpdate(
+                request,
+                ps -> {
+                    ps.setString(1, room.getRoomLabel());
+                    ps.setInt(2, room.getFloor());
+
+                    if (room.getLength() != null) {
+                        ps.setDouble(3, room.getLength());
+                    } else {
+                        ps.setNull(3, Types.DOUBLE);
+                    }
+
+                    if (room.getWidth() != null) {
+                        ps.setDouble(4, room.getWidth());
+                    } else {
+                        ps.setNull(4, Types.DOUBLE);
+                    }
+
+                    ps.setInt(5, room.getId());
+                }
+        );
+    }
+
 
     public int deleteRoom(int roomId) {
         //First delete all Devices belonging to this room
@@ -94,11 +119,22 @@ public class RoomRepository {
 
     private Room mapRoom(ResultSet rs) throws SQLException {
         Room room = new Room();
+
         room.setId(rs.getInt("id"));
         room.setRoomLabel(rs.getString("label"));
-        room.setArea(rs.getDouble("area"));
-        // Home is not saved within the Room in Objects
+        room.setFloor(rs.getInt("floor"));
+
+        double length = rs.getDouble("length");
+        room.setLength(rs.wasNull() ? null : length);
+
+        double width = rs.getDouble("width");
+        room.setWidth(rs.wasNull() ? null : width);
+
+        double area = rs.getDouble("area");
+        room.setArea(rs.wasNull() ? null : area);
+
         room.setDevices(new ArrayList<>());
         return room;
     }
 }
+

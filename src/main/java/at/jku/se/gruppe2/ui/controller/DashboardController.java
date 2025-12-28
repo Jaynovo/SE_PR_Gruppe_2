@@ -119,7 +119,6 @@ public class DashboardController extends BaseController implements Initializable
         home.setRooms(rooms.orElse(Collections.emptyList()));
     }
 
-
     private void renderCards() {
         cardsFlow.getChildren().clear();
 
@@ -135,12 +134,10 @@ public class DashboardController extends BaseController implements Initializable
         }
     }
 
-
     public void addHomeButtonClicked() {
-        /* TODO  new Home logic validation not more than one home*/
         User user = Session.getCurrentUser();
         if (user == null) {
-            dialog.info("Error", "No user logged in.", ButtonType.OK);
+            dialog.error("Error", "No user logged in.");
             return;
         }
 
@@ -148,10 +145,12 @@ public class DashboardController extends BaseController implements Initializable
         Home existingHome = homeRepo.getHomeByUser(user).orElse(null);
         if (existingHome != null) {
             dialog.info("Information",
-                    "Home creation not possible!\n\n" +
-                            "You are not allowed more than one home at the same time.\n" +
-                            "Please first delete your home if you want to add a new home.",
-                    ButtonType.OK);
+                    """
+                            Home creation not possible!
+                            
+                            You are not allowed more than one home at the same time.
+                            Please first delete your home if you want to add a new home."""
+            );
             return;
         }
 
@@ -162,46 +161,37 @@ public class DashboardController extends BaseController implements Initializable
     public void deleteHomeButtonClicked() {
         User user = Session.getCurrentUser();
         if (user == null) {
-            showInfo("Error",  "No user logged in");
+            dialog.error("Error", "No user logged in");
             return;
         }
 
+        Optional<ButtonType> result = dialog.confirm(
+                "Delete Home",
+                "Are you sure you want to delete your home?\n\nThis action cannot be undone."
+        );
 
-        /* TODO restyle Alerts, example below*/
-//        UIUtils.styledAlert(
-//                Alert.AlertType.CONFIRMATION,
-//                "Please fill out all required fields!",
-//                ButtonType.OK
-//        ).showAndWait();
-
-        //Confirm with the user if the home should be deleted
-        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmationAlert.setTitle("Delete Home");
-        confirmationAlert.setHeaderText("Are you sure you want to delete your home?");
-        confirmationAlert.setContentText("This action cannot be undone.");
-
-        ButtonType result= confirmationAlert.showAndWait().orElse(ButtonType.CANCEL);
-        //eg. The user canceled
-        if (result !=  ButtonType.OK) return;
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
 
         //Get the home
         Home home= homeRepo.getHomeByUser(user).orElse(null);
         if (home == null){
-            showInfo("Error",  "No home found to delete.");
+            dialog.error("Error",  "No home found to delete.");
             return;
         }
 
         //Delete the home from DB
         int deleted = homeRepo.deleteHomeInDatabase(home.getId());
         if (deleted==1) {
-            showInfo("Success", "Your home has been deleted!");
+            dialog.info("Success", "Your home has been deleted!");
             homeCard.setVisible(false);
             homeName.setText("");
             homeAddress.setText("");
             homeFloors.setText("");
             temperatureLabel.setText("No home available");
         } else {
-            showInfo("Error", "Failed to delete the home! \n Please try again.");
+            dialog.error("Error", "Failed to delete the home! \n Please try again.");
         }
     }
 
@@ -209,9 +199,4 @@ public class DashboardController extends BaseController implements Initializable
         handleUserProfile(Page.HOME_DASHBOARD.fxml());
     }
 
-    private void showInfo(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.CLOSE);
-        alert.setTitle(title);
-        alert.showAndWait();
-    }
 }

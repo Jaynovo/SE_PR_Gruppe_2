@@ -2,6 +2,7 @@ package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.service.DialogService;
 import at.jku.se.gruppe2.service.NavigationService;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.utils.PasswordUtils;
@@ -13,29 +14,17 @@ import java.util.Optional;
 public class RegistrationController {
 
     @FXML
-    private TextField firstNameField;
-    @FXML
-    private TextField lastNameField;
-    @FXML
-    private TextField streetNameField;
-    @FXML
-    private TextField streetNumberField;
-    @FXML
-    private TextField cityField;
-    @FXML
-    private TextField postalCodeField;
+    private TextField firstNameField, lastNameField, streetNameField, streetNumberField,
+            cityField, postalCodeField, emailField;
     @FXML
     private ComboBox<String> countryBox;
     @FXML
-    private TextField emailField;
-    @FXML
-    private PasswordField passwordField;
-    @FXML
-    private PasswordField confirmPasswordField;
+    private PasswordField passwordField, confirmPasswordField;
 
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
     private final NavigationService navigate = new NavigationService();
+    private final DialogService dialog = new DialogService();
 
     @FXML
     public void initialize() {
@@ -67,13 +56,20 @@ public class RegistrationController {
                         || !postalCode.isEmpty()
                         || (country != null && !country.isEmpty());
 
-        //Basic Validierung
-        if (!validateInput(firstName, lastName, email, password, confirmPassword, streetName, streetNumber, city, postalCode, country)) {
+// Validate input
+        String validationErrors = validateInput(firstName, lastName, email, password, confirmPassword,
+                streetName, streetNumber, city, postalCode, country);
+
+        if (validationErrors != null) {
+            dialog.error("Missing Fields",
+                    "Please fill out all required fields!\n\n" +
+                            "You are missing the following fields:\n" + validationErrors);
             return;
         }
+
         //Check ob Email-vergeben
         if (userRepository.existsUserByEmail(email)) {
-            showAlert(Alert.AlertType.ERROR, "Registration failed", "E-Mail-Adresse already taken.");
+            dialog.error("Registration failed", "E-Mail-Adresse already taken.");
             return;
         }
 
@@ -103,59 +99,64 @@ public class RegistrationController {
             int userId = userRepository.createUserInDatabase(newUser);
 
             if (userId > 0) {
-                Alert successAlert = new Alert(Alert.AlertType.CONFIRMATION,
-                        "Account created successfully! You can log in now.",
-                        ButtonType.OK, ButtonType.CANCEL);
+                Optional<ButtonType> result = dialog.confirm(
+                        "Account created",
+                        "Account created successfully! \nYou can log in now.");
 
-                Optional<ButtonType> result = successAlert.showAndWait();
+
                 if (result.isPresent() && result.get() == ButtonType.OK) {
                     navigate.goTo("login_page");
                 }
             } else {
-                showAlert(Alert.AlertType.ERROR, "Registration failed", "Could not save user.");
+                dialog.error("Registration failed", "Could not save user.");
             }
+
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "An unexpected error occurred: " + e.getMessage());
+            dialog.error("Error", "An unexpected error occurred: " + e.getMessage());
         }
     }
-
 
     //Validierung
-    private boolean validateInput(String firstName, String lastName, String email, String password,
-                                  String confirmPassword, String streetName, String streetNumber,
-                                  String city, String postalCode, String country) {
+    private String validateInput(String firstName, String lastName, String email, String password,
+                                 String confirmPassword, String streetName, String streetNumber,
+                                 String city, String postalCode, String country) {
 
-        if (firstName.isEmpty() || lastName.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Registration failed", "First name or last name is empty.");
-            return false;
+        StringBuilder errors = new StringBuilder();
+
+        if (firstName.isEmpty()) {
+            errors.append("- First name\n");
+        }
+        if (lastName.isEmpty()) {
+            errors.append("- Last name\n");
         }
         if (email.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Registration failed", "Email is empty.");
-            return false;
-        }
-        if (!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
-            showAlert(Alert.AlertType.ERROR, "Invalid Email", "Please enter a valid email address.");
-            return false;
+            errors.append("- Email\n");
+        } else if (!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+            errors.append("- Valid email\n");
         }
         if (password.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Registration failed", "Password is empty.");
-            return false;
+            errors.append("- Password\n");
         }
         if (!password.equals(confirmPassword)) {
-            showAlert(Alert.AlertType.ERROR, "Passwords dont match", "Password and confirm Password must be the same");
-            return false;
+            errors.append("- Passwords must match\n");
         }
-        return true;
+
+//        // Adds required address fields if the address is partially filled
+//        if (!streetName.isEmpty() || !streetNumber.isEmpty() || !city.isEmpty() ||
+//                !postalCode.isEmpty() || (country != null && !country.isEmpty())) {
+//
+//            if (streetName.isEmpty()) errors.append("- Street Name\n");
+//            if (streetNumber.isEmpty()) errors.append("- Street Number\n");
+//            if (city.isEmpty()) errors.append("- City\n");
+//            if (postalCode.isEmpty()) errors.append("- Postal Code\n");
+//            if (country == null || country.isEmpty()) errors.append("- Country\n");
+//        }
+
+        return !errors.isEmpty() ? errors.toString() : null;
     }
 
-    public void handleToLogin () {
+    public void handleToLogin() {
         navigate.goTo("login_page");
-    }
-
-    private void showAlert(Alert.AlertType type, String title, String message) {
-        Alert alert = new Alert(type, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.showAndWait();
     }
 }

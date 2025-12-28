@@ -5,9 +5,9 @@ import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.component.RoomCardFactory;
+import at.jku.se.gruppe2.ui.custom.CreateRoomDialog;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -60,21 +60,12 @@ public class HomeDashboardController extends BaseController{
                 );
     }
 
-    /* TODO create Badges for actuators and toggle device methods */
+    public void handleCreateRoom() {
+        CreateRoomDialog dialog =
+                new CreateRoomDialog(home, roomService);
 
-    public void handleCreateRoom(ActionEvent actionEvent) {
-        TextInputDialog dialog1 = UIUtils.styledTextInputDialog(
-                "Please enter a room name:");
-        dialog1.setTitle("Create Room");
-
-        dialog1.showAndWait().ifPresent(name -> {
-            try {
-                roomService.createRoom(name, home);
-                reload();
-            } catch (IllegalArgumentException e) {
-                dialog.info("Invalid input", e.getMessage());
-            }
-        });
+        dialog.showAndWait();
+        reload();
     }
 
     public void handleDeleteRoom(Room room) {

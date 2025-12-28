@@ -5,22 +5,26 @@ import java.util.*;
 public class Room {
     private int id;
     private String roomLabel;
-    private double length;
-    private double width;
-    private double area;
+    private Integer floor;
+    private Double length;
+    private Double width;
+    private Double area;
 
     private Home home;
 
     private List<Device> devices = new ArrayList<>();
 
-    public Room() {}
-
-    public  Room(int id, String roomLabel, double length, double width) {
+    public  Room(int id, String roomLabel, double length, double width, int floor) {
         this.id = id;
         this.roomLabel = roomLabel;
         this.length = length;
         this.width = width;
+        this.floor = floor;
         this.area = length * width;
+    }
+
+    public Room() {
+
     }
 
     public int getId() {
@@ -39,7 +43,7 @@ public class Room {
         this.roomLabel = roomLabel;
     }
 
-    public double getLength() {
+    public Double getLength() {
         return length;
     }
 
@@ -47,7 +51,7 @@ public class Room {
         this.length = length;
     }
 
-    public double getWidth() {
+    public Double getWidth() {
         return width;
     }
 
@@ -55,12 +59,16 @@ public class Room {
         this.width = width;
     }
 
-    public double getArea() {
-        return area;
+    public void setArea(Double area) {
+        this.area = area;
     }
 
-    public void setArea(double area) {
-        this.area = area;
+    public Integer getFloor() {
+        return floor;
+    }
+
+    public void setFloor(int floor) {
+        this.floor = floor;
     }
 
     public Home getHome() {

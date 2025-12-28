@@ -32,7 +32,13 @@ public class RoomService {
         return rooms;
     }
 
-    public void createRoom(String roomName, Home home) {
+    public void createRoom(
+            String roomName,
+            Home home,
+            int floor,
+            Double length,
+            Double width
+    ) {
         if (roomName == null || roomName.isBlank()) {
             throw new IllegalArgumentException("Room name must not be empty");
         }
@@ -40,12 +46,20 @@ public class RoomService {
         Room room = new Room();
         room.setRoomLabel(roomName);
         room.setHome(home);
+        room.setFloor(floor);
+
+        if (length != null && width != null) {
+            room.setLength(length);
+            room.setWidth(width);
+            room.setArea(length * width);
+        }
 
         roomRepo.createRoomInDatabase(room, home);
     }
 
+
     public void deleteRoom(Room room) {
-        // explicit deletion → avoids relying on DB cascade
+        // explicit deletion, avoids relying on DB cascade
         for (Device device : room.getDevices()) {
             deviceRepo.deleteDevice(device.getId());
         }
