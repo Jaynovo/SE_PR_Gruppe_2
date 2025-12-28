@@ -5,6 +5,7 @@ import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
+import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -84,7 +85,7 @@ public class HomeRegistrationController {
             userRepo.updateHome(currentUser, newHome);
 
             dialog.info("Bestätigung", "Home has been created successfully!", ButtonType.OK);
-            navigate.goTo("dashboard_page");
+            navigate.goTo(Page.DASHBOARD.fxml());
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -157,11 +158,11 @@ public class HomeRegistrationController {
         Optional<ButtonType> result = alert.showAndWait();
 
         if (result.isPresent() && result.get() == ButtonType.YES) {
-            navigate.goTo("dashboard_page");
+            navigate.goTo(Page.DASHBOARD.fxml());
         }
     }
 
     public void handleDashboard() {
-        navigate.goTo("dashboard_page");
+        navigate.goTo(Page.DASHBOARD.fxml());
     }
 }

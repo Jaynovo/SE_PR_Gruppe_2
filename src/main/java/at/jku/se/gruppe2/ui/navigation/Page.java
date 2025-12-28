@@ -7,6 +7,7 @@ public enum Page {
     PROFILE("profile_page"),
     DASHBOARD("dashboard_page"),
     LOGIN("login_page"),
+    USER_REGISTRATION("registration_page"),
     HOME_REGISTRATION("home_registration_page");
 
     private final String fxml;

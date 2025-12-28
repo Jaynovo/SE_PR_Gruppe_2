@@ -6,6 +6,7 @@ import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.GeoCodingService;
 import at.jku.se.gruppe2.service.NavigationService;
 import at.jku.se.gruppe2.ui.UIUtils;
+import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.*;
 
 import javafx.fxml.FXML;
@@ -43,7 +44,7 @@ public class ProfileController {
 
         User current = Session.getCurrentUser();
         if (current == null) {
-            MainApp.setRoot("login_page");
+            MainApp.setRoot(Page.LOGIN.fxml());
             return;
         }
 
@@ -264,7 +265,7 @@ public class ProfileController {
             if (previous != null) {
                 navigate.goTo(previous);
             } else {
-                navigate.goTo("dashboard_page"); // fallback
+                navigate.goTo(Page.DASHBOARD.fxml()); // fallback
             }
 
         } catch (Exception e) {
