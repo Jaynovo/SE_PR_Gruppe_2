@@ -5,6 +5,7 @@ import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.DialogService;
 import at.jku.se.gruppe2.service.NavigationService;
 import at.jku.se.gruppe2.ui.UIUtils;
+import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.PasswordUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -105,7 +106,7 @@ public class RegistrationController {
 
 
                 if (result.isPresent() && result.get() == ButtonType.OK) {
-                    navigate.goTo("login_page");
+                    navigate.goTo(Page.LOGIN.fxml());
                 }
             } else {
                 dialog.error("Registration failed", "Could not save user.");
@@ -157,6 +158,6 @@ public class RegistrationController {
     }
 
     public void handleToLogin() {
-        navigate.goTo("login_page");
+        navigate.goTo(Page.LOGIN.fxml());
     }
 }

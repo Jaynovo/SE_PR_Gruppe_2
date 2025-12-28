@@ -7,6 +7,7 @@ import at.jku.se.gruppe2.model.sensor.*;
 import at.jku.se.gruppe2.persistence.DeviceRepository;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;
+import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -193,7 +194,7 @@ public class RoomDashboardController {
 
     public void handleDashboard() {
         stopLiveRefresh();
-        navigate.goTo("dashboard_page");
+        navigate.goTo(Page.DASHBOARD.fxml());
     }
 
     public void handleAddDevice() {
@@ -250,13 +251,13 @@ public class RoomDashboardController {
     }
 
     public void handleUserProfile() {
-        Session.setPreviousPage("home_dashboard_page");
-        navigate.goTo("profile_page");
+        Session.setPreviousPage(Page.HOME_DASHBOARD.fxml());
+        navigate.goTo(Page.PROFILE.fxml());
     }
 
     public void handleLogout() {
         dialog.info("Logout", "You have been logged out.");
-        navigate.goTo("login_page");
+        navigate.goTo(Page.LOGIN.fxml());
     }
 
     private void showVentilationConfig(Device actuatorDevice) {

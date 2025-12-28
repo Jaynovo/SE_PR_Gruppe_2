@@ -155,7 +155,7 @@ public class DashboardController extends BaseController implements Initializable
         }
 
         // Navigate to home registration if no home exists
-        navigate.goTo("home_registration_page");
+        navigate.goTo(Page.HOME_REGISTRATION.fxml());
     }
 
     public void deleteHomeButtonClicked() {

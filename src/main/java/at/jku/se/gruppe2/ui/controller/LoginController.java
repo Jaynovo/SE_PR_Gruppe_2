@@ -1,7 +1,7 @@
 package at.jku.se.gruppe2.ui.controller;
 
-import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.service.NavigationService;
+import at.jku.se.gruppe2.ui.navigation.Page;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import at.jku.se.gruppe2.model.User;
@@ -25,7 +25,7 @@ public class LoginController {
 
     @FXML
     private void registerButtonClicked() {
-        navigate.goTo("registration_page");
+        navigate.goTo(Page.USER_REGISTRATION.fxml());
     }
     @FXML
     private void handleLoginButton() {
@@ -51,20 +51,9 @@ public class LoginController {
         }
 
         Session.setCurrentUser(UserBuildingService.buildUserByEmail(email));
-        //Session.setCurrentUser(user.orElse(null)); // User speichern für Dashboard
 
         try {
-            // TESTCODE >>>
-            User newUser = Session.getCurrentUser();
-            System.out.println("User logged in: " + newUser.getEmail());
-            if (newUser.getHome() != null) {
-                System.out.println("User home: " + newUser.getHome().getHomeLabel());
-            }
-            if (newUser.getHome() != null) {
-                System.out.println("User Address: " + newUser.getHome().getAddress().getStreet() + ", " + newUser.getHome().getAddress().getHouseNumber() + ", " + newUser.getHome().getAddress().getPostalCode());
-            }
-            // <<< TESTCODE
-            MainApp.setRoot("dashboard_page");
+            navigate.goTo(Page.DASHBOARD.fxml());
         } catch (Exception e) {
             e.printStackTrace();
             errorLabel.setText("Error loading dashboard.");
