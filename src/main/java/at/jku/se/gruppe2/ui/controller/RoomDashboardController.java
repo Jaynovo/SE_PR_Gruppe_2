@@ -259,14 +259,6 @@ public class RoomDashboardController {
         navigate.goTo("login_page");
     }
 
-    public List<Device> getDevices() {
-        return devices;
-    }
-
-    public void setDevices(List<Device> devices) {
-        this.devices = devices;
-    }
-
     private void showVentilationConfig(Device actuatorDevice) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Configure Ventilation");

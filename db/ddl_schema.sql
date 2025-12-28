@@ -41,12 +41,26 @@ create table home_user
     PRIMARY KEY (home_id, user_id)
 );
 
-create table room (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    label VARCHAR(100),
-    home_info INTEGER NOT NULL REFERENCES home (id) ON DELETE CASCADE,
-    area numeric(5,2),
-    UNIQUE(home_info, label)                               -- Each label is unique within each Home
+create table room
+(
+    id        INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    label     VARCHAR(100) NOT NULL,
+    home_info INTEGER      NOT NULL
+        REFERENCES home (id) ON DELETE CASCADE,
+
+    floor     INTEGER NOT NULL CHECK (floor > 0),
+    length    DOUBLE PRECISION CHECK (length > 0),
+    width     DOUBLE PRECISION CHECK (width > 0),
+
+    area      DOUBLE PRECISION
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN length IS NOT NULL AND width IS NOT NULL
+                    THEN length * width
+                END
+            ) STORED,
+
+    UNIQUE (home_info, label)
 );
 
 create type device_category as enum ('SENSOR', 'ACTUATOR');
