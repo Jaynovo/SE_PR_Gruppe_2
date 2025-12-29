@@ -9,12 +9,11 @@ VALUES ('Max', 'Mustermann', 'max.mustermann@example.com',
         '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8',  1
        );
 
-INSERT INTO room(label, home_info, area)
-VALUES ('Living Room', 1, 24.6);
+INSERT INTO room(label, home_info, floor, length, width)
+VALUES ('Living Room', 1, 1, 4, 2.6);
 
-INSERT INTO room(label, home_info, area)
-VALUES ('Bedroom', 1, 32);
-
+INSERT INTO room(label, home_info, floor, length, width)
+VALUES ('Bedroom', 1, 1, 21, 1.2);
 
 -- Living Room devices
 INSERT INTO device(room_id, label)
@@ -82,7 +81,7 @@ VALUES
          WHERE d.label = 'Living Room Humidity Sensor'
            AND r.label = 'Living Room'),
         (SELECT id FROM device_type
-         WHERE label = 'Humidity Sensor'
+         WHERE label = 'HumiditySensor'
            AND category = 'SENSOR')
     );
 
@@ -102,13 +101,13 @@ VALUES
 
 
 -- Living Room actuators
--- Light Switch
+-- SmartLightActuator
 INSERT INTO actuator (device_id, actuator_type_id)
 SELECT d.id, dt.id
 FROM device d
          JOIN room r ON d.room_id = r.id
          JOIN device_type dt
-              ON dt.label = 'Light Switch'
+              ON dt.label = 'SmartLightActuator'
                   AND dt.category = 'ACTUATOR'
 WHERE d.label = 'Living Room Ceiling Light'
   AND r.label = 'Living Room';
@@ -130,7 +129,7 @@ SELECT d.id, dt.id
 FROM device d
          JOIN room r ON d.room_id = r.id
          JOIN device_type dt
-              ON dt.label = 'Light Switch'
+              ON dt.label = 'SmartLightActuator'
                   AND dt.category = 'ACTUATOR'
 WHERE d.label = 'Bedroom Ceiling Light'
   AND r.label = 'Bedroom';
