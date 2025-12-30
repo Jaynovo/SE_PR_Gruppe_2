@@ -112,10 +112,13 @@ create table actuator_state
 
 INSERT INTO device_type (category, label, unit)
 VALUES  ('SENSOR',   'Thermometer',      '°C'),
-        ('SENSOR',   'Humidity Sensor',  '%'),
-        ('ACTUATOR', 'Light Switch',     NULL),
+        ('SENSOR',   'HumiditySensor',  '%'),
+        ('ACTUATOR', 'Light Switch',     NULL), -- TODO is this even necessary??
         ('ACTUATOR', 'Heating',          '%'),
         ('SENSOR',   'CO2Sensor',   'ppm'),
         ('SENSOR',   'NoiseSensor', 'dB'),
         ('ACTUATOR', 'Ventilation', NULL),
-        ('ACTUATOR', 'AlarmSystem',       NULL);
+        ('ACTUATOR', 'AlarmSystem',       NULL),
+        ('SENSOR', 'LightSensor', 'lx'),
+        ('ACTUATOR', 'SmartLightActuator', NULL),
+        ('ACTUATOR', 'Blinds', NULL);

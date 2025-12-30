@@ -1,16 +1,16 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.model.actuator.Actuator;
-import at.jku.se.gruppe2.model.actuator.AlarmSystemActuator;
-import at.jku.se.gruppe2.model.actuator.VentilationActuator;
-import at.jku.se.gruppe2.model.sensor.CO2Sensor;
-import at.jku.se.gruppe2.model.sensor.NoiseSensor;
-import at.jku.se.gruppe2.model.sensor.Sensor;
-import at.jku.se.gruppe2.model.sensor.Thermometer;
+import at.jku.se.gruppe2.model.Device;
+import at.jku.se.gruppe2.model.DeviceType;
+import at.jku.se.gruppe2.model.Room;
+import at.jku.se.gruppe2.model.actuator.*;
+import at.jku.se.gruppe2.model.sensor.*;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /* TODO CHANGE: currently generated class to allow adding rooms*/
 public class DeviceRepository {
@@ -125,7 +125,7 @@ public class DeviceRepository {
                 case ACTUATOR -> createActuator(typeLabel);
             };
 
-            //DeviceType erstellen und setzten
+            //Create and set DeviceType
             DeviceType dt = new DeviceType();
             dt.setId(typeId);
             dt.setCategory(category);
@@ -146,6 +146,8 @@ public class DeviceRepository {
             case "Thermometer" -> new Thermometer();
             case "CO2Sensor" -> new CO2Sensor();
             case "NoiseSensor" -> new NoiseSensor();
+            case "LightSensor" -> new LightSensor();
+            case "HumiditySensor" -> new HumiditySensor();
             default -> new Sensor() {
             }; // fallback
         };
@@ -155,6 +157,8 @@ public class DeviceRepository {
         return switch (typeLabel) {
             case "Ventilation" -> new VentilationActuator();
             case "AlarmSystem" -> new AlarmSystemActuator();
+            case "SmartLightActuator" -> new SmartLightActuator();
+            case "BlindsActuator" -> new BlindsActuator();
             default -> new Actuator() {
             }; //fallback
         };
