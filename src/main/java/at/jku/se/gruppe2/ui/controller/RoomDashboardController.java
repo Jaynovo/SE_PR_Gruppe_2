@@ -437,9 +437,8 @@ public class RoomDashboardController {
     }
     private void evaluateAutomation() {
 
-        // =========================
         // Ventilation Automation (CO2)
-        // =========================
+
         Sensor co2 = null;
         for (Device d : devices) {
             if (d instanceof Sensor s && "CO2Sensor".equalsIgnoreCase(d.getTypeLabel())) {
@@ -472,10 +471,7 @@ public class RoomDashboardController {
                 }
             }
         }
-
-        // =========================
         // Alarm Automation (Noise -> TRIGGERED)
-        // =========================
         Sensor noise = null;
         for (Device d : devices) {
             if (d instanceof Sensor s && "NoiseSensor".equalsIgnoreCase(d.getTypeLabel())) {
