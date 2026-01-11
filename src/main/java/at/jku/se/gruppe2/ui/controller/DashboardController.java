@@ -217,6 +217,10 @@ public class DashboardController extends BaseController implements Initializable
         }
     }
 
+    public void changeHomeDetails() {
+        navigate.goTo(Page.HOME_EDIT.fxml());
+    }
+
     public void handleUserProfile() {
         handleUserProfile(Page.HOME_DASHBOARD.fxml());
     }

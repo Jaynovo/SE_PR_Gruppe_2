@@ -22,7 +22,7 @@ public class MainApp extends Application {
         primaryStage.setTitle("Smart Home Simulator");
         primaryStage.setResizable(true);
 
-        Scene scene = new Scene(FXMLLoader.load(getClass().getResource("/fxml/login-registration/login_page.fxml")));
+        Scene scene = new Scene(FXMLLoader.load(getClass().getResource("/fxml/user-login-registration/login_page.fxml")));
         scene.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();

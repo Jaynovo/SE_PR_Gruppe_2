@@ -30,7 +30,6 @@ public class HomeRegistrationController {
         this.homeRepo= homeRepo;
     }
 
-
     @FXML
     public void initialize (){
         UIUtils.setupCountryComboBox(countryBox);
@@ -39,13 +38,7 @@ public class HomeRegistrationController {
     @FXML
     private void saveButtonClicked() {
 
-        String validationErrors = validateInputs();
-
-        //Validierung prüfen
-        if (validationErrors != null) {
-            dialog.error("Missing Fields", "Please fill out all required fields!\n\n" +
-                            "You are missing the following fields:\n" + validationErrors,
-                    ButtonType.OK);
+        if (!validateInputs()) {
             return;
         }
 
@@ -93,57 +86,23 @@ public class HomeRegistrationController {
         }
     }
 
-    private String validateInputs() {
-        StringBuilder errors = new StringBuilder();
+    private boolean validateInputs() {
+        ValidationService.ValidationResult result = ValidationService.validateCompleteHome(
+                homeLabel.getText(),
+                floorLevels.getValue(),
+                street.getText(),
+                streetNumber.getText(),
+                postalCode.getText(),
+                city.getText(),
+                countryBox.getValue()
+        );
 
-        //Check for all possible errors
-        if (homeLabel.getText().isBlank()) {
-            errors.append("- Home label cannot be empty.\n");
-        } else if (homeLabel.getText().length() < 4) {
-            errors.append("- Home label must be at least 4 characters long.\n");
+        if (!result.isValid()) {
+            dialog.error("Validation Error", result.getErrorMessage());
+            return false;
         }
 
-        if (floorLevels.getValue() <= 0) {
-            errors.append("- Number of floors must be greater than 0.\n");
-        }
-
-        if (street.getText().isBlank()) {
-            errors.append("- Street is required.\n");
-        }
-
-        if (streetNumber.getText().isBlank()) {
-            errors.append("- Street number is required.\n");
-        }
-
-        if (postalCode.getText().isBlank()) {
-            errors.append("- Postal code is required.\n");
-        }
-
-        if (city.getText().isBlank()) {
-            errors.append("- City is required.\n");
-        }
-
-        if (countryBox.getSelectionModel().getSelectedItem() == null ||
-                countryBox.getSelectionModel().getSelectedItem().isBlank()) {
-            errors.append("- Country is required.\n");
-        }
-
-
-        return errors.isEmpty() ? null : errors.toString();
-
-//        // If no errors it is valid
-//        if (errors.length() == 0) {
-//            return true;
-//        }
-//
-//        // Show all errors in a single alert
-//        UIUtils.styledAlert(
-//                Alert.AlertType.ERROR,
-//                "You are missing the following inputs:\n\n" + errors,
-//                ButtonType.OK
-//        ).showAndWait();
-//
-//        return false;
+        return true;
     }
 
     @FXML

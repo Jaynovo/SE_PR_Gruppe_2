@@ -57,7 +57,7 @@
                                 <Label fx:id="homeFloors" text="--"/>
                             </HBox>
                         </VBox>
-                        <Button text="Open Home" onAction="#openHomeDetails"/>
+                        <Button text="Change Home Details" onAction="#changeHomeDetails"/>
                     </HBox>
                 </top>
 
