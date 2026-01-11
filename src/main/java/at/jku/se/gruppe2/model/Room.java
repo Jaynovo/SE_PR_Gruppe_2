@@ -3,6 +3,7 @@ package at.jku.se.gruppe2.model;
 import java.util.*;
 
 public class Room {
+
     private int id;
     private String roomLabel;
     private Integer floor;
@@ -11,8 +12,12 @@ public class Room {
     private Double area;
 
     private Home home;
-
     private List<Device> devices = new ArrayList<>();
+
+    private Double minTemperature;
+    private Double maxTemperature;
+
+    public Room() {}
 
     public  Room(int id, String roomLabel, double length, double width, int floor) {
         this.id = id;
@@ -23,9 +28,7 @@ public class Room {
         this.area = length * width;
     }
 
-    public Room() {
-
-    }
+    /* Getter and Setter */
 
     public int getId() {
         return id;
@@ -43,6 +46,14 @@ public class Room {
         this.roomLabel = roomLabel;
     }
 
+    public Integer getFloor() {
+        return floor;
+    }
+
+    public void setFloor(int floor) {
+        this.floor = floor;
+    }
+
     public Double getLength() {
         return length;
     }
@@ -55,20 +66,16 @@ public class Room {
         return width;
     }
 
-    public void setWidth(double width) {
+    public void setWidth(Double width) {
         this.width = width;
+    }
+
+    public Double getArea() {
+        return area;
     }
 
     public void setArea(Double area) {
         this.area = area;
-    }
-
-    public Integer getFloor() {
-        return floor;
-    }
-
-    public void setFloor(int floor) {
-        this.floor = floor;
     }
 
     public Home getHome() {
@@ -85,5 +92,36 @@ public class Room {
 
     public void setDevices(List<Device> devices) {
         this.devices = devices;
+    }
+
+    /* Temperature Settings */
+
+    public Double getMinTemperature() {
+        return minTemperature;
+    }
+
+    public void setMinTemperature(Double minTemperature) {
+        this.minTemperature = minTemperature;
+    }
+
+    public Double getMaxTemperature() {
+        return maxTemperature;
+    }
+
+    public void setMaxTemperature(Double maxTemperature) {
+        this.maxTemperature = maxTemperature;
+    }
+
+    public boolean hasTemperatureLimits() {
+        return minTemperature != null && maxTemperature != null;
+    }
+
+    /* Device List Helper */
+
+    public <T extends Device> List<T> getDevicesOfType(Class<T> type) {
+        return devices.stream()
+                .filter(type::isInstance)
+                .map(type::cast)
+                .toList();
     }
 }

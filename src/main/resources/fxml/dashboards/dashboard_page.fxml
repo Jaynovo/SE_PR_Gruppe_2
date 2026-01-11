@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane prefHeight="600.0" prefWidth="640.0"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="at.jku.se.gruppe2.ui.controller.DashboardController">
+
+    <top>
+        <ToolBar BorderPane.alignment="CENTER">
+            <Label text="Smart Home Dashboard" styleClass="title"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <MenuButton text="Manage User">
+                <items>
+                    <MenuItem text="Profile" onAction="#handleUserProfile"/>
+                    <MenuItem text="Logout" onAction="#handleLogout"/>
+                </items>
+            </MenuButton>
+        </ToolBar>
+    </top>
+
+    <center>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+
+            <Label text="Your Home:" styleClass="title" />
+
+            <Label fx:id="temperatureLabel" text="Loading weather..." style="-fx-font-size: 14;" />
+
+            <Button fx:id="addHomeButton"
+                    text="Add a new Home"
+                    onAction="#addHomeButtonClicked"
+                    visible="false"
+                    managed="false" />
+
+            <!-- Home display area -->
+            <BorderPane fx:id="homeCard" visible="false" styleClass="card">
+                <top>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Home Details" styleClass="card-title"/>
+                            <HBox spacing="4" alignment="CENTER_LEFT">
+                                <Label text="Name:" styleClass="muted"/>
+                                <Label fx:id="homeName" text="Loading..."/>
+                            </HBox>
+                            <HBox spacing="4" alignment="CENTER_LEFT">
+                                <Label text="Address:" styleClass="muted"/>
+                                <Label fx:id="homeAddress" text="--"/>
+                            </HBox>
+                            <HBox spacing="4" alignment="CENTER_LEFT">
+                                <Label text="Floors:" styleClass="muted"/>
+                                <Label fx:id="homeFloors" text="--"/>
+                            </HBox>
+                        </VBox>
+                        <Button text="Open Home" onAction="#openHomeDetails"/>
+                    </HBox>
+                </top>
+
+                <center>
+                    <VBox spacing="8">
+                        <padding>
+                            <Insets top="16" right="0" bottom="0" left="0"/>
+                        </padding>
+
+                        <Label text="Rooms" styleClass="card-title"/>
+
+                        <ScrollPane fitToWidth="true" pannable="true" maxHeight="300"
+                                    style="-fx-background: transparent; -fx-background-color: transparent;">
+                            <FlowPane fx:id="cardsFlow" hgap="16" vgap="16">
+                                <padding>
+                                    <Insets top="8" right="8" bottom="8" left="8"/>
+                                </padding>
+                            </FlowPane>
+                        </ScrollPane>
+                    </VBox>
+                </center>
+            </BorderPane>
+
+        </VBox>
+    </center>
+
+</BorderPane>

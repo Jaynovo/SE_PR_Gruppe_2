@@ -20,6 +20,7 @@ public class DashboardController extends BaseController implements Initializable
     @FXML private Label homeName;
     @FXML private Label homeAddress;
     @FXML private Label homeFloors;
+    @FXML private Button addHomeButton;
 
     @FXML private FlowPane cardsFlow;
     private Home home;
@@ -37,79 +38,95 @@ public class DashboardController extends BaseController implements Initializable
     private final DialogService dialog = new DialogService();
 
 
-    /* TODO restyle card and dashboard layout*/
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         User user = Session.getCurrentUser();
         if (user == null) {
             temperatureLabel.setText("No user logged in");
+            showNoHomeState();
             return;
         }
 
-        //Load the home from the database
+        // Load the home from the database
         Home home = homeRepo.getHomeByUser(user).orElse(null);
 
         if (home == null) {
-            temperatureLabel.setText("No home available");
-            homeCard.setVisible(false);
+            showNoHomeState();
             return;
         }
 
-        //Add the home info
-        homeName.setText(home.getHomeLabel());
-        homeFloors.setText("The number of floors is "+ home.getFloors());
+        // Home exists - show it
+        this.home = home;
+        showHomeState();
+        displayHomeInfo();
+        loadRooms();
+        renderCards();
+    }
 
+    private void showNoHomeState() {
+        temperatureLabel.setText("No home available");
+        homeCard.setVisible(false);
+        homeCard.setManaged(false);
+        addHomeButton.setVisible(true);
+        addHomeButton.setManaged(true);
+    }
+
+    private void showHomeState() {
+        homeCard.setVisible(true);
+        homeCard.setManaged(true);
+        addHomeButton.setVisible(false);
+        addHomeButton.setManaged(false);
+    }
+
+    private void displayHomeInfo() {
+        // Add the home info
+        homeName.setText(home.getHomeLabel());
+        homeFloors.setText(String.valueOf(home.getFloors()));
 
         Address address = home.getAddress();
         if (address != null) {
-            homeAddress.setText(address.getStreet() +" "+ address.getHouseNumber()
-                            + "\n"+address.getCity() +" "+ address.getPostalCode());
-        } else {
-            homeAddress.setText("No address available! \n Please add a address as soon as possible!");
-        }
+            homeAddress.setText(address.getStreet() + " " + address.getHouseNumber()
+                    + ", " + address.getCity() + " " + address.getPostalCode());
 
-        homeCard.setVisible(true);
+            // Geocoding logic with check if it is needed
+            boolean needsGeocoding = Double.isNaN(address.getLatitude()) ||
+                    Double.isNaN(address.getLongitude()) ||
+                    (address.getLatitude() == 0.0 && address.getLongitude() == 0.0);
 
-        //New Geocoding logic with check if it is needed
-        boolean needsGeocoding= Double.isNaN(address.getLatitude()) || Double.isNaN(address.getLongitude()) ||
-                (address.getLatitude() == 0.0 && address.getLongitude() == 0.0);
+            if (needsGeocoding) {
+                System.out.println("Geocoding address...");
+                GeoCodingService.enrichWithCoordinates(address);
 
-        if (needsGeocoding){
-            System.out.println("Geocoding address...");
-            GeoCodingService.enrichWithCoordinates(address);
+                // Save to DB
+                AddressRepository addressRepo = new AddressRepository();
+                addressRepo.updateAddressInDatabase(address);
 
-            //Save to DB
-            AddressRepository addressRepo = new AddressRepository();
-            addressRepo.updateAddressInDatabase(address);
-
-            System.out.println("The new coordinates have been saved to the DB!");
-            System.out.println("Coordinates after geocoding: LAT= " + address.getLatitude()
+                System.out.println("The new coordinates have been saved to the DB!");
+                System.out.println("Coordinates after geocoding: LAT= " + address.getLatitude()
                         + " and LON= " + address.getLongitude());
-        }
+            }
 
+            // Retrieve weather from service
+            double temp = WeatherService.getCurrentTemperature(
+                    address.getLatitude(),
+                    address.getLongitude()
+            );
 
-        //Retrieve weather from service
-        double temp = WeatherService.getCurrentTemperature(
-                address.getLatitude(),
-                address.getLongitude()
-        );
-
-        if (Double.isNaN(temp)) {
-            temperatureLabel.setText("Weather unavailable");
+            if (Double.isNaN(temp)) {
+                temperatureLabel.setText("Weather unavailable");
+            } else {
+                temperatureLabel.setText(String.format("Current temperature: %.1f °C", temp));
+            }
         } else {
-            temperatureLabel.setText(String.format("Current temperature: %.1f °C", temp));
+            homeAddress.setText("No address available");
+            temperatureLabel.setText("Weather unavailable (no address)");
         }
-
-        this.home = home;
-        loadRooms();
-        renderCards();
-
     }
 
     private void loadRooms() {
         rooms = roomRepo.getAllRoomsByHome(home);
 
-        //Load devices for each room
+        // Load devices for each room
         for (Room room : rooms.orElse(Collections.emptyList())) {
             List<Device> devices = deviceRepo.getDevicesByRoomId(room.getId());
             room.setDevices(devices);
@@ -122,13 +139,13 @@ public class DashboardController extends BaseController implements Initializable
     private void renderCards() {
         cardsFlow.getChildren().clear();
 
-        if (home != null) {
+        if (home != null && rooms.isPresent()) {
             cardsFlow.getChildren().add(
                     cardFactory.createHomeCard(
                             home,
                             h -> openHomeDetails(),
-                            h -> addHomeButtonClicked(), // wrapper to match Consumer<Home>
-                            h -> deleteHomeButtonClicked() // wrapper to match Consumer<Home>
+                            h -> addHomeButtonClicked(),
+                            h -> deleteHomeButtonClicked()
                     )
             );
         }
@@ -146,10 +163,10 @@ public class DashboardController extends BaseController implements Initializable
         if (existingHome != null) {
             dialog.info("Information",
                     """
-                            Home creation not possible!
-                            
-                            You are not allowed more than one home at the same time.
-                            Please first delete your home if you want to add a new home."""
+                    Home creation not possible!
+                    
+                    You are not allowed more than one home at the same time.
+                    Please first delete your home if you want to add a new home."""
             );
             return;
         }
@@ -174,29 +191,33 @@ public class DashboardController extends BaseController implements Initializable
             return;
         }
 
-        //Get the home
-        Home home= homeRepo.getHomeByUser(user).orElse(null);
-        if (home == null){
-            dialog.error("Error",  "No home found to delete.");
+        // Get the home
+        Home home = homeRepo.getHomeByUser(user).orElse(null);
+        if (home == null) {
+            dialog.error("Error", "No home found to delete.");
             return;
         }
 
-        //Delete the home from DB
+        // Delete the home from DB
         int deleted = homeRepo.deleteHomeInDatabase(home.getId());
-        if (deleted==1) {
+        if (deleted == 1) {
             dialog.info("Success", "Your home has been deleted!");
-            homeCard.setVisible(false);
-            homeName.setText("");
-            homeAddress.setText("");
-            homeFloors.setText("");
-            temperatureLabel.setText("No home available");
+
+            // Clear the current home reference
+            this.home = null;
+            this.rooms = Optional.empty();
+
+            // Clear the cards
+            cardsFlow.getChildren().clear();
+
+            // Show the no home state
+            showNoHomeState();
         } else {
-            dialog.error("Error", "Failed to delete the home! \n Please try again.");
+            dialog.error("Error", "Failed to delete the home!\nPlease try again.");
         }
     }
 
     public void handleUserProfile() {
         handleUserProfile(Page.HOME_DASHBOARD.fxml());
     }
-
 }

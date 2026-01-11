@@ -57,12 +57,46 @@ public class RoomService {
         roomRepo.createRoomInDatabase(room, home);
     }
 
-
     public void deleteRoom(Room room) {
         // explicit deletion, avoids relying on DB cascade
         for (Device device : room.getDevices()) {
             deviceRepo.deleteDevice(device.getId());
         }
         roomRepo.deleteRoom(room.getId());
+    }
+
+// --------------------
+// Room settings logic
+// --------------------
+
+    public void updateRoomSettings(Room room, Double minTemperature, Double maxTemperature) {
+        if (room == null) {
+            throw new IllegalArgumentException("Room must not be null");
+        }
+
+        validateTemperatureSettings(minTemperature, maxTemperature);
+
+        room.setMinTemperature(minTemperature);
+        room.setMaxTemperature(maxTemperature);
+
+        roomRepo.updateRoom(room);
+    }
+
+    public void clearRoomSettings(Room room) {
+        updateRoomSettings(room, null, null);
+    }
+
+    private void validateTemperatureSettings(Double min, Double max) {
+        if (min != null && (min < -50 || min > 100)) {
+            throw new IllegalArgumentException("Minimum temperature out of range");
+        }
+        if (max != null && (max < -50 || max > 100)) {
+            throw new IllegalArgumentException("Maximum temperature out of range");
+        }
+        if (min != null && max != null && min >= max) {
+            throw new IllegalArgumentException(
+                    "Minimum temperature must be lower than maximum temperature"
+            );
+        }
     }
 }
