@@ -148,6 +148,134 @@ public class ValidationService {
         return result;
     }
 
+    // ========== ROOM VALIDATION ==========
+
+    /**
+     * Validates room label (name)
+     */
+    public static ValidationResult validateRoomLabel(String roomLabel) {
+        ValidationResult result = new ValidationResult();
+
+        if (roomLabel == null || roomLabel.trim().isEmpty()) {
+            result.addError("Please enter a name for your room.");
+        } else if (roomLabel.trim().length() < 2) {
+            result.addError("Room name must be at least 2 characters long.");
+        } else if (roomLabel.trim().length() > 100) {
+            result.addError("Room name must not exceed 100 characters.");
+        }
+
+        return result;
+    }
+
+    /**
+     * Validates floor number
+     */
+    public static ValidationResult validateFloorNumber(String floorText) {
+        ValidationResult result = new ValidationResult();
+
+        if (floorText == null || floorText.trim().isEmpty()) {
+            result.addError("Please enter a floor number.");
+            return result;
+        }
+
+        try {
+            int floor = Integer.parseInt(floorText.trim());
+            if (floor < -2) {
+                result.addError("Floor number cannot be lower than -2.");
+            } else if (floor > 50) {
+                result.addError("Floor number seems unrealistic (maximum 50).");
+            }
+        } catch (NumberFormatException e) {
+            result.addError("Floor number must be a valid integer.");
+        }
+
+        return result;
+    }
+
+    /**
+     * Validates room length
+     */
+    public static ValidationResult validateRoomLength(String lengthText) {
+        ValidationResult result = new ValidationResult();
+
+        if (lengthText == null || lengthText.trim().isEmpty()) {
+            result.addError("Please enter the room length.");
+            return result;
+        }
+
+        try {
+            double length = Double.parseDouble(lengthText.trim());
+            if (length <= 0) {
+                result.addError("Room length must be greater than 0.");
+            } else if (length > 1000) {
+                result.addError("Room length seems unrealistic (maximum 1000 meters).");
+            }
+        } catch (NumberFormatException e) {
+            result.addError("Room length must be a valid number.");
+        }
+
+        return result;
+    }
+
+    /**
+     * Validates room width
+     */
+    public static ValidationResult validateRoomWidth(String widthText) {
+        ValidationResult result = new ValidationResult();
+
+        if (widthText == null || widthText.trim().isEmpty()) {
+            result.addError("Please enter the room width.");
+            return result;
+        }
+
+        try {
+            double width = Double.parseDouble(widthText.trim());
+            if (width <= 0) {
+                result.addError("Room width must be greater than 0.");
+            } else if (width > 1000) {
+                result.addError("Room width seems unrealistic (maximum 1000 meters).");
+            }
+        } catch (NumberFormatException e) {
+            result.addError("Room width must be a valid number.");
+        }
+
+        return result;
+    }
+
+    /**
+     * Validates all room data at once
+     */
+    public static ValidationResult validateRoomData(
+            String roomLabel,
+            String floorText,
+            String lengthText,
+            String widthText
+    ) {
+        ValidationResult result = new ValidationResult();
+
+        ValidationResult labelResult = validateRoomLabel(roomLabel);
+        if (!labelResult.isValid()) {
+            result.errors.addAll(labelResult.errors);
+        }
+
+        ValidationResult floorResult = validateFloorNumber(floorText);
+        if (!floorResult.isValid()) {
+            result.errors.addAll(floorResult.errors);
+        }
+
+        ValidationResult lengthResult = validateRoomLength(lengthText);
+        if (!lengthResult.isValid()) {
+            result.errors.addAll(lengthResult.errors);
+        }
+
+        ValidationResult widthResult = validateRoomWidth(widthText);
+        if (!widthResult.isValid()) {
+            result.errors.addAll(widthResult.errors);
+        }
+
+        return result;
+    }
+
     // ========== COMBINED VALIDATION ==========
 
     /**

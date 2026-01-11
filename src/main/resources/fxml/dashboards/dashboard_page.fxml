@@ -41,23 +41,29 @@
             <!-- Home display area -->
             <BorderPane fx:id="homeCard" visible="false" styleClass="card">
                 <top>
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                    <HBox spacing="10" alignment="TOP_LEFT">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
                             <Label text="Home Details" styleClass="card-title"/>
                             <HBox spacing="4" alignment="CENTER_LEFT">
-                                <Label text="Name:" styleClass="muted"/>
+                                <Label text="Name:" styleClass="muted" minWidth="70" maxWidth="70"/>
                                 <Label fx:id="homeName" text="Loading..."/>
                             </HBox>
-                            <HBox spacing="4" alignment="CENTER_LEFT">
-                                <Label text="Address:" styleClass="muted"/>
-                                <Label fx:id="homeAddress" text="--"/>
+                            <HBox spacing="4" alignment="TOP_LEFT">
+                                <Label text="Address:" styleClass="muted" minWidth="70" maxWidth="70"/>
+                                <VBox spacing="0">
+                                    <Label fx:id="homeAddressStreet" text="--"/>
+                                    <Label fx:id="homeAddressCity" text="--"/>
+                                </VBox>
                             </HBox>
                             <HBox spacing="4" alignment="CENTER_LEFT">
-                                <Label text="Floors:" styleClass="muted"/>
+                                <Label text="Floors:" styleClass="muted" minWidth="70" maxWidth="70"/>
                                 <Label fx:id="homeFloors" text="--"/>
                             </HBox>
                         </VBox>
-                        <Button text="Change Home Details" onAction="#changeHomeDetails"/>
+                        <VBox spacing="8">
+                            <Button text="Change Home Details" onAction="#changeHomeDetails"/>
+                            <Button text="Delete Home" onAction="#deleteHomeButtonClicked" styleClass="danger"/>
+                        </VBox>
                     </HBox>
                 </top>
 
@@ -67,9 +73,15 @@
                             <Insets top="16" right="0" bottom="0" left="0"/>
                         </padding>
 
-                        <Label text="Rooms" styleClass="card-title"/>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Rooms" styleClass="card-title"/>
+                            <Pane HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="createRoomButton"
+                                    text="+ New Room"
+                                    onAction="#handleCreateRoom"/>
+                        </HBox>
 
-                        <ScrollPane fitToWidth="true" pannable="true" maxHeight="300"
+                        <ScrollPane fitToWidth="true" pannable="true" minHeight="450" maxHeight="450"
                                     style="-fx-background: transparent; -fx-background-color: transparent;">
                             <FlowPane fx:id="cardsFlow" hgap="16" vgap="16">
                                 <padding>
