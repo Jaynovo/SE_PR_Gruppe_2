@@ -29,8 +29,9 @@ public class RoomRepository {
 
     public int createRoomInDatabase(Room room, Home home) {
         String request = """
-                INSERT INTO room (label, home_info, floor, length, width)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO room
+                (label, home_info, floor, length, width, min_temperature, max_temperature)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 RETURNING id;
                 """;
 
@@ -52,6 +53,18 @@ public class RoomRepository {
                     } else {
                         ps.setNull(5, Types.DOUBLE);
                     }
+
+                    if (room.getMinTemperature() != null) {
+                        ps.setDouble(6, room.getMinTemperature());
+                    } else {
+                        ps.setNull(6, Types.DOUBLE);
+                    }
+
+                    if (room.getMaxTemperature() != null) {
+                        ps.setDouble(7, room.getMaxTemperature());
+                    } else {
+                        ps.setNull(7, Types.DOUBLE);
+                    }
                 },
                 rs -> rs.getInt("id")
         );
@@ -60,14 +73,15 @@ public class RoomRepository {
         return id.orElse(0);
     }
 
-    // Returns 1 if update was successful, otherwise returns 0
     public int updateRoom(Room room) {
         String request = """
                 UPDATE room
                 SET label = ?,
                     floor = ?,
                     length = ?,
-                    width = ?
+                    width = ?,
+                    min_temperature = ?,
+                    max_temperature = ?
                 WHERE id = ?;
                 """;
 
@@ -89,11 +103,22 @@ public class RoomRepository {
                         ps.setNull(4, Types.DOUBLE);
                     }
 
-                    ps.setInt(5, room.getId());
+                    if (room.getMinTemperature() != null) {
+                        ps.setDouble(5, room.getMinTemperature());
+                    } else {
+                        ps.setNull(5, Types.DOUBLE);
+                    }
+
+                    if (room.getMaxTemperature() != null) {
+                        ps.setDouble(6, room.getMaxTemperature());
+                    } else {
+                        ps.setNull(6, Types.DOUBLE);
+                    }
+
+                    ps.setInt(7, room.getId());
                 }
         );
     }
-
 
     public int deleteRoom(int roomId) {
         //First delete all Devices belonging to this room
@@ -132,6 +157,12 @@ public class RoomRepository {
 
         double area = rs.getDouble("area");
         room.setArea(rs.wasNull() ? null : area);
+
+        double minTemp = rs.getDouble("min_temperature");
+        room.setMinTemperature(rs.wasNull() ? null : minTemp);
+
+        double maxTemp = rs.getDouble("max_temperature");
+        room.setMaxTemperature(rs.wasNull() ? null : maxTemp);
 
         room.setDevices(new ArrayList<>());
         return room;

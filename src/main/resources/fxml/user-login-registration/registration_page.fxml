@@ -47,7 +47,7 @@
         <HBox alignment="TOP_CENTER"
               spacing="10">
             <Button text="Return to Login" onAction="#handleToLogin"/>
-            <Button text="Register" onAction="#registrationButtonClicked"/>
+            <Button text="Register" onAction="#registrationButtonClicked" defaultButton="true"/>
         </HBox>
 
     </VBox>

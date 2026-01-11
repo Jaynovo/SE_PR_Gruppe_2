@@ -56,7 +56,7 @@
             <HBox alignment="TOP_RIGHT" spacing="10">
 
                 <Button text="Cancel" onAction="#cancelButtonClicked"/>
-                <Button text="Save Home" onAction="#saveButtonClicked"/>
+                <Button text="Save Home" onAction="#saveButtonClicked" defaultButton="true"/>
 
             </HBox>
         </VBox>

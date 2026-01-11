@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import at.jku.se.gruppe2.ui.custom.IntegerField?>
+
+<BorderPane prefHeight="600.0"
+            prefWidth="640.0"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="at.jku.se.gruppe2.ui.controller.HomeEditController">
+
+    <top>
+        <HBox spacing="10" styleClass="card">
+            <Button text="Back to Dashboard" onAction="#handleDashboard"/>
+        </HBox>
+    </top>
+
+    <!-- MAIN CONTAINER -->
+    <center>
+        <VBox alignment="TOP_CENTER"
+              spacing="15"
+              styleClass="card">
+
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20" />
+            </padding>
+
+            <Label text="Edit Home Details">
+                <font>
+                    <Font size="20" />
+                </font>
+            </Label>
+
+            <TextField fx:id="homeLabel" promptText="Name your Home:" />
+            <IntegerField fx:id="floorLevels" promptText="Number of floors:" />
+
+            <Separator />
+
+            <Label text="Address Information" styleClass="card-title"/>
+
+            <HBox spacing="10">
+                <TextField fx:id="street" promptText="Street Name:" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="streetNumber" promptText="Number:" prefWidth="100"/>
+            </HBox>
+
+            <HBox spacing="10">
+                <TextField fx:id="postalCode" promptText="Postal Code:" prefWidth="150" />
+                <TextField fx:id="city" promptText="City:" HBox.hgrow="ALWAYS" />
+            </HBox>
+
+            <ComboBox fx:id="countryBox" promptText="Choose Country:" prefWidth="Infinity"/>
+
+            <HBox alignment="TOP_RIGHT" spacing="10">
+                <Button text="Cancel" onAction="#cancelButtonClicked"/>
+                <Button text="Save Changes" onAction="#saveButtonClicked" defaultButton="true"/>
+            </HBox>
+
+            <Separator />
+
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="Danger Zone" styleClass="error-label"/>
+            </HBox>
+            <Button text="Delete Home"
+                    onAction="#deleteHomeButtonClicked"
+                    styleClass="button, danger"
+                    maxWidth="200"/>
+
+        </VBox>
+    </center>
+
+</BorderPane>

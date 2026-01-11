@@ -56,9 +56,14 @@ create table room
         GENERATED ALWAYS AS (
             CASE
                 WHEN length IS NOT NULL AND width IS NOT NULL
-                    THEN length * width
-                END
-            ) STORED,
+                THEN length * width
+            END
+        ) STORED,
+
+    min_temperature DOUBLE PRECISION
+        CHECK (min_temperature >= -50 AND min_temperature <= 100),
+    max_temperature DOUBLE PRECISION
+        CHECK (max_temperature >= -50 AND max_temperature <= 100),
 
     UNIQUE (home_info, label)
 );

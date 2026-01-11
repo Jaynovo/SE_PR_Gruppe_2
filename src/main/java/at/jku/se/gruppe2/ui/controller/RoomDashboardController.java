@@ -398,5 +398,4 @@ public class RoomDashboardController {
 
         return box;
     }
-
 }

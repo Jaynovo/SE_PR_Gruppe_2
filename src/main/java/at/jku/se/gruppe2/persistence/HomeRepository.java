@@ -44,6 +44,7 @@ public class HomeRepository {
                 this::mapHome
         );
     }
+
     public Optional<Home> getHomeByUser(User user) {
         String request = """
         SELECT h.*
