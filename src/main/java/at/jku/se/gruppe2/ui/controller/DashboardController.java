@@ -5,7 +5,9 @@ import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
+import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.component.*;
+import at.jku.se.gruppe2.ui.custom.CreateRoomDialog;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -18,25 +20,27 @@ public class DashboardController extends BaseController implements Initializable
 
     @FXML private BorderPane homeCard;
     @FXML private Label homeName;
-    @FXML private Label homeAddress;
+    @FXML private Label homeAddressStreet;
+    @FXML private Label homeAddressCity;
     @FXML private Label homeFloors;
     @FXML private Button addHomeButton;
 
     @FXML private FlowPane cardsFlow;
+    @FXML private Label temperatureLabel;
+    @FXML private Button createRoomButton;
+
     private Home home;
     private Optional<List<Room>> rooms;
-
-    @FXML private Label temperatureLabel;
 
     private final HomeRepository homeRepo = new HomeRepository();
     private final RoomRepository roomRepo = new RoomRepository();
     private final DeviceRepository deviceRepo = new DeviceRepository();
+    private final RoomService roomService = new RoomService();
 
-    private final HomeCardFactory cardFactory = new HomeCardFactory();
+    private final RoomCardFactory roomCardFactory = new RoomCardFactory();
 
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
-
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -60,7 +64,7 @@ public class DashboardController extends BaseController implements Initializable
         showHomeState();
         displayHomeInfo();
         loadRooms();
-        renderCards();
+        renderRoomCards();
     }
 
     private void showNoHomeState() {
@@ -85,8 +89,8 @@ public class DashboardController extends BaseController implements Initializable
 
         Address address = home.getAddress();
         if (address != null) {
-            homeAddress.setText(address.getStreet() + " " + address.getHouseNumber()
-                    + ", " + address.getCity() + " " + address.getPostalCode());
+            homeAddressStreet.setText(address.getStreet() + " " + address.getHouseNumber());
+            homeAddressCity.setText(address.getPostalCode() + " " + address.getCity());
 
             // Geocoding logic with check if it is needed
             boolean needsGeocoding = Double.isNaN(address.getLatitude()) ||
@@ -118,37 +122,33 @@ public class DashboardController extends BaseController implements Initializable
                 temperatureLabel.setText(String.format("Current temperature: %.1f °C", temp));
             }
         } else {
-            homeAddress.setText("No address available");
+            homeAddressStreet.setText("No address available");
+            homeAddressCity.setText("");
             temperatureLabel.setText("Weather unavailable (no address)");
         }
     }
 
     private void loadRooms() {
-        rooms = roomRepo.getAllRoomsByHome(home);
+        rooms = Optional.of(roomService.loadRoomsWithDevices(home));
 
-        // Load devices for each room
-        for (Room room : rooms.orElse(Collections.emptyList())) {
-            List<Device> devices = deviceRepo.getDevicesByRoomId(room.getId());
-            room.setDevices(devices);
-        }
-
-        // Set the rooms into the home so HomeCardFactory can access them
+        // Set the rooms into the home
         home.setRooms(rooms.orElse(Collections.emptyList()));
     }
 
-    private void renderCards() {
+    private void renderRoomCards() {
         cardsFlow.getChildren().clear();
 
-        if (home != null && rooms.isPresent()) {
-            cardsFlow.getChildren().add(
-                    cardFactory.createHomeCard(
-                            home,
-                            h -> openHomeDetails(),
-                            h -> addHomeButtonClicked(),
-                            h -> deleteHomeButtonClicked()
-                    )
-            );
-        }
+        rooms.orElse(Collections.emptyList())
+                .forEach(room ->
+                        cardsFlow.getChildren().add(
+                                roomCardFactory.createRoomCard(
+                                        room,
+                                        this::handleManageRoom,
+                                        this::handleDeleteRoom,
+                                        this::handleEditRoom
+                                )
+                        )
+                );
     }
 
     public void addHomeButtonClicked() {
@@ -219,6 +219,53 @@ public class DashboardController extends BaseController implements Initializable
 
     public void changeHomeDetails() {
         navigate.goTo(Page.HOME_EDIT.fxml());
+    }
+
+    public void handleCreateRoom() {
+        if (home == null) {
+            dialog.error("Error", "No home available to add rooms to.");
+            return;
+        }
+
+        CreateRoomDialog createDialog = new CreateRoomDialog(home, roomService);
+        createDialog.showAndWait();
+        reload();
+    }
+
+    public void handleDeleteRoom(Room room) {
+        Alert confirm = UIUtils.styledConfirm(
+                "Delete \"" + room.getRoomLabel() + "\"?\nAll devices in this room will also be deleted."
+        );
+        confirm.setTitle("Delete Room");
+
+        confirm.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                // Delete devices first
+                for (Device device : room.getDevices()) {
+                    deviceRepo.deleteDevice(device.getId());
+                }
+
+                roomRepo.deleteRoom(room.getId());
+                reload();
+            }
+        });
+    }
+
+    public void handleManageRoom(Room room) {
+        Session.setSelectedRoom(room);
+        navigate.goTo(Page.ROOM_DASHBOARD.fxml());
+    }
+
+    public void handleEditRoom(Room room) {
+        Session.setSelectedRoom(room);
+        navigate.goTo(Page.ROOM_EDIT.fxml());
+    }
+
+    private void reload() {
+        if (home != null) {
+            loadRooms();
+            renderRoomCards();
+        }
     }
 
     public void handleUserProfile() {
