@@ -236,6 +236,7 @@ public class RoomDashboardController {
         return String.format("%.2f", value);
     }
 
+
     private void handleDeleteDevice(Device d) {
         Alert confirm = UIUtils.styledConfirm("Delete \"" + d.getLabel() + "\"?");
         confirm.setTitle("Delete Device");
@@ -353,6 +354,9 @@ public class RoomDashboardController {
         grid.add(new Label("Switch OFF at (ppm):"), 0, 2);
         grid.add(offTh, 1, 2);
 
+        onTh.setEditable(false);
+        offTh.setEditable(false);
+
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
@@ -411,6 +415,9 @@ public class RoomDashboardController {
 
         grid.add(new Label("Ticks required:"), 0, 2);
         grid.add(ticks, 1, 2);
+
+        thresholdDb.setEditable(false);
+        ticks.setEditable(false);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
