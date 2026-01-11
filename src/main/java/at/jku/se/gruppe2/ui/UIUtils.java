@@ -171,8 +171,8 @@ public class UIUtils {
         Timeline blink = new Timeline(
                 new KeyFrame(Duration.ZERO,
                         e -> root.setStyle("-fx-background-color: #b91c1c; -fx-background-radius: 18;")),
-                new KeyFrame(Duration.seconds(0.45),
-                        e -> root.setStyle("-fx-background-color: #7f1d1d; -fx-background-radius: 18;"))
+                new KeyFrame(Duration.seconds(1),
+                        e -> root.setStyle("-fx-background-color: #f8ed03; -fx-background-radius: 18;"))
         );
         blink.setCycleCount(Timeline.INDEFINITE);
         blink.play();

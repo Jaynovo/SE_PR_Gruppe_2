@@ -21,7 +21,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
 
-import java.awt.*;
+import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -354,8 +354,8 @@ public class RoomDashboardController {
         grid.add(new Label("Switch OFF at (ppm):"), 0, 2);
         grid.add(offTh, 1, 2);
 
-        onTh.setEditable(false);
-        offTh.setEditable(false);
+        //onTh.setEditable(false);
+        //offTh.setEditable(false);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -416,8 +416,8 @@ public class RoomDashboardController {
         grid.add(new Label("Ticks required:"), 0, 2);
         grid.add(ticks, 1, 2);
 
-        thresholdDb.setEditable(false);
-        ticks.setEditable(false);
+        //thresholdDb.setEditable(false);
+        //ticks.setEditable(false);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -435,12 +435,11 @@ public class RoomDashboardController {
                     "Saved alarm config.", ButtonType.OK).showAndWait();
         });
     }
-
-
     private void evaluateAutomation() {
-        Room room = Session.getSelectedRoom();
 
-        // 1) CO2 Sensor im Raum finden
+        // =========================
+        // Ventilation Automation (CO2)
+        // =========================
         Sensor co2 = null;
         for (Device d : devices) {
             if (d instanceof Sensor s && "CO2Sensor".equalsIgnoreCase(d.getTypeLabel())) {
@@ -448,11 +447,7 @@ public class RoomDashboardController {
                 break;
             }
         }
-        if (co2 == null) return; // kein CO2 Sensor -> keine Lüftungsautomatik
 
-        double co2Value = co2.getValue();
-
-        // 2) Ventilation Actuator im Raum finden
         Device ventilation = null;
         for (Device d : devices) {
             if (d.getCategory() == Device.DeviceCategory.ACTUATOR
@@ -461,27 +456,26 @@ public class RoomDashboardController {
                 break;
             }
         }
-        if (ventilation == null) return; // kein Ventilator im Raum
 
-        // 3) Config holen
-        VentilationConfig cfg = actuatorCfg.getOrCreateVentilationConfig(ventilation.getId());
-        if (!cfg.isAutoMode()) return; // User will manuell steuern
+        if (co2 != null && ventilation != null) {
+            VentilationConfig vCfg = actuatorCfg.getOrCreateVentilationConfig(ventilation.getId());
+            if (vCfg.isAutoMode()) {
 
-        // 4) aktuellen State holen
-        String currentState = actuatorService.getStateOrDefault(ventilation.getId(), "OFF");
-        boolean isOn = "ON".equalsIgnoreCase(currentState);
+                double co2Value = co2.getValue();
+                String currentState = actuatorService.getStateOrDefault(ventilation.getId(), "OFF");
+                boolean isOn = "ON".equalsIgnoreCase(currentState);
 
-        // 5) Hysterese-Regeln anwenden
-        if (!isOn && co2Value >= cfg.getOnThresholdPpm()) {
-            actuatorService.setState(ventilation.getId(), "ON");
-        } else if (isOn && co2Value <= cfg.getOffThresholdPpm()) {
-            actuatorService.setState(ventilation.getId(), "OFF");
+                if (!isOn && co2Value >= vCfg.getOnThresholdPpm()) {
+                    actuatorService.setState(ventilation.getId(), "ON");
+                } else if (isOn && co2Value <= vCfg.getOffThresholdPpm()) {
+                    actuatorService.setState(ventilation.getId(), "OFF");
+                }
+            }
         }
 
-        //ALARMSYSTEM
-        // ===== Alarm Automation (Noise -> TRIGGERED) =====
-
-        // 1) Noise Sensor finden
+        // =========================
+        // Alarm Automation (Noise -> TRIGGERED)
+        // =========================
         Sensor noise = null;
         for (Device d : devices) {
             if (d instanceof Sensor s && "NoiseSensor".equalsIgnoreCase(d.getTypeLabel())) {
@@ -489,11 +483,7 @@ public class RoomDashboardController {
                 break;
             }
         }
-        if (noise == null) return; // kein NoiseSensor -> kein Alarm-Trigger
 
-        double noiseValue = noise.getValue();
-
-        // 2) AlarmSystem Actuator finden
         Device alarm = null;
         for (Device d : devices) {
             if (d.getCategory() == Device.DeviceCategory.ACTUATOR
@@ -502,43 +492,31 @@ public class RoomDashboardController {
                 break;
             }
         }
-        if (alarm == null) return; // keine Alarmanlage im Raum
 
-        // 3) Config holen
-        var alarmCfg = actuatorCfg.getOrCreateAlarmConfig(alarm.getId());
+        if (noise == null || alarm == null) return;
+
+        double noiseValue = noise.getValue();
+
+        AlarmConfig alarmCfg = actuatorCfg.getOrCreateAlarmConfig(alarm.getId());
         if (!alarmCfg.isAutoMode()) return;
 
-        // 4) aktuellen State holen
         String alarmState = actuatorService.getStateOrDefault(alarm.getId(), "DISARMED");
         boolean armed = "ARMED".equalsIgnoreCase(alarmState);
         boolean triggered = "TRIGGERED".equalsIgnoreCase(alarmState);
 
-        // State merken, damit Wechsel erkannt wird
-        if (!alarmState.equalsIgnoreCase(lastAlarmState)) {
-            // Wenn zurückgesetzt wurde
-            if (!"TRIGGERED".equalsIgnoreCase(alarmState)) {
-                lastAlarmState = alarmState;
-            }
-        }
         if (!armed || triggered) {
-            // wenn nicht scharf oder bereits ausgelöst -> counter reset (optional)
             actuatorCfg.resetAlarmNoiseCounter(alarm.getId());
+            lastAlarmState = alarmState;
             return;
         }
-        // 5) Debounce-Regel
+
         int threshold = alarmCfg.getNoiseThresholdDb();
         int requiredTicks = alarmCfg.getRequiredConsecutiveTicks();
 
         int counter = actuatorCfg.getAlarmNoiseCounter(alarm.getId());
-
-        if (noiseValue >= threshold) {
-            counter++;
-        } else {
-            counter = 0;
-        }
+        counter = (noiseValue >= threshold) ? (counter + 1) : 0;
         actuatorCfg.setAlarmNoiseCounter(alarm.getId(), counter);
 
-        // 6) Auslösen
         if (counter >= requiredTicks) {
             actuatorService.setState(alarm.getId(), "TRIGGERED");
             actuatorCfg.resetAlarmNoiseCounter(alarm.getId());
@@ -549,6 +527,7 @@ public class RoomDashboardController {
             }
         }
     }
+
     private void onAlarmTriggered(double noiseValue) {
         UIUtils.showAlarmPopup(
                 "ALARM!",
