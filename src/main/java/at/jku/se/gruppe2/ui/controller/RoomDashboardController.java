@@ -225,7 +225,6 @@ public class RoomDashboardController {
     private String formatSensorValue(String typeLabel, double value) {
         if (typeLabel == null) return String.format("%.2f", value);
 
-
         if (typeLabel.equalsIgnoreCase("CO2Sensor")) {
             return String.format("%.0f", value);
         }
@@ -435,6 +434,7 @@ public class RoomDashboardController {
                     "Saved alarm config.", ButtonType.OK).showAndWait();
         });
     }
+
     private void evaluateAutomation() {
 
         // Ventilation Automation (CO2)
