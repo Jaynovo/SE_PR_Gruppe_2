@@ -247,3 +247,11 @@
 .menu-item .label {
     -fx-text-fill: -fx-text;
 }
+/* ALARMSYSTEM */
+.badge-armed {
+    -fx-background-color: #f15f19;
+}
+
+.badge-triggered {
+    -fx-background-color: #ff0000;
+}

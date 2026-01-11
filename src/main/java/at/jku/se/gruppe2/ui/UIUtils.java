@@ -5,6 +5,19 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.*;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.awt.Toolkit;
+
 import java.util.*;
 
 public class UIUtils {
@@ -108,6 +121,77 @@ public class UIUtils {
         Alert alert = styledAlert(Alert.AlertType.CONFIRMATION, message, ButtonType.OK, ButtonType.CANCEL);
         return alert;
     }
+    public static void showAlarmPopup(String titleText, String message, double noiseValue) {
 
+        Stage stage = new Stage();
+        stage.setTitle("ALARM");
+        stage.initModality(Modality.APPLICATION_MODAL);
 
+        StackPane root = new StackPane();
+        root.setPrefSize(480, 240);
+        root.setStyle("-fx-background-color: #b91c1c; -fx-background-radius: 18;");
+
+        Label title = new Label(titleText);
+        title.setStyle("""
+        -fx-text-fill: white;
+        -fx-font-size: 28px;
+        -fx-font-weight: bold;
+    """);
+
+        Label msg = new Label(
+                message + "\n\nAktueller Lärm: " + String.format("%.1f", noiseValue) + " dB"
+        );
+        msg.setStyle("""
+        -fx-text-fill: white;
+        -fx-font-size: 16px;
+    """);
+        msg.setTextAlignment(TextAlignment.CENTER);
+
+        Button ok = new Button("OK");
+        ok.setStyle("""
+        -fx-background-color: white;
+        -fx-text-fill: #b91c1c;
+        -fx-font-weight: bold;
+        -fx-padding: 10 28;
+        -fx-background-radius: 20;
+    """);
+
+        VBox box = new VBox(18, title, msg, ok);
+        box.setAlignment(Pos.CENTER);
+
+        root.getChildren().add(box);
+
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(
+                UIUtils.class.getResource("/css/app.css").toExternalForm()
+        );
+        stage.setScene(scene);
+
+        //BLINKEN
+        Timeline blink = new Timeline(
+                new KeyFrame(Duration.ZERO,
+                        e -> root.setStyle("-fx-background-color: #b91c1c; -fx-background-radius: 18;")),
+                new KeyFrame(Duration.seconds(1),
+                        e -> root.setStyle("-fx-background-color: #f8ed03; -fx-background-radius: 18;"))
+        );
+        blink.setCycleCount(Timeline.INDEFINITE);
+        blink.play();
+
+        //sound alle 2 Sekunden
+        Timeline beepLoop = new Timeline(
+                new KeyFrame(Duration.ZERO, e -> Toolkit.getDefaultToolkit().beep()),
+                new KeyFrame(Duration.seconds(2))
+        );
+        beepLoop.setCycleCount(Timeline.INDEFINITE);
+        beepLoop.play();
+
+        // Stop alles beim Schließen
+        ok.setOnAction(e -> stage.close());
+        stage.setOnHidden(e -> {
+            blink.stop();
+            beepLoop.stop();
+        });
+
+        stage.show();
+    }
 }

@@ -1,5 +1,6 @@
 package at.jku.se.gruppe2.service;
 
+import at.jku.se.gruppe2.model.actuator.AlarmConfig;
 import at.jku.se.gruppe2.model.actuator.VentilationConfig;
 
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ActuatorConfigService {
 
+    // VENTILATION
     //config pro actuator-device-id
     private final Map<Integer, VentilationConfig> ventilationConfigByActuatorId = new ConcurrentHashMap<>();
 
@@ -27,5 +29,31 @@ public class ActuatorConfigService {
 
     public void setManualOn(int actuatorDeviceId, boolean on) {
         manualOnByActuatorId.put(actuatorDeviceId, on);
+    }
+
+    // ALARMSYSTEM
+    private final Map<Integer, AlarmConfig> alarmConfigByActuatorId = new ConcurrentHashMap<>();
+
+    // Debounce-Counter: wie viele "zu laut"-Ticks in Folge
+    private final Map<Integer, Integer> alarmNoiseCounterByActuatorId = new ConcurrentHashMap<>();
+
+    public AlarmConfig getOrCreateAlarmConfig(int actuatorDeviceId) {
+        return alarmConfigByActuatorId.computeIfAbsent(actuatorDeviceId, id -> new AlarmConfig());
+    }
+
+    public void saveAlarmConfig(int actuatorDeviceId, AlarmConfig cfg) {
+        alarmConfigByActuatorId.put(actuatorDeviceId, cfg);
+    }
+
+    public int getAlarmNoiseCounter(int actuatorDeviceId) {
+        return alarmNoiseCounterByActuatorId.getOrDefault(actuatorDeviceId, 0);
+    }
+
+    public void setAlarmNoiseCounter(int actuatorDeviceId, int value) {
+        alarmNoiseCounterByActuatorId.put(actuatorDeviceId, value);
+    }
+
+    public void resetAlarmNoiseCounter(int actuatorDeviceId) {
+        alarmNoiseCounterByActuatorId.put(actuatorDeviceId, 0);
     }
 }

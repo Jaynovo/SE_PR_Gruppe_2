@@ -30,13 +30,6 @@ public class AlarmSystemActuator extends Actuator {
         setState(TRIGGERED);
     }
 
-    /**
-     * Optional: nach Alarm wieder "scharf" schalten
-
-    public void resetToArmed() {
-        setState(ARMED);
-    }
-    */
     public void resetToDisarmed() {
         setState(DISARMED);
     }
