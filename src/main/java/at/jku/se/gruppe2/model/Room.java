@@ -19,13 +19,14 @@ public class Room {
 
     public Room() {}
 
-    public  Room(int id, String roomLabel, double length, double width, int floor) {
+    public Room(int id, String roomLabel, Double length, Double width, Integer floor) {
         this.id = id;
         this.roomLabel = roomLabel;
         this.length = length;
         this.width = width;
         this.floor = floor;
-        this.area = length * width;
+        // Only calculate area if both dimensions are provided
+        this.area = (length != null && width != null) ? length * width : null;
     }
 
     /* Getter and Setter */
@@ -58,7 +59,7 @@ public class Room {
         return length;
     }
 
-    public void setLength(double length) {
+    public void setLength(Double length) {
         this.length = length;
     }
 

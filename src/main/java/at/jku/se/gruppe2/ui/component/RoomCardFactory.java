@@ -57,29 +57,47 @@ public class RoomCardFactory {
         Label floorValue = new Label(String.valueOf(room.getFloor()));
         floorBox.getChildren().addAll(floorLabel, floorValue);
 
-        // Dimensions
-        HBox dimensionsBox = new HBox(4);
-        dimensionsBox.setAlignment(Pos.CENTER_LEFT);
-        Label dimensionsLabel = new Label("Dimensions:");
-        dimensionsLabel.getStyleClass().add("muted");
-        dimensionsLabel.setMinWidth(80);
-        dimensionsLabel.setMaxWidth(80);
-        Label dimensionsValue = new Label(
-                String.format("%.1f m × %.1f m", room.getLength(), room.getWidth())
-        );
-        dimensionsBox.getChildren().addAll(dimensionsLabel, dimensionsValue);
+        box.getChildren().add(floorBox);
 
-        // Area
-        HBox areaBox = new HBox(4);
-        areaBox.setAlignment(Pos.CENTER_LEFT);
-        Label areaLabel = new Label("Area:");
-        areaLabel.getStyleClass().add("muted");
-        areaLabel.setMinWidth(80);
-        areaLabel.setMaxWidth(80);
-        Label areaValue = new Label(String.format("%.2f m²", room.getArea()));
-        areaBox.getChildren().addAll(areaLabel, areaValue);
+        // Only show dimensions and area if both length and width are available
+        if (room.getLength() != null && room.getWidth() != null) {
+            // Dimensions
+            HBox dimensionsBox = new HBox(4);
+            dimensionsBox.setAlignment(Pos.CENTER_LEFT);
+            Label dimensionsLabel = new Label("Dimensions:");
+            dimensionsLabel.getStyleClass().add("muted");
+            dimensionsLabel.setMinWidth(80);
+            dimensionsLabel.setMaxWidth(80);
+            Label dimensionsValue = new Label(
+                    String.format("%.1f m × %.1f m", room.getLength(), room.getWidth())
+            );
+            dimensionsBox.getChildren().addAll(dimensionsLabel, dimensionsValue);
 
-        box.getChildren().addAll(floorBox, dimensionsBox, areaBox);
+            // Area
+            HBox areaBox = new HBox(4);
+            areaBox.setAlignment(Pos.CENTER_LEFT);
+            Label areaLabel = new Label("Area:");
+            areaLabel.getStyleClass().add("muted");
+            areaLabel.setMinWidth(80);
+            areaLabel.setMaxWidth(80);
+            Label areaValue = new Label(String.format("%.2f m²", (room.getLength() * room.getWidth())));
+            areaBox.getChildren().addAll(areaLabel, areaValue);
+
+            box.getChildren().addAll(dimensionsBox, areaBox);
+        } else {
+            // Optional: Show a message when dimensions are not set
+            HBox dimensionsBox = new HBox(4);
+            dimensionsBox.setAlignment(Pos.CENTER_LEFT);
+            Label dimensionsLabel = new Label("Dimensions:");
+            dimensionsLabel.getStyleClass().add("muted");
+            dimensionsLabel.setMinWidth(80);
+            dimensionsLabel.setMaxWidth(80);
+            Label dimensionsValue = new Label("Not set");
+            dimensionsValue.getStyleClass().add("muted");
+            dimensionsBox.getChildren().addAll(dimensionsLabel, dimensionsValue);
+            box.getChildren().add(dimensionsBox);
+        }
+
         return box;
     }
 
