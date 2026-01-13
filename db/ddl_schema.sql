@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS location_information CASCADE;
 DROP TABLE IF EXISTS address_information CASCADE;
 DROP TYPE IF EXISTS device_category CASCADE;
 DROP TABLE IF EXISTS home, user_information, home_user, room, device, sensor_type, sensor, actuator_type, actuator, sensor_reading, actuator_state CASCADE;
-DROP TABLE IF EXISTS device_type CASCADE;
+DROP TABLE IF EXISTS device_type, home_invitation CASCADE;
 
 create table address_information (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -99,6 +99,20 @@ create table actuator_state
     state       VARCHAR(50)
 );
 
+-- Table to store home invitations
+CREATE TABLE home_invitation (
+                                 id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                                 home_id INTEGER NOT NULL REFERENCES home(id) ON DELETE CASCADE,
+                                 inviter_user_id INTEGER NOT NULL REFERENCES user_information(id) ON DELETE CASCADE,
+                                 invitee_email VARCHAR(100) NOT NULL,
+                                 invitation_status VARCHAR(20) DEFAULT 'PENDING' CHECK (invitation_status IN ('PENDING', 'ACCEPTED', 'DECLINED', 'CANCELLED')),
+                                 invited_at TIMESTAMP NOT NULL DEFAULT now(),
+                                 responded_at TIMESTAMP,
+                                 UNIQUE (home_id, invitee_email)
+);
+
+CREATE INDEX idx_home_invitation_email ON home_invitation(invitee_email);
+CREATE INDEX idx_home_invitation_status ON home_invitation(invitation_status);
 
 -- ADD Permanent Device below --
 

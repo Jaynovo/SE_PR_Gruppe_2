@@ -33,6 +33,6 @@ public abstract class BaseController {
 
     @FXML
     protected void openHomeDetails() {
-        navigate.goTo(Page.HOME_DASHBOARD.fxml());
+        navigate.goTo(Page.DASHBOARD.fxml());
     }
 }

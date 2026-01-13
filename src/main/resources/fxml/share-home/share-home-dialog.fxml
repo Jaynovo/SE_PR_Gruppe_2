@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="15" prefWidth="500" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="at.jku.se.gruppe2.ui.controller.ShareHomeDialogController">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Share Your Home" style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+
+    <VBox spacing="8">
+        <Label text="Invite someone to access your home:"/>
+        <TextField fx:id="emailField" promptText="Enter email address"/>
+        <Label fx:id="emailErrorLabel" style="-fx-text-fill: red;" visible="false" managed="false"/>
+    </VBox>
+
+    <Separator/>
+
+    <VBox spacing="8">
+        <Label text="Pending Invitations:" style="-fx-font-weight: bold;"/>
+        <ScrollPane fitToWidth="true" minHeight="150" maxHeight="300"
+                    style="-fx-background: transparent; -fx-background-color: transparent;">
+            <VBox fx:id="invitationsContainer" spacing="8">
+                <Label fx:id="noInvitationsLabel" text="No pending invitations"
+                       style="-fx-text-fill: gray;" visible="true"/>
+            </VBox>
+        </ScrollPane>
+    </VBox>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Send Invitation" onAction="#handleSendInvitation" defaultButton="true"/>
+        <Button text="Close" onAction="#handleClose"/>
+    </HBox>
+
+</VBox>

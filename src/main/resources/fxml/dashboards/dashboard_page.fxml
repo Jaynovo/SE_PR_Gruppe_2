@@ -13,6 +13,7 @@
         <ToolBar BorderPane.alignment="CENTER">
             <Label text="Smart Home Dashboard" styleClass="title"/>
             <Pane HBox.hgrow="ALWAYS"/>
+
             <MenuButton text="Manage User">
                 <items>
                     <MenuItem text="Profile" onAction="#handleUserProfile"/>
@@ -38,6 +39,13 @@
                     visible="false"
                     managed="false" />
 
+            <Button fx:id="homeInvitationsButton"
+                    text="Home Invitations"
+                    onAction="#handleHomeInvitations"
+                    visible="false"
+                    managed="false"
+                    style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+
             <!-- Home display area -->
             <BorderPane fx:id="homeCard" visible="false" styleClass="card">
                 <top>
@@ -62,6 +70,7 @@
                         </VBox>
                         <VBox spacing="8">
                             <Button text="Change Home Details" onAction="#changeHomeDetails"/>
+                            <Button text="Share Home" onAction="#shareHome"/>
                             <Button text="Delete Home" onAction="#deleteHomeButtonClicked" styleClass="danger"/>
                         </VBox>
                     </HBox>
