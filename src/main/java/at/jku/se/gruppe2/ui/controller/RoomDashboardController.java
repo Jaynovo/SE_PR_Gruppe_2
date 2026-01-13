@@ -21,7 +21,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
 
-import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -208,7 +207,6 @@ public class RoomDashboardController {
         return deviceCard;
     }
 
-
     private void handleConfigureActuator(Device actuatorDevice) {
         String type = actuatorDevice.getTypeLabel();
 
@@ -234,7 +232,6 @@ public class RoomDashboardController {
         }
         return String.format("%.2f", value);
     }
-
 
     private void handleDeleteDevice(Device d) {
         Alert confirm = UIUtils.styledConfirm("Delete \"" + d.getLabel() + "\"?");

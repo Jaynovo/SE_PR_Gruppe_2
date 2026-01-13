@@ -1,12 +1,8 @@
 package at.jku.se.gruppe2.ui.controller;
 
-import at.jku.se.gruppe2.model.Device;
-import at.jku.se.gruppe2.model.Room;
-import at.jku.se.gruppe2.persistence.DeviceRepository;
-import at.jku.se.gruppe2.persistence.RoomRepository;
-import at.jku.se.gruppe2.service.DialogService;
-import at.jku.se.gruppe2.service.NavigationService;
-import at.jku.se.gruppe2.service.ValidationService;
+import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
@@ -15,7 +11,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
 import java.net.URL;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class RoomEditController extends BaseController implements Initializable {
@@ -28,7 +23,7 @@ public class RoomEditController extends BaseController implements Initializable 
 
     private Room room;
     private final RoomRepository roomRepo = new RoomRepository();
-    private final DeviceRepository deviceRepo = new DeviceRepository();
+    private final HomeRepository homeRepo = new HomeRepository();
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
 
@@ -49,8 +44,20 @@ public class RoomEditController extends BaseController implements Initializable 
     private void loadRoomData() {
         roomLabelField.setText(room.getRoomLabel());
         floorField.setText(String.valueOf(room.getFloor()));
-        lengthField.setText(String.valueOf(room.getLength()));
-        widthField.setText(String.valueOf(room.getWidth()));
+
+        // Handle nullable dimensions
+        if (room.getLength() != null) {
+            lengthField.setText(String.valueOf(room.getLength()));
+        } else {
+            lengthField.setText("");
+        }
+
+        if (room.getWidth() != null) {
+            widthField.setText(String.valueOf(room.getWidth()));
+        } else {
+            widthField.setText("");
+        }
+
         updateAreaLabel();
     }
 
@@ -62,8 +69,24 @@ public class RoomEditController extends BaseController implements Initializable 
 
     private void updateAreaLabel() {
         try {
-            double length = Double.parseDouble(lengthField.getText());
-            double width = Double.parseDouble(widthField.getText());
+            String lengthText = lengthField.getText().trim();
+            String widthText = widthField.getText().trim();
+
+            // Handle empty fields gracefully
+            if (lengthText.isEmpty() || widthText.isEmpty()) {
+                areaLabel.setText("--");
+                return;
+            }
+
+            double length = Double.parseDouble(lengthText);
+            double width = Double.parseDouble(widthText);
+
+            // Optional: validate positive values
+            if (length <= 0 || width <= 0) {
+                areaLabel.setText("--");
+                return;
+            }
+
             double area = length * width;
             areaLabel.setText(String.format("%.2f m²", area));
         } catch (NumberFormatException e) {
@@ -79,30 +102,52 @@ public class RoomEditController extends BaseController implements Initializable 
         String lengthText = lengthField.getText().trim();
         String widthText = widthField.getText().trim();
 
-        // Validate all room data
-        ValidationService.ValidationResult result = ValidationService.validateRoomData(
-                label, floorText, lengthText, widthText
-        );
-
-        if (!result.isValid()) {
-            dialog.error("Validation Error", result.getErrorMessage());
+        // Validate room label
+        ValidationService.ValidationResult labelResult = ValidationService.validateRoomLabel(label);
+        if (!labelResult.isValid()) {
+            dialog.error("Validation Error", labelResult.getErrorMessage());
             return;
         }
 
-        // Parse validated values
-        int floor = Integer.parseInt(floorText);
-        double length = Double.parseDouble(lengthText);
-        double width = Double.parseDouble(widthText);
+        // Get the home to check floor range
+        Home currentHome = Session.getCurrentUser() != null ?
+                homeRepo.getHomeByUser(Session.getCurrentUser()).orElse(null) : null;
 
-        // Update room object
-        room.setRoomLabel(label);
-        room.setFloor(floor);
-        room.setLength(length);
-        room.setWidth(width);
-        room.setArea(length * width);
+        if (currentHome == null) {
+            dialog.error("Error", "Could not load home information.");
+            return;
+        }
+
+        // Calculate valid floor range
+        int minFloor = -2;
+        int maxFloor = currentHome.getFloors();
+
+        // Validate floor is in range
+        ValidationService.ValidationResult floorResult =
+                ValidationService.validateFloorInRange(floorText, minFloor, maxFloor);
+        if (!floorResult.isValid()) {
+            dialog.error("Validation Error", floorResult.getErrorMessage());
+            return;
+        }
+
+        // Validate optional dimensions
+        ValidationService.ValidationResult lengthResult = ValidationService.validateRoomLength(lengthText);
+        if (!lengthResult.isValid()) {
+            dialog.error("Validation Error", lengthResult.getErrorMessage());
+            return;
+        }
+
+        ValidationService.ValidationResult widthResult = ValidationService.validateRoomWidth(widthText);
+        if (!widthResult.isValid()) {
+            dialog.error("Validation Error", widthResult.getErrorMessage());
+            return;
+        }
+
+        // Build room from form
+        Room updatedRoom = buildRoomFromForm();
 
         // Save to database
-        int updated = roomRepo.updateRoom(room);
+        int updated = roomRepo.updateRoom(updatedRoom);
 
         if (updated > 0) {
             dialog.info("Success", "Room details updated successfully!");
@@ -112,31 +157,37 @@ public class RoomEditController extends BaseController implements Initializable 
         }
     }
 
-    @FXML
-    public void handleDelete() {
-        Optional<ButtonType> result = dialog.confirm(
-                "Delete Room",
-                "Are you sure you want to delete this room?\n\nAll devices in this room will also be deleted.\n\nThis action cannot be undone."
-        );
+    private Room buildRoomFromForm() {
+        // Update the existing room object
+        room.setRoomLabel(roomLabelField.getText().trim());
 
-        if (result.isEmpty() || result.get() != ButtonType.OK) {
-            return;
-        }
+        // Floor (required - validation already passed)
+        room.setFloor(Integer.parseInt(floorField.getText().trim()));
 
-        // Delete devices first
-        for (Device device : room.getDevices()) {
-            deviceRepo.deleteDevice(device.getId());
-        }
-
-        // Delete the room
-        int deleted = roomRepo.deleteRoom(room.getId());
-
-        if (deleted > 0) {
-            dialog.info("Success", "Room has been deleted!");
-            handleBack();
+        // Length (optional)
+        String lengthText = lengthField.getText().trim();
+        if (!lengthText.isEmpty()) {
+            room.setLength(Double.parseDouble(lengthText));
         } else {
-            dialog.error("Error", "Failed to delete the room. Please try again.");
+            room.setLength(null);
         }
+
+        // Width (optional)
+        String widthText = widthField.getText().trim();
+        if (!widthText.isEmpty()) {
+            room.setWidth(Double.parseDouble(widthText));
+        } else {
+            room.setWidth(null);
+        }
+
+        // Calculate area only if both dimensions exist
+        if (room.getLength() != null && room.getWidth() != null) {
+            room.setArea(room.getLength() * room.getWidth());
+        } else {
+            room.setArea(null);
+        }
+
+        return room;
     }
 
     @FXML
@@ -144,7 +195,4 @@ public class RoomEditController extends BaseController implements Initializable 
         navigate.goTo(Page.DASHBOARD.fxml());
     }
 
-    public void handleUserProfile() {
-        handleUserProfile(Page.ROOM_EDIT.fxml());
-    }
 }

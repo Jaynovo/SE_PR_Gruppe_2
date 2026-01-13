@@ -58,16 +58,6 @@
                 <Button text="Save Changes" onAction="#saveButtonClicked" defaultButton="true"/>
             </HBox>
 
-            <Separator />
-
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="Danger Zone" styleClass="error-label"/>
-            </HBox>
-            <Button text="Delete Home"
-                    onAction="#deleteHomeButtonClicked"
-                    styleClass="button, danger"
-                    maxWidth="200"/>
-
         </VBox>
     </center>
 

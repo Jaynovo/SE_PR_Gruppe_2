@@ -20,17 +20,10 @@ public class ValidationService {
             return errors.isEmpty();
         }
 
-        public List<String> getErrors() {
-            return new ArrayList<>(errors);
-        }
-
         public String getErrorMessage() {
             return String.join("\n", errors);
         }
 
-        public Optional<String> getFirstError() {
-            return errors.isEmpty() ? Optional.empty() : Optional.of(errors.get(0));
-        }
     }
 
     // ========== HOME VALIDATION ==========
@@ -199,16 +192,15 @@ public class ValidationService {
         ValidationResult result = new ValidationResult();
 
         if (lengthText == null || lengthText.trim().isEmpty()) {
-            result.addError("Please enter the room length.");
-            return result;
+            return result; // OK → optional
         }
 
         try {
             double length = Double.parseDouble(lengthText.trim());
             if (length <= 0) {
                 result.addError("Room length must be greater than 0.");
-            } else if (length > 1000) {
-                result.addError("Room length seems unrealistic (maximum 1000 meters).");
+            } else if (length > 100) {
+                result.addError("Room length seems unrealistic (maximum 100 meters).");
             }
         } catch (NumberFormatException e) {
             result.addError("Room length must be a valid number.");
@@ -224,16 +216,15 @@ public class ValidationService {
         ValidationResult result = new ValidationResult();
 
         if (widthText == null || widthText.trim().isEmpty()) {
-            result.addError("Please enter the room width.");
-            return result;
+            return result; // OK → optional
         }
 
         try {
             double width = Double.parseDouble(widthText.trim());
             if (width <= 0) {
                 result.addError("Room width must be greater than 0.");
-            } else if (width > 1000) {
-                result.addError("Room width seems unrealistic (maximum 1000 meters).");
+            } else if (width > 100) {
+                result.addError("Room width seems unrealistic (maximum 100 meters).");
             }
         } catch (NumberFormatException e) {
             result.addError("Room width must be a valid number.");
@@ -242,35 +233,28 @@ public class ValidationService {
         return result;
     }
 
+
     /**
-     * Validates all room data at once
+     * Validates floor number is within home's floor range
      */
-    public static ValidationResult validateRoomData(
-            String roomLabel,
-            String floorText,
-            String lengthText,
-            String widthText
-    ) {
+    public static ValidationResult validateFloorInRange(String floorText, int minFloor, int maxFloor) {
         ValidationResult result = new ValidationResult();
 
-        ValidationResult labelResult = validateRoomLabel(roomLabel);
-        if (!labelResult.isValid()) {
-            result.errors.addAll(labelResult.errors);
+        if (floorText == null || floorText.trim().isEmpty()) {
+            result.addError("Please enter a floor number.");
+            return result;
         }
 
-        ValidationResult floorResult = validateFloorNumber(floorText);
-        if (!floorResult.isValid()) {
-            result.errors.addAll(floorResult.errors);
-        }
-
-        ValidationResult lengthResult = validateRoomLength(lengthText);
-        if (!lengthResult.isValid()) {
-            result.errors.addAll(lengthResult.errors);
-        }
-
-        ValidationResult widthResult = validateRoomWidth(widthText);
-        if (!widthResult.isValid()) {
-            result.errors.addAll(widthResult.errors);
+        try {
+            int floor = Integer.parseInt(floorText.trim());
+            if (floor < minFloor || floor > maxFloor) {
+                result.addError(String.format(
+                        "Floor must be between %d and %d (based on your home's configuration).",
+                        minFloor, maxFloor
+                ));
+            }
+        } catch (NumberFormatException e) {
+            result.addError("Floor number must be a valid integer.");
         }
 
         return result;
