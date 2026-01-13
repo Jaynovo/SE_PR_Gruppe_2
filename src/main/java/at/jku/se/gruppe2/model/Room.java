@@ -71,10 +71,6 @@ public class Room {
         this.width = width;
     }
 
-    public Double getArea() {
-        return area;
-    }
-
     public void setArea(Double area) {
         this.area = area;
     }

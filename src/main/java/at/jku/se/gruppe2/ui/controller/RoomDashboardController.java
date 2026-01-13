@@ -21,7 +21,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
 
-import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
 

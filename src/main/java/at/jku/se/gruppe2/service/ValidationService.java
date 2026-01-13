@@ -20,17 +20,10 @@ public class ValidationService {
             return errors.isEmpty();
         }
 
-        public List<String> getErrors() {
-            return new ArrayList<>(errors);
-        }
-
         public String getErrorMessage() {
             return String.join("\n", errors);
         }
 
-        public Optional<String> getFirstError() {
-            return errors.isEmpty() ? Optional.empty() : Optional.of(errors.get(0));
-        }
     }
 
     // ========== HOME VALIDATION ==========
@@ -240,39 +233,6 @@ public class ValidationService {
         return result;
     }
 
-    /**
-     * Validates all room data at once
-     */
-    public static ValidationResult validateRoomData(
-            String roomLabel,
-            String floorText,
-            String lengthText,
-            String widthText
-    ) {
-        ValidationResult result = new ValidationResult();
-
-        ValidationResult labelResult = validateRoomLabel(roomLabel);
-        if (!labelResult.isValid()) {
-            result.errors.addAll(labelResult.errors);
-        }
-
-        ValidationResult floorResult = validateFloorNumber(floorText);
-        if (!floorResult.isValid()) {
-            result.errors.addAll(floorResult.errors);
-        }
-
-        ValidationResult lengthResult = validateRoomLength(lengthText);
-        if (!lengthResult.isValid()) {
-            result.errors.addAll(lengthResult.errors);
-        }
-
-        ValidationResult widthResult = validateRoomWidth(widthText);
-        if (!widthResult.isValid()) {
-            result.errors.addAll(widthResult.errors);
-        }
-
-        return result;
-    }
 
     /**
      * Validates floor number is within home's floor range

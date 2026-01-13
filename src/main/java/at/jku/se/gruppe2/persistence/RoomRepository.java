@@ -110,12 +110,6 @@ public class RoomRepository {
         );
     }
 
-    public int deleteRoom(Room room) {
-        if (room == null) {
-            return 0;
-        }
-        return deleteRoom(room.getId());
-    }
 
     private Room mapRoom(ResultSet rs) throws SQLException {
         Room room = new Room();
