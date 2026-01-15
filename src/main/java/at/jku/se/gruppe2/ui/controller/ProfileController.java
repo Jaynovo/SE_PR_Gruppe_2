@@ -9,6 +9,7 @@ import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.*;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.*;
 import javafx.scene.canvas.*;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import java.io.File;
 
@@ -60,6 +62,12 @@ public class ProfileController {
             MainApp.setRoot(Page.LOGIN.fxml());
             return;
         }
+        Platform.runLater(() -> {
+            Stage stage = (Stage) avatarImage.getScene().getWindow();
+            stage.setWidth(800);
+            stage.setHeight(820);
+            stage.centerOnScreen();
+        });
 
         UIUtils.setupCountryComboBox(countryComboBox);
 

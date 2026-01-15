@@ -1,74 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
 
-<StackPane prefHeight="600.0" prefWidth="640.0"
-           xmlns="http://javafx.com/javafx/17.0.12"
-           xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="at.jku.se.gruppe2.ui.controller.ProfileController">
+<BorderPane prefHeight="640.0"
+            prefWidth="680.0"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="at.jku.se.gruppe2.ui.controller.ProfileController">
 
-    <children>
-        <VBox alignment="CENTER" maxWidth="360" spacing="12" styleClass="card">
+    <top>
+        <HBox spacing="10" styleClass="card">
+            <Button text="Dashboard" onAction="#onCancel"/>
+        </HBox>
+    </top>
 
-            <!-- Titel -->
-            <Label alignment="TOP_CENTER" text="Profil">
-                <font>
-                    <Font size="18.0" />
-                </font>
-            </Label>
+    <center>
+        <ScrollPane fitToWidth="true" pannable="true">
+                <content>
+                    <VBox alignment="TOP_CENTER"
+                          spacing="15"
+                          styleClass="card">
 
-            <!-- Avatar -->
-            <ImageView fx:id="avatarImage" fitHeight="80" fitWidth="80" preserveRatio="false" smooth="true" />
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20"/>
+                        </padding>
 
-            <HBox alignment="CENTER" spacing="8">
-                <Button fx:id="changeAvatarButton"
-                        onAction="#onChangeAvatar"
-                        text="Profilbild ändern"
-                        prefHeight="25.0" />
+                        <Label text="Profile">
+                            <font>
+                                <Font size="20"/>
+                            </font>
+                        </Label>
+                        <VBox alignment="CENTER" spacing="10">
+                            <ImageView fx:id="avatarImage"
+                                       fitHeight="96"
+                                       fitWidth="96"
+                                       preserveRatio="false"
+                                       smooth="true"/>
 
-                <Button fx:id="removeAvatarButton"
-                        onAction="#onRemoveAvatar"
-                        text="Entfernen"
-                        prefHeight="25.0" />
-            </HBox>
+                            <HBox alignment="CENTER" spacing="10">
+                                <Button fx:id="changeAvatarButton"
+                                        text="Change picture"
+                                        onAction="#onChangeAvatar"/>
 
-            <!-- Formular -->
-            <!-- TODO change signature of text fields, add description-->
-            <VBox alignment="CENTER_LEFT" maxWidth="300" spacing="8">
+                                <Button fx:id="removeAvatarButton"
+                                        text="Remove"
+                                        onAction="#onRemoveAvatar"/>
+                            </HBox>
+                        </VBox>
 
-                <TextField fx:id="firstNameField" promptText="First Name" />
+                        <TextField fx:id="firstNameField" promptText="First Name"/>
+                        <TextField fx:id="lastNameField" promptText="Last Name"/>
+                        <TextField fx:id="emailField" editable="false" promptText="E-Mail (cannot be changed)"/>
 
-                <TextField fx:id="lastNameField" promptText="Last Name" />
+                        <HBox spacing="10">
+                            <TextField fx:id="streetField" promptText="Street" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="streetNumberField" promptText="Nr." prefWidth="110"/>
+                        </HBox>
 
-                <TextField fx:id="emailField" editable="false" promptText="E-Mail (Änderung der Email nicht möglich)" />
+                        <HBox spacing="10">
+                            <TextField fx:id="postalCodeField" promptText="Postal Code" prefWidth="150"/>
+                            <TextField fx:id="cityField" promptText="City" HBox.hgrow="ALWAYS"/>
+                        </HBox>
 
-                <TextField fx:id="streetField" promptText="Address" />
+                        <ComboBox fx:id="countryComboBox" promptText="Country" prefWidth="Infinity"/>
 
-                <TextField fx:id="streetNumberField" promptText="Nr:" />
+                        <Button fx:id="changePasswordButton"
+                                text="Change password"
+                                maxWidth="Infinity"
+                                onAction="#onChangePassword"/>
 
-                <TextField fx:id="postalCodeField" promptText="Postal Code" />
+                        <HBox alignment="TOP_RIGHT" spacing="10">
+                            <Button fx:id="cancelButton" text="Cancel" onAction="#onCancel"/>
+                            <Button fx:id="saveButton" text="Save" onAction="#onSave" defaultButton="true"/>
+                        </HBox>
 
-                <TextField fx:id="cityField" promptText="City" />
-
-                <ComboBox fx:id="countryComboBox" promptText="Country" />
-
-                <Button fx:id="changePasswordButton" alignment="CENTER" maxWidth="Infinity" onAction="#onChangePassword" prefHeight="25.0" prefWidth="156.0" text="Passwort ändern" />
-            </VBox>
-
-            <!-- Buttons -->
-            <HBox alignment="CENTER" spacing="12">
-                <Button fx:id="cancelButton" onAction="#onCancel" text="Cancel" />
-
-                <Button fx:id="saveButton" alignment="CENTER_RIGHT" onAction="#onSave" text="Save" defaultButton="true"/>
-            </HBox>
-
-            <padding>
-                <Insets bottom="16" left="16" right="16" top="16" />
-            </padding>
-        </VBox>
-    </children>
-</StackPane>
+                    </VBox>
+                </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

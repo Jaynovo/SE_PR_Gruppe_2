@@ -255,3 +255,44 @@
 .badge-triggered {
     -fx-background-color: #ff0000;
 }
+
+/*Combo-Box Sensor/Aktor */
+.combo-box {
+    -fx-background-color: -fx-surface;
+    -fx-background-radius: 10;
+    -fx-padding: 4 10;
+}
+
+/* Text im geschlossenen Zustand */
+.combo-box .list-cell {
+    -fx-text-fill: -fx-text;
+    -fx-background-color: transparent;
+}
+
+/* Prompt-Text */
+.combo-box .list-cell:empty {
+    -fx-text-fill: -fx-muted;
+}
+
+/* Dropdown-Liste */
+.combo-box-popup .list-view {
+    -fx-background-color: -fx-card;
+}
+
+.combo-box-popup .list-cell {
+    -fx-text-fill: -fx-text;
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+/* Pfeil-Button */
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box .arrow {
+    -fx-background-color: -fx-text;
+}
