@@ -108,9 +108,10 @@ CREATE TABLE home_invitation (
                                  invitation_status VARCHAR(20) DEFAULT 'PENDING' CHECK (invitation_status IN ('PENDING', 'ACCEPTED', 'DECLINED', 'CANCELLED')),
                                  invited_at TIMESTAMP NOT NULL DEFAULT now(),
                                  responded_at TIMESTAMP,
-                                 UNIQUE (home_id, invitee_email)
+                                 CONSTRAINT unique_pending_invitation UNIQUE (home_id, invitee_email, invitation_status)
 );
 
+-- Index for faster queries
 CREATE INDEX idx_home_invitation_email ON home_invitation(invitee_email);
 CREATE INDEX idx_home_invitation_status ON home_invitation(invitation_status);
 

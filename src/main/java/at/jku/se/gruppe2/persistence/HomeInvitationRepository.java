@@ -9,6 +9,41 @@ import java.util.Optional;
 public class HomeInvitationRepository {
 
     public int createInvitation(HomeInvitation invitation) {
+        // First check if there's an existing cancelled/declined invitation
+        String checkSql = """
+            SELECT id FROM home_invitation
+            WHERE home_id = ? AND invitee_email = ? 
+            AND invitation_status IN ('CANCELLED', 'DECLINED')
+            """;
+
+        Optional<Integer> existingId = JdbcTemplate.queryForValue(
+                checkSql,
+                ps -> {
+                    ps.setInt(1, invitation.getHomeId());
+                    ps.setString(2, invitation.getInviteeEmail().toLowerCase().trim());
+                },
+                rs -> rs.getInt("id")
+        );
+
+        // If there's an old invitation, reactivate it
+        if (existingId.isPresent()) {
+            String reactivateSql = """
+                UPDATE home_invitation
+                SET invitation_status = 'PENDING', 
+                    invited_at = now(),
+                    responded_at = NULL
+                WHERE id = ?
+                """;
+
+            int success = JdbcTemplate.executeUpdate(
+                    reactivateSql,
+                    ps -> ps.setInt(1, existingId.get())
+            );
+
+            return success > 0 ? existingId.get() : -1;
+        }
+
+        // Otherwise create a new invitation
         String sql = """
             INSERT INTO home_invitation (home_id, inviter_user_id, invitee_email, invitation_status)
             VALUES (?, ?, ?, ?)

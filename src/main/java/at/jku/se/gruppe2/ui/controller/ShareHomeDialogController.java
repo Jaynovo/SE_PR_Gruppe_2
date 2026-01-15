@@ -10,7 +10,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class ShareHomeDialogController {
@@ -178,22 +178,20 @@ public class ShareHomeDialogController {
     }
 
     private void handleCancelInvitation(HomeInvitation invitation) {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Cancel Invitation");
-        confirm.setHeaderText("Cancel invitation to " + invitation.getInviteeEmail() + "?");
-        confirm.setContentText("This action cannot be undone.");
+        Optional<ButtonType> result = dialog.confirm(
+                "Cancel Invitation",
+                "Cancel invitation to " + invitation.getInviteeEmail() + "?\n\nThis action cannot be undone."
+        );
 
-        confirm.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                int success = invitationRepo.updateInvitationStatus(
-                        invitation.getId(), HomeInvitation.Status.CANCELLED);
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            int success = invitationRepo.updateInvitationStatus(
+                    invitation.getId(), HomeInvitation.Status.CANCELLED);
 
-                if (success > 0) {
-                    loadPendingInvitations();
-                } else {
-                    dialog.error("Error", "Failed to cancel invitation");
-                }
+            if (success > 0) {
+                loadPendingInvitations();
+            } else {
+                dialog.error("Error", "Failed to cancel invitation");
             }
-        });
+        }
     }
 }

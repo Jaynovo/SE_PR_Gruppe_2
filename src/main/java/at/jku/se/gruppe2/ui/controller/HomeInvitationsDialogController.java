@@ -1,8 +1,12 @@
 package at.jku.se.gruppe2.ui.controller;
 
-import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.persistence.*;
-import at.jku.se.gruppe2.service.*;
+import at.jku.se.gruppe2.model.Home;
+import at.jku.se.gruppe2.model.HomeInvitation;
+import at.jku.se.gruppe2.model.User;
+import at.jku.se.gruppe2.persistence.HomeInvitationRepository;
+import at.jku.se.gruppe2.persistence.HomeRepository;
+import at.jku.se.gruppe2.persistence.UserRepository;
+import at.jku.se.gruppe2.service.DialogService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -10,7 +14,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.*;
 
 public class HomeInvitationsDialogController {
 
@@ -104,20 +108,17 @@ public class HomeInvitationsDialogController {
     private void handleAcceptInvitation(HomeInvitation invitation) {
         // Check if user already has a home
         if (user.getHome() != null) {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-            confirm.setTitle("Replace Current Home");
-            confirm.setHeaderText("You already have a home");
-            confirm.setContentText(
-                    "Accepting this invitation will replace your current home with \"" +
+            Optional<ButtonType> result = dialog.confirm(
+                    "Replace Current Home",
+                    "You already have a home.\n\n" +
+                            "Accepting this invitation will replace your current home with \"" +
                             invitation.getHomeName() + "\".\n\n" +
                             "Do you want to continue?"
             );
 
-            confirm.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.OK) {
-                    acceptInvitation(invitation);
-                }
-            });
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                acceptInvitation(invitation);
+            }
         } else {
             acceptInvitation(invitation);
         }
