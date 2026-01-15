@@ -1,11 +1,7 @@
 package at.jku.se.gruppe2.ui.controller;
 
-import at.jku.se.gruppe2.model.Home;
-import at.jku.se.gruppe2.model.HomeInvitation;
-import at.jku.se.gruppe2.model.User;
-import at.jku.se.gruppe2.persistence.HomeInvitationRepository;
-import at.jku.se.gruppe2.persistence.HomeRepository;
-import at.jku.se.gruppe2.persistence.UserRepository;
+import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.DialogService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -106,8 +102,11 @@ public class HomeInvitationsDialogController {
     }
 
     private void handleAcceptInvitation(HomeInvitation invitation) {
+        // Reload user from database to get the latest state
+        User freshUser = userRepo.findUserById(user.getId()).orElse(user);
+
         // Check if user already has a home
-        if (user.getHome() != null) {
+        if (freshUser.getHome() != null) {
             Optional<ButtonType> result = dialog.confirm(
                     "Replace Current Home",
                     "You already have a home.\n\n" +
@@ -116,12 +115,12 @@ public class HomeInvitationsDialogController {
                             "Do you want to continue?"
             );
 
-            if (result.isPresent() && result.get() == ButtonType.OK) {
-                acceptInvitation(invitation);
+            if (result.isEmpty() || result.get() != ButtonType.OK) {
+                return;
             }
-        } else {
-            acceptInvitation(invitation);
         }
+
+        acceptInvitation(invitation);
     }
 
     private void acceptInvitation(HomeInvitation invitation) {
@@ -153,26 +152,25 @@ public class HomeInvitationsDialogController {
     }
 
     private void handleDeclineInvitation(HomeInvitation invitation) {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Decline Invitation");
-        confirm.setHeaderText("Decline invitation to \"" + invitation.getHomeName() + "\"?");
-        confirm.setContentText("You can ask for a new invitation later if needed.");
+        Optional<ButtonType> result = dialog.confirm(
+                "Decline Invitation",
+                "Decline invitation to \"" + invitation.getHomeName() + "\"?\n\n" +
+                        "You can ask for a new invitation later if needed."
+        );
 
-        confirm.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                int success = invitationRepo.updateInvitationStatus(
-                        invitation.getId(), HomeInvitation.Status.DECLINED
-                );
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            int success = invitationRepo.updateInvitationStatus(
+                    invitation.getId(), HomeInvitation.Status.DECLINED
+            );
 
-                if (success > 0) {
-                    dialog.info("Invitation Declined",
-                            "You have declined the invitation to \"" +
-                                    invitation.getHomeName() + "\".");
-                    loadInvitations();
-                } else {
-                    dialog.error("Error", "Failed to decline invitation.");
-                }
+            if (success > 0) {
+                dialog.info("Invitation Declined",
+                        "You have declined the invitation to \"" +
+                                invitation.getHomeName() + "\".");
+                loadInvitations();
+            } else {
+                dialog.error("Error", "Failed to decline invitation.");
             }
-        });
+        }
     }
 }
