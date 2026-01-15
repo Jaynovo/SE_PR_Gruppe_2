@@ -10,6 +10,8 @@ public class User {
 
     private Home home;
 
+    private String avatarPath;
+
 
     public User() {}
 
@@ -85,6 +87,13 @@ public class User {
     }
     public void setHome(Home home) {
         this.home = home;
+    }
+
+    public String getAvatarPath() {
+        return avatarPath;
+    }
+    public void setAvatarPath(String avatarPath) {
+        this.avatarPath = avatarPath;
     }
 
     @Override
