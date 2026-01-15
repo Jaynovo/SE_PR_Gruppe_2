@@ -350,8 +350,8 @@ public class RoomDashboardController {
         grid.add(new Label("Switch OFF at (ppm):"), 0, 2);
         grid.add(offTh, 1, 2);
 
-        //onTh.setEditable(false);
-        //offTh.setEditable(false);
+        onTh.setEditable(false);
+        offTh.setEditable(false);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -393,10 +393,10 @@ public class RoomDashboardController {
         CheckBox autoMode = new CheckBox("Auto mode (based on Noise)");
         autoMode.setSelected(cfg.isAutoMode());
 
-        Spinner<Integer> thresholdDb = new Spinner<>(40, 120, cfg.getNoiseThresholdDb());
+        Spinner<Integer> thresholdDb = new Spinner<>(0, 120, cfg.getNoiseThresholdDb());
         thresholdDb.setEditable(true);
 
-        Spinner<Integer> ticks = new Spinner<>(1, 5, cfg.getRequiredConsecutiveTicks());
+        Spinner<Integer> ticks = new Spinner<>(1, 10, cfg.getRequiredConsecutiveTicks());
         ticks.setEditable(true);
 
         GridPane grid = new GridPane();
@@ -412,8 +412,8 @@ public class RoomDashboardController {
         grid.add(new Label("Ticks required:"), 0, 2);
         grid.add(ticks, 1, 2);
 
-        //thresholdDb.setEditable(false);
-        //ticks.setEditable(false);
+        thresholdDb.setEditable(false);
+        ticks.setEditable(false);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
