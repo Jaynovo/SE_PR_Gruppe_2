@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox spacing="15" prefWidth="550" xmlns="http://javafx.com/javafx"
+<VBox spacing="15" prefWidth="550" styleClass="card" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="at.jku.se.gruppe2.ui.controller.HomeInvitationsDialogController">
 
@@ -12,15 +12,17 @@
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <Label text="Home Invitations" style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+    <Label text="Home Invitations" styleClass="title"/>
 
     <Label text="You have received invitations to join the following homes:"/>
 
-    <ScrollPane fitToWidth="true" minHeight="300" maxHeight="400"
-                style="-fx-background: transparent; -fx-background-color: transparent;">
+    <ScrollPane fitToWidth="true" minHeight="300" maxHeight="400">
         <VBox fx:id="invitationsContainer" spacing="12">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
             <Label fx:id="noInvitationsLabel" text="No pending invitations"
-                   style="-fx-text-fill: gray;" visible="true"/>
+                   styleClass="muted" visible="true"/>
         </VBox>
     </ScrollPane>
 

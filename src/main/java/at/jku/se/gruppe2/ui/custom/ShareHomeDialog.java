@@ -30,6 +30,12 @@ public class ShareHomeDialog {
             controller.setHome(home);
 
             Scene scene = new Scene(root);
+
+            // Apply the app.css stylesheet
+            scene.getStylesheets().add(
+                    getClass().getResource("/css/app.css").toExternalForm()
+            );
+
             stage.setScene(scene);
             stage.setResizable(false);
 

@@ -14,16 +14,6 @@ import java.util.List;
 
 public class HomeInvitationsDialogController {
 
-    /*TODO
-    Invitation Dialog and share home dialog do not use the same css format as the rest of the pages
-    There is a logic error when creating a user or when sending an invite or somewhere in the legacy code
-    that tells the user he already has a home when trying to accept a home invite.
-    Keep the button design and stuff but the dialogs should use the css background, pop ups as well.
-
-    I would like to populate the information in the home registration form with the address information the user enters
-    if available, because the user can choose to add that information during the registration process.
-    * */
-
     @FXML private VBox invitationsContainer;
     @FXML private Label noInvitationsLabel;
 
@@ -72,23 +62,23 @@ public class HomeInvitationsDialogController {
 
     private VBox createInvitationCard(HomeInvitation invitation) {
         VBox card = new VBox(12);
-        card.setStyle("-fx-padding: 15; -fx-border-color: #4CAF50; " +
-                "-fx-border-width: 2; -fx-border-radius: 8; " +
-                "-fx-background-color: #f9f9f9; -fx-background-radius: 8;");
+        card.getStyleClass().add("card");
+        card.setStyle("-fx-padding: 16; -fx-border-color: -fx-primary; " +
+                "-fx-border-width: 2; -fx-border-radius: 12;");
 
         // Home name
         Label homeLabel = new Label(invitation.getHomeName());
-        homeLabel.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
+        homeLabel.getStyleClass().add("title");
 
         // Invitation details
         VBox detailsBox = new VBox(4);
 
         Label inviterLabel = new Label("Invited by: " + invitation.getInviterName());
-        inviterLabel.setStyle("-fx-text-fill: gray;");
+        inviterLabel.getStyleClass().add("muted");
 
         Label dateLabel = new Label("Invited on: " +
                 invitation.getInvitedAt().format(DATE_FORMATTER));
-        dateLabel.setStyle("-fx-text-fill: gray;");
+        dateLabel.getStyleClass().add("muted");
 
         detailsBox.getChildren().addAll(inviterLabel, dateLabel);
 
@@ -97,13 +87,11 @@ public class HomeInvitationsDialogController {
         buttonBox.setStyle("-fx-alignment: center-right;");
 
         Button acceptButton = new Button("Accept");
-        acceptButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; " +
-                "-fx-font-weight: bold; -fx-padding: 8 20;");
+        acceptButton.setStyle("-fx-background-color: #24a211;");
         acceptButton.setOnAction(e -> handleAcceptInvitation(invitation));
 
         Button declineButton = new Button("Decline");
-        declineButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; " +
-                "-fx-font-weight: bold; -fx-padding: 8 20;");
+        declineButton.getStyleClass().add("danger");
         declineButton.setOnAction(e -> handleDeclineInvitation(invitation));
 
         buttonBox.getChildren().addAll(acceptButton, declineButton);

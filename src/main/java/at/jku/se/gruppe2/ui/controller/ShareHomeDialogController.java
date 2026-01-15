@@ -1,11 +1,8 @@
 package at.jku.se.gruppe2.ui.controller;
 
-import at.jku.se.gruppe2.model.Home;
-import at.jku.se.gruppe2.model.HomeInvitation;
-import at.jku.se.gruppe2.model.User;
-import at.jku.se.gruppe2.persistence.HomeInvitationRepository;
-import at.jku.se.gruppe2.persistence.UserRepository;
-import at.jku.se.gruppe2.service.DialogService;
+import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -157,22 +154,22 @@ public class ShareHomeDialogController {
 
     private HBox createInvitationCard(HomeInvitation invitation) {
         HBox card = new HBox(10);
-        card.setStyle("-fx-padding: 10; -fx-border-color: lightgray; " +
-                "-fx-border-width: 1; -fx-border-radius: 5; -fx-background-radius: 5;");
+        card.getStyleClass().add("card");
+        card.setStyle("-fx-padding: 12; -fx-background-radius: 8;");
 
         VBox infoBox = new VBox(4);
         Label emailLabel = new Label(invitation.getInviteeEmail());
-        emailLabel.setStyle("-fx-font-weight: bold;");
+        emailLabel.getStyleClass().add("card-title");
 
         Label dateLabel = new Label("Sent: " +
                 invitation.getInvitedAt().toLocalDate().toString());
-        dateLabel.setStyle("-fx-text-fill: gray; -fx-font-size: 11;");
+        dateLabel.getStyleClass().add("muted");
 
         infoBox.getChildren().addAll(emailLabel, dateLabel);
         HBox.setHgrow(infoBox, javafx.scene.layout.Priority.ALWAYS);
 
         Button cancelButton = new Button("Cancel");
-        cancelButton.setStyle("-fx-background-color: #ff6b6b; -fx-text-fill: white;");
+        cancelButton.getStyleClass().add("danger");
         cancelButton.setOnAction(e -> handleCancelInvitation(invitation));
 
         card.getChildren().addAll(infoBox, cancelButton);
