@@ -151,7 +151,7 @@ public class UserRepository {
         user.setPassword(rs.getString("password"));
 
         int home_id = rs.getInt("home_info");
-        System.out.println("home_id in mapUser: " + home_id);
+
         if (rs.wasNull()) {
             user.setHome(null);
         } else {
