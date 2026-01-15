@@ -273,7 +273,6 @@
 .combo-box .list-cell:empty {
     -fx-text-fill: -fx-muted;
 }
-
 /* Dropdown-Liste */
 .combo-box-popup .list-view {
     -fx-background-color: -fx-card;
