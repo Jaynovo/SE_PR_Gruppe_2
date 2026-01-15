@@ -1,14 +1,14 @@
 package at.jku.se.gruppe2.model.sensor;
 
 import at.jku.se.gruppe2.model.Device;
-import at.jku.se.gruppe2.model.Readings;
+import at.jku.se.gruppe2.model.telemetry.SensorReading;
 
 import java.util.List;
 
 public abstract class Sensor extends Device {
     //private String unit;
     private double value;
-    private List<Readings> readings;//Possible future zusatzfeature
+    private List<SensorReading> readings;//Possible future zusatzfeature
 
 //    public String getUnit() {
 //        return unit;
@@ -26,11 +26,11 @@ public abstract class Sensor extends Device {
         this.value = value;
     }
 
-    public List<Readings> getReadings() {
+    public List<SensorReading> getReadings() {
         return readings;
     }
 
-    public void setReadings(List<Readings> readings) {
+    public void setReadings(List<SensorReading> readings) {
         this.readings = readings;
     }
 }
