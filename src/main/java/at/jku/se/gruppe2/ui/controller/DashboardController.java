@@ -8,6 +8,9 @@ import at.jku.se.gruppe2.utils.Session;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.component.*;
 import at.jku.se.gruppe2.ui.custom.CreateRoomDialog;
+import at.jku.se.gruppe2.ui.custom.ShareHomeDialog;
+import at.jku.se.gruppe2.ui.custom.HomeInvitationsDialog;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -24,6 +27,7 @@ public class DashboardController extends BaseController implements Initializable
     @FXML private Label homeAddressCity;
     @FXML private Label homeFloors;
     @FXML private Button addHomeButton;
+    @FXML private Button homeInvitationsButton;
 
     @FXML private FlowPane cardsFlow;
     @FXML private Label temperatureLabel;
@@ -36,6 +40,7 @@ public class DashboardController extends BaseController implements Initializable
     private final RoomRepository roomRepo = new RoomRepository();
     private final DeviceRepository deviceRepo = new DeviceRepository();
     private final RoomService roomService = new RoomService();
+    private final HomeInvitationRepository invitationRepo = new HomeInvitationRepository();
 
     private final RoomCardFactory roomCardFactory = new RoomCardFactory();
 
@@ -50,6 +55,9 @@ public class DashboardController extends BaseController implements Initializable
             showNoHomeState();
             return;
         }
+
+        // Check for pending invitations
+        checkPendingInvitations(user);
 
         // Load the home from the database
         Home home = homeRepo.getHomeByUser(user).orElse(null);
@@ -67,12 +75,30 @@ public class DashboardController extends BaseController implements Initializable
         renderRoomCards();
     }
 
+    private void checkPendingInvitations(User user) {
+        List<HomeInvitation> pendingInvitations =
+                invitationRepo.getPendingInvitationsByEmail(user.getEmail())
+                        .orElse(java.util.Collections.emptyList());
+
+        if (!pendingInvitations.isEmpty()) {
+            homeInvitationsButton.setVisible(true);
+            homeInvitationsButton.setManaged(true);
+
+            // Update button text with count
+            homeInvitationsButton.setText(
+                    "Home Invitations (" + pendingInvitations.size() + ")"
+            );
+        }
+    }
+
     private void showNoHomeState() {
         temperatureLabel.setText("No home available");
         homeCard.setVisible(false);
         homeCard.setManaged(false);
         addHomeButton.setVisible(true);
         addHomeButton.setManaged(true);
+        homeInvitationsButton.setVisible(true);
+        homeInvitationsButton.setManaged(true);
     }
 
     private void showHomeState() {
@@ -80,6 +106,8 @@ public class DashboardController extends BaseController implements Initializable
         homeCard.setManaged(true);
         addHomeButton.setVisible(false);
         addHomeButton.setManaged(false);
+        homeInvitationsButton.setVisible(false);
+        homeInvitationsButton.setManaged(false);
     }
 
     private void displayHomeInfo() {
@@ -212,6 +240,9 @@ public class DashboardController extends BaseController implements Initializable
 
             // Show the no home state
             showNoHomeState();
+
+            // Check for invitations again
+            checkPendingInvitations(user);
         } else {
             dialog.error("Error", "Failed to delete the home!\nPlease try again.");
         }
@@ -269,6 +300,31 @@ public class DashboardController extends BaseController implements Initializable
     }
 
     public void handleUserProfile() {
-        handleUserProfile(Page.HOME_DASHBOARD.fxml());
+        handleUserProfile(Page.DASHBOARD.fxml());
+    }
+
+    public void shareHome(ActionEvent actionEvent) {
+        if (home == null) {
+            dialog.error("Error", "No home available to share.");
+            return;
+        }
+
+        ShareHomeDialog shareDialog = new ShareHomeDialog(home);
+        shareDialog.showAndWait();
+    }
+
+    @FXML
+    public void handleHomeInvitations() {
+        User user = Session.getCurrentUser();
+        if (user == null) {
+            dialog.error("Error", "No user logged in.");
+            return;
+        }
+
+        HomeInvitationsDialog invitationsDialog = new HomeInvitationsDialog(user);
+        invitationsDialog.showAndWait();
+
+        // Reload the dashboard to reflect any accepted invitations
+        navigate.goTo(Page.DASHBOARD.fxml());
     }
 }

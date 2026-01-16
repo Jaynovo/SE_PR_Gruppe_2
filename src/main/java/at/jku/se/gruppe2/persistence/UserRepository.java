@@ -152,7 +152,7 @@ public class UserRepository {
         user.setAvatarPath(rs.getString("avatar_path"));
 
         int home_id = rs.getInt("home_info");
-        System.out.println("home_id in mapUser: " + home_id);
+
         if (rs.wasNull()) {
             user.setHome(null);
         } else {

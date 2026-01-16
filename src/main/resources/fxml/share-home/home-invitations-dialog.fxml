@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="15" prefWidth="550" styleClass="card" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="at.jku.se.gruppe2.ui.controller.HomeInvitationsDialogController">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Home Invitations" styleClass="title"/>
+
+    <Label text="You have received invitations to join the following homes:"/>
+
+    <ScrollPane fitToWidth="true" minHeight="300" maxHeight="400">
+        <VBox fx:id="invitationsContainer" spacing="12">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
+            <Label fx:id="noInvitationsLabel" text="No pending invitations"
+                   styleClass="muted" visible="true"/>
+        </VBox>
+    </ScrollPane>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Close" onAction="#handleClose"/>
+    </HBox>
+
+</VBox>

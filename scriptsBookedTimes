@@ -4,35 +4,31 @@ ALLE auf einmal
 git log --all --pretty=format:"%ad %an %s" --date=format:"%Y-%m-%d %H:%M:%S" --graph --decorate |
 awk '
 BEGIN {
-    # persons to track
     people["Thomas"]
     people["Jason"]
     people["Markus"]
 }
 
 {
-    sum = 0
-
     # --- explicit person time ---
     for (p in people) {
-        if (match($0, (p " ?([0-9]+([.,][0-9]+)?)[hH]?"), m)) {
+        if (match($0, (p " ?(-?[0-9]+([.,][0-9]+)?)[hH]?"), m)) {
             val = m[1]
             gsub(/,/, ".", val)
             people[p] += val + 0
-            sum += val + 0
-            printf "Explizit für %s gezählt: %s => +%s\n", p, $0, val
+            printf "Explizit für %s gezählt: %s => %+g\n", p, $0, val
         }
     }
 
-    # --- shared "time" ---
-    if (match($0, /time:? ?([0-9]+([.,][0-9]+)?)[hH]?/, t)) {
+    # --- shared "time" for all ---
+    if (match($0, /time:? ?(-?[0-9]+([.,][0-9]+)?)[hH]?/, t)) {
         val = t[1]
         gsub(/,/, ".", val)
 
         for (p in people)
             people[p] += val + 0
 
-        printf "Gemeinsam (time) für alle gezählt: %s => +%s\n", $0, val
+        printf "Gemeinsam (time) für alle gezählt: %s => %+g\n", $0, val
     }
 }
 
@@ -41,6 +37,7 @@ END {
     for (p in people)
         printf "%s: %.2f h\n", p, people[p]
 }'
+
 
 
 

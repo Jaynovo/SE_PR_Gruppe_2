@@ -312,7 +312,7 @@ public class RoomDashboardController {
     }
 
     public void handleUserProfile() {
-        Session.setPreviousPage(Page.HOME_DASHBOARD.fxml());
+        Session.setPreviousPage(Page.DASHBOARD.fxml());
         navigate.goTo(Page.PROFILE.fxml());
     }
 
