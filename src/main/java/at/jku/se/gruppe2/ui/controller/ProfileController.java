@@ -9,6 +9,7 @@ import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.*;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.*;
 import javafx.scene.canvas.*;
@@ -21,17 +22,31 @@ import javafx.scene.paint.Color;
 import java.io.IOException;
 import java.util.Optional;
 
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+
+import java.io.File;
+
 public class ProfileController {
 
-    @FXML private TextField firstNameField;
-    @FXML private TextField lastNameField;
-    @FXML private TextField emailField;
-    @FXML private TextField streetField;
-    @FXML private TextField streetNumberField;
-    @FXML private TextField cityField;
-    @FXML private TextField postalCodeField;
-    @FXML private ComboBox<String> countryComboBox;
-    @FXML private ImageView avatarImage;
+    @FXML
+    private TextField firstNameField;
+    @FXML
+    private TextField lastNameField;
+    @FXML
+    private TextField emailField;
+    @FXML
+    private TextField streetField;
+    @FXML
+    private TextField streetNumberField;
+    @FXML
+    private TextField cityField;
+    @FXML
+    private TextField postalCodeField;
+    @FXML
+    private ComboBox<String> countryComboBox;
+    @FXML
+    private ImageView avatarImage;
 
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
@@ -47,6 +62,12 @@ public class ProfileController {
             MainApp.setRoot(Page.LOGIN.fxml());
             return;
         }
+        Platform.runLater(() -> {
+            Stage stage = (Stage) avatarImage.getScene().getWindow();
+            stage.setWidth(800);
+            stage.setHeight(820);
+            stage.centerOnScreen();
+        });
 
         UIUtils.setupCountryComboBox(countryComboBox);
 
@@ -65,24 +86,12 @@ public class ProfileController {
         });
 
         // Prolifbild wird aktualisiert sobald die Felder geändert werden
-        firstNameField.textProperty().addListener((obs, oldV, newV) -> updateAvatar());
-        lastNameField.textProperty().addListener((obs, oldV, newV) -> updateAvatar());
-        updateAvatar(); // initial
+        firstNameField.textProperty().addListener((obs, oldV, newV) -> refreshAvatarView());
+        lastNameField.textProperty().addListener((obs, oldV, newV) -> refreshAvatarView());
+        applyCircleClip(avatarImage,80);
+        refreshAvatarView(); // initial
     }
 
-    private void updateAvatar() {
-        String first = firstNameField.getText();
-        String last = lastNameField.getText();
-
-        if (first == null) first = "";
-        if (last == null) last = "";
-
-        String initials = "";
-        if (!first.isEmpty()) initials += first.substring(0, 1).toUpperCase();
-        if (!last.isEmpty()) initials += last.substring(0, 1).toUpperCase();
-
-        avatarImage.setImage(generateAvatar(initials));
-    }
 
     private Image generateAvatar(String initials) {
         double size = 100;
@@ -115,9 +124,112 @@ public class ProfileController {
         return image;
     }
 
+    private String getInitials() {
+        String first = Optional.ofNullable(firstNameField.getText()).orElse("").trim();
+        String last = Optional.ofNullable(lastNameField.getText()).orElse("").trim();
+
+        String initials = "";
+        if (!first.isEmpty()) initials += first.substring(0, 1).toUpperCase();
+        if (!last.isEmpty()) initials += last.substring(0, 1).toUpperCase();
+
+        return initials.isEmpty() ? "?" : initials;
+    }
+
+    private void applyCircleClip(ImageView iv, double size) {
+        iv.setFitWidth(size);
+        iv.setFitHeight(size);
+        javafx.scene.shape.Circle clip = new javafx.scene.shape.Circle(size / 2, size / 2, size / 2);
+        iv.setClip(clip);
+    }
+
+    private void refreshAvatarView() {
+        User current = Session.getCurrentUser();
+        if (current == null) return;
+
+        String path = current.getAvatarPath();
+        if (path != null && !path.isBlank()) {
+            try {
+                File f = new File(path);
+                if (f.exists()) {
+                    Image img = new Image(f.toURI().toString());
+                    if (!img.isError()) {
+                        avatarImage.setImage(img);
+                        applySquareViewport(avatarImage, img);
+                        return;
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        avatarImage.setViewport(null);
+        avatarImage.setImage(generateAvatar(getInitials()));
+    }
+
     @FXML
     private void onChangeAvatar() {
-        //TODO: Profilbild ändern
+        User current = Session.getCurrentUser();
+        if (current == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "No user in session");
+            return;
+        }
+
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Profilbild auswählen");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg")
+        );
+
+        File file = chooser.showOpenDialog(avatarImage.getScene().getWindow());
+        if (file == null) return;
+
+        if (file.length() > 5 * 1024 * 1024) {
+            showAlert(Alert.AlertType.ERROR, "Zu groß", "Bild darf max. 5MB groß sein.");
+            return;
+        }
+
+        try {
+            Image img = new Image(file.toURI().toString(), 256, 256, true, true);
+            if (img.isError()) {
+                showAlert(Alert.AlertType.ERROR, "Fehler", "Bild konnte nicht geladen werden.");
+                return;
+            }
+
+            String path = AvatarStorage.saveAvatarForUser(current.getId(), img);
+            current.setAvatarPath(path);
+            userRepository.updateAvatarPath(current, path);
+
+            refreshAvatarView();
+            showAlert(Alert.AlertType.INFORMATION, "Erfolg", "Profilbild aktualisiert.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Profilbild konnte nicht gespeichert werden.");
+        }
+    }
+
+    @FXML
+    private void onRemoveAvatar() {
+        User current = Session.getCurrentUser();
+        if (current == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "No user in session");
+            return;
+        }
+        current.setAvatarPath(null);
+        userRepository.updateAvatarPath(current, null);
+
+        refreshAvatarView();
+        showAlert(Alert.AlertType.INFORMATION, "Erfolg", "Profilbild entfernt.");
+    }
+
+    //Helper Methode
+    private void applySquareViewport(ImageView iv, Image img) {
+        double w = img.getWidth();
+        double h = img.getHeight();
+        double size = Math.min(w, h);
+
+        double x = (w - size) / 2.0;
+        double y = (h - size) / 2.0;
+
+        iv.setViewport(new Rectangle2D(x, y, size, size)); //center-crop
     }
 
     //TODO!!!!!!!
@@ -182,11 +294,12 @@ public class ProfileController {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Could not save profile");
         }
+        navigate.goTo(Page.DASHBOARD.fxml());
     }
 
     @FXML
     private void onCancel() {
-        goTo();
+        navigate.goTo(Page.DASHBOARD.fxml());
     }
 
     @FXML
@@ -258,7 +371,7 @@ public class ProfileController {
         alert.showAndWait();
     }
 
-    private void goTo(){
+    private void goTo() {
         try {
             String previous = Session.getPreviousPage();
 

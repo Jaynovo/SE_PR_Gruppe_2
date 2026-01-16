@@ -53,7 +53,6 @@ public class RoomService {
             room.setWidth(width);
             room.setArea(length * width);
         }
-
         roomRepo.createRoomInDatabase(room, home);
     }
 

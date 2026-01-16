@@ -131,7 +131,7 @@ public class UserRepository {
                     ps.setString(1, user.getFirstName());
                     ps.setString(2, user.getLastName());
                     ps.setString(3, user.getPassword());
-                    if (user.getHome() != null) {
+                    if (user.getHome() != null && user.getHome().getId() > 0) {
                         ps.setInt(4, user.getHome().getId());
                     } else {
                         ps.setNull(4, Types.INTEGER);
@@ -149,6 +149,7 @@ public class UserRepository {
         user.setLastName(rs.getString("last_name"));
         user.setEmail(rs.getString("e_mail"));
         user.setPassword(rs.getString("password"));
+        user.setAvatarPath(rs.getString("avatar_path"));
 
         int home_id = rs.getInt("home_info");
 
@@ -160,4 +161,21 @@ public class UserRepository {
         }
         return user;
     }
+
+    public void updateAvatarPath(User user, String avatarPath) {
+        String request = "UPDATE user_information SET avatar_path = ? WHERE id = ?";
+
+        JdbcTemplate.executeUpdate(
+                request,
+                ps -> {
+                    if (avatarPath == null || avatarPath.isBlank()) {
+                        ps.setNull(1, Types.VARCHAR);
+                    } else {
+                        ps.setString(1, avatarPath);
+                    }
+                    ps.setInt(2, user.getId());
+                }
+        );
+    }
+
 }

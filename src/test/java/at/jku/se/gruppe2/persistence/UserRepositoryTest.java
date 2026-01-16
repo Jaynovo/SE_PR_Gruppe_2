@@ -66,6 +66,6 @@ public class UserRepositoryTest {
 
     @Test
     void feelGoodTest() {
-        assert(true);
+        assertTrue(true);
     }
 }

@@ -30,7 +30,8 @@ create table user_information
     last_name VARCHAR(25),
     e_mail VARCHAR(100) UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    home_info INTEGER REFERENCES home (id) ON DELETE SET NULL                         -- One User, one house. Many users, still one house. May be NULL if User doesn't have a home :(
+    home_info INTEGER REFERENCES home (id) ON DELETE SET NULL,                         -- One User, one house. Many users, still one house. May be NULL if User doesn't have a home :(
+    avatar_path VARCHAR(200)
 );
 
 create table home_user
@@ -114,6 +115,24 @@ CREATE TABLE home_invitation (
 -- Index for faster queries
 CREATE INDEX idx_home_invitation_email ON home_invitation(invitee_email);
 CREATE INDEX idx_home_invitation_status ON home_invitation(invitation_status);
+
+CREATE TABLE rule (
+    id INTEGER PRIMARY KEY,
+    home_id INTEGER NOT NULL REFERENCES home(id) ON DELETE CASCADE, -- Rules are per house at the moment
+
+    name VARCHAR(100) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    priority INTEGER NOT NULL DEFAULT 0,
+
+    condition_json TEXT NOT NULL,
+    action_json TEXT NOT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_rule_home_enabled_priority
+    ON rule(home_id, enabled, priority DESC, updated_at DESC);
 
 -- ADD Permanent Device below --
 
