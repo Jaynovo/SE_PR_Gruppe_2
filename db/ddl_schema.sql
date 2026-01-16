@@ -100,6 +100,23 @@ create table actuator_state
     state       VARCHAR(50)
 );
 
+CREATE TABLE rule (
+    id INTEGER PRIMARY KEY,
+    home_id INTEGER NOT NULL REFERENCES home(id) ON DELETE CASCADE, -- Rules are per house at the moment
+
+    name VARCHAR(100) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    priority INTEGER NOT NULL DEFAULT 0,
+
+    condition_json TEXT NOT NULL,
+    action_json TEXT NOT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_rule_home_enabled_priority
+    ON rule(home_id, enabled, priority DESC, updated_at DESC);
 
 -- ADD Permanent Device below --
 
