@@ -31,6 +31,7 @@ create table user_information
     e_mail VARCHAR(100) UNIQUE NOT NULL,
     password TEXT NOT NULL,
     home_info INTEGER REFERENCES home (id) ON DELETE SET NULL,                         -- One User, one house. Many users, still one house. May be NULL if User doesn't have a home :(
+    address_info INTEGER REFERENCES address_information(id) ON DELETE SET NULL,        -- One User, their address. Can be different from home.address
     avatar_path VARCHAR(200)
 );
 

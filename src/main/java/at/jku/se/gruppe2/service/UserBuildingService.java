@@ -5,7 +5,6 @@ import at.jku.se.gruppe2.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class UserBuildingService {
     private final UserRepository userRepository;
@@ -16,9 +15,9 @@ public class UserBuildingService {
 
     public UserBuildingService() {
         deviceRepository = new DeviceRepository();
+        homeRepository = new HomeRepository();
         userRepository = new UserRepository();
         roomRepository = new RoomRepository();
-        homeRepository = new HomeRepository();
         addressRepository = new AddressRepository();
     }
     public UserBuildingService(UserRepository userRepository, RoomRepository roomRepository, HomeRepository homeRepository, AddressRepository addressRepository, DeviceRepository deviceRepository) {
