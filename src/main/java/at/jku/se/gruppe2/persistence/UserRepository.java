@@ -46,7 +46,6 @@ public class UserRepository {
 
     public Optional<User> findUserByEmail(String email) {
         String request = "SELECT * FROM user_information WHERE e_mail = ?";
-        System.out.println("Hello, this is finding the User by Email: " + email);
         Optional<User> userByEmail = JdbcTemplate.queryForObject(
                 request,
                 ps -> ps.setString(1, email),
@@ -136,7 +135,27 @@ public class UserRepository {
         JdbcTemplate.executeUpdate(
                 request,
                 ps -> {
-                    ps.setInt(1, address.getId());
+                    if (address != null && address.getId() > 0) {
+                        ps.setInt(1, address.getId());
+                    }  else {
+                        ps.setNull(1, Types.INTEGER);
+                    }
+                    ps.setInt(2, user.getId());
+                }
+        );
+    }
+
+    public void updateAvatarPath(User user, String avatarPath) {
+        String request = "UPDATE user_information SET avatar_path = ? WHERE id = ?";
+
+        JdbcTemplate.executeUpdate(
+                request,
+                ps -> {
+                    if (avatarPath == null || avatarPath.isBlank()) {
+                        ps.setNull(1, Types.VARCHAR);
+                    } else {
+                        ps.setString(1, avatarPath);
+                    }
                     ps.setInt(2, user.getId());
                 }
         );
@@ -210,21 +229,4 @@ public class UserRepository {
 
         return user;
     }
-
-    public void updateAvatarPath(User user, String avatarPath) {
-        String request = "UPDATE user_information SET avatar_path = ? WHERE id = ?";
-
-        JdbcTemplate.executeUpdate(
-                request,
-                ps -> {
-                    if (avatarPath == null || avatarPath.isBlank()) {
-                        ps.setNull(1, Types.VARCHAR);
-                    } else {
-                        ps.setString(1, avatarPath);
-                    }
-                    ps.setInt(2, user.getId());
-                }
-        );
-    }
-
 }

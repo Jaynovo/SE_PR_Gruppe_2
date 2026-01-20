@@ -30,15 +30,19 @@ public class UserBuildingService {
 
     public User buildUserByEmail(String email) {
         User user = userRepository.findUserByEmail(email).orElseThrow(() -> new IllegalArgumentException("User with email " + email + " not found"));
-        Home home = homeRepository.getHomeByUser(user).orElse(new Home());
+
+        Address user_address = addressRepository.getAddressById(user.getAddress().getId()).orElse(null);
+        user.setAddress(user_address);
+
+        Home home = homeRepository.getHomeByUser(user).orElse(null);
         user.setHome(home);
 
-        if (user.getHome() != null) {
-            Address address = addressRepository.getAddressByUser(user).orElse(new Address());
+        if (home != null) {
+            Address home_address = addressRepository.getAddressById(home.getAddress().getId()).orElse(null);
             List<Room> rooms = new ArrayList<>();
             rooms = roomRepository.getAllRoomsByHome(home).orElse(new ArrayList<>());
 
-            home.setAddress(address);
+            home.setAddress(home_address);
             home.setRooms(rooms);
 
             if (!home.getRooms().isEmpty()) {

@@ -52,10 +52,10 @@ public class RegistrationController {
         //Addresse bereitgestellt? Wenn ja, dann address Objekt erstellen
         boolean addressProvided =
                 !streetName.isEmpty()
-                        || !streetNumber.isEmpty()
-                        || !city.isEmpty()
-                        || !postalCode.isEmpty()
-                        || (country != null && !country.isEmpty());
+                        && !streetNumber.isEmpty()
+                        && !city.isEmpty()
+                        && !postalCode.isEmpty()
+                        && (country != null && !country.isEmpty());
 
 // Validate input
         String validationErrors = validateInput(firstName, lastName, email, password, confirmPassword,
@@ -75,17 +75,19 @@ public class RegistrationController {
         }
 
         try {
+            Address address = null;
             //Address-Objekt erstellen
             if (addressProvided) {
-                Address address = new Address(
+                address = new Address(
                         streetNameField.getText(),
                         streetNumberField.getText(),
                         postalCodeField.getText(),
                         cityField.getText(),
                         countryBox.getValue(),
                         0.0, 0.0
-                ); //long und lat bei Registrierung mit 0 speichern, wird beim login geo gecoded
-                addressRepository.createAddressInDatabase(address); //ACHTUNG kein FK zu User (sondern nur Home)
+                );
+                int addressId = addressRepository.createAddressInDatabase(address);
+                address.setId(addressId);
             }
 
             //User-Objekt erstellen
@@ -95,6 +97,7 @@ public class RegistrationController {
                     email,
                     PasswordUtils.hashPassword(password) // PW gehasht speichern
             );
+            newUser.setAddress(address);
 
             //In DB speichern
             int userId = userRepository.createUserInDatabase(newUser);
