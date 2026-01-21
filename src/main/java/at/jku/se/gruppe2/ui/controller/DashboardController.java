@@ -120,6 +120,8 @@ public class DashboardController extends BaseController implements Initializable
             homeAddressStreet.setText(address.getStreet() + " " + address.getHouseNumber());
             homeAddressCity.setText(address.getPostalCode() + " " + address.getCity());
 
+            // TODO THIS SHOULD BE UNNECESSARY SINCE IT'S HANDLED IN ADDRESSREPO
+            // (ugly, I know)
             // Geocoding logic with check if it is needed
             boolean needsGeocoding = Double.isNaN(address.getLatitude()) ||
                     Double.isNaN(address.getLongitude()) ||

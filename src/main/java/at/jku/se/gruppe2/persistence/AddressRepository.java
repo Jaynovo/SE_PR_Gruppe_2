@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public class AddressRepository {
 
+    // This keys off user, so this is the user-address
     public Optional<Address> getAddressById(int addressInformation) {
         String request = "SELECT * FROM address_information WHERE id = ?";
         return JdbcTemplate.queryForObject(
@@ -21,22 +22,9 @@ public class AddressRepository {
         );
     }
 
-    public Optional<Address> getAddressByUser(User user) {
-        Optional<Home> addressHome = Optional.ofNullable(user.getHome());
-        if  (addressHome.isPresent() && addressHome.get().getAddress() != null) {
-            Home home = addressHome.get();
-            String request = "SELECT * FROM address_information WHERE id = ?";
-            return JdbcTemplate.queryForObject(
-                    request,
-                    ps -> ps.setInt(1, home.getAddress().getId()),
-                    this::mapAddress
-            );
-        }
-        return Optional.empty();
-    }
-
     // Returns the created id
     public int createAddressInDatabase(Address address) {
+        GeoCodingService.enrichWithCoordinates(address);
         String request = """
                 INSERT INTO address_information (street, house_nr, post_code, city, country, longitude, latitude)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -62,11 +50,10 @@ public class AddressRepository {
     // Returns 1 if Update was successful, 0 if not
     public int updateAddressInDatabase(Address address) {
         GeoCodingService.enrichWithCoordinates(address);
-
         String request = """
-                UPDATE address_information\s
-                SET street = ?, house_nr = ?, post_code = ?, city = ?, country = ?, longitude = ?, latitude = ?
-                WHERE id = ?
+            UPDATE address_information\s
+            SET street = ?, house_nr = ?, post_code = ?, city = ?, country = ?, longitude = ?, latitude = ?
+            WHERE id = ?
         """;
         int success = JdbcTemplate.executeUpdate(
                 request,

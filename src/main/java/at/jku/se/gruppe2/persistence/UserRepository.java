@@ -9,13 +9,16 @@ import java.util.Optional;
 public class UserRepository {
 
     private final HomeRepository homeRepository;
+    private final AddressRepository addressRepository;
 
     public UserRepository() {
-        homeRepository = new HomeRepository();
+        this.homeRepository = new HomeRepository();
+        addressRepository = new AddressRepository();
     }
 
-    public UserRepository(HomeRepository homeRepository) {
+    public UserRepository(HomeRepository homeRepository, AddressRepository addressRepository) {
         this.homeRepository = homeRepository;
+        this.addressRepository = addressRepository;
     }
 
     public Optional<User> findUserById(int id) {
@@ -43,7 +46,6 @@ public class UserRepository {
 
     public Optional<User> findUserByEmail(String email) {
         String request = "SELECT * FROM user_information WHERE e_mail = ?";
-        System.out.println("Hello, this is finding the User by Email: " + email);
         Optional<User> userByEmail = JdbcTemplate.queryForObject(
                 request,
                 ps -> ps.setString(1, email),
@@ -66,8 +68,8 @@ public class UserRepository {
     //Returns the User ID
     public int createUserInDatabase(User user) {
         String request = """
-                INSERT INTO user_information (first_name, last_name, e_mail, password, home_info)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO user_information (first_name, last_name, e_mail, password, home_info, address_info, avatar_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 RETURNING ID""";
 
         Optional<Integer> userIdOptional = JdbcTemplate.queryForValue(
@@ -82,6 +84,16 @@ public class UserRepository {
                         ps.setInt(5, user.getHome().getId());
                     } else {
                         ps.setNull(5, Types.INTEGER);
+                    }
+                    if (user.getAddress() != null) {
+                        ps.setInt(6, user.getAddress().getId());
+                    } else  {
+                        ps.setNull(6, Types.INTEGER);
+                    }
+                    if (user.getAvatarPath() == null || user.getAvatarPath().isBlank()) {
+                        ps.setNull(7, Types.VARCHAR);
+                    } else {
+                        ps.setString(7, user.getAvatarPath());
                     }
                 },
                 rs -> rs.getInt("id")
@@ -118,48 +130,19 @@ public class UserRepository {
         );
     }
 
-    // Returns 1 if Update was successful, 0 if not
-    public int updateUserInDatabase(User user) {
-        String request = """
-            UPDATE user_information\s
-            SET first_name = ?, last_name = ?, password = ?, home_info = ?
-            WHERE id = ?
-           \s""";
-        int success = JdbcTemplate.executeUpdate(
+    public void updateAddress(User user, Address address) {
+        String request = "UPDATE user_information SET address_info = ? WHERE id = ?";
+        JdbcTemplate.executeUpdate(
                 request,
                 ps -> {
-                    ps.setString(1, user.getFirstName());
-                    ps.setString(2, user.getLastName());
-                    ps.setString(3, user.getPassword());
-                    if (user.getHome() != null && user.getHome().getId() > 0) {
-                        ps.setInt(4, user.getHome().getId());
-                    } else {
-                        ps.setNull(4, Types.INTEGER);
+                    if (address != null && address.getId() > 0) {
+                        ps.setInt(1, address.getId());
+                    }  else {
+                        ps.setNull(1, Types.INTEGER);
                     }
-                    ps.setInt(5, user.getId());
+                    ps.setInt(2, user.getId());
                 }
         );
-        return success;
-    }
-
-    private User mapUser(ResultSet rs) throws SQLException {
-        User user = new User();
-        user.setId(rs.getInt("id"));
-        user.setFirstName(rs.getString("first_name"));
-        user.setLastName(rs.getString("last_name"));
-        user.setEmail(rs.getString("e_mail"));
-        user.setPassword(rs.getString("password"));
-        user.setAvatarPath(rs.getString("avatar_path"));
-
-        int home_id = rs.getInt("home_info");
-
-        if (rs.wasNull()) {
-            user.setHome(null);
-        } else {
-            Home home = homeRepository.getHomeById(home_id).orElse(null);
-            user.setHome(home);
-        }
-        return user;
     }
 
     public void updateAvatarPath(User user, String avatarPath) {
@@ -178,4 +161,72 @@ public class UserRepository {
         );
     }
 
+    // Returns 1 if Update was successful, 0 if not
+    public int updateUserInDatabase(User user) {
+        String request = """
+            UPDATE user_information\s
+            SET first_name = ?, last_name = ?, password = ?, home_info = ?,  address_info = ?, avatar_path = ?
+            WHERE id = ?
+           \s""";
+        int success = JdbcTemplate.executeUpdate(
+                request,
+                ps -> {
+                    ps.setString(1, user.getFirstName());
+                    ps.setString(2, user.getLastName());
+                    ps.setString(3, user.getPassword());
+                    if (user.getHome() != null && user.getHome().getId() > 0) {
+                        ps.setInt(4, user.getHome().getId());
+                    } else {
+                        ps.setNull(4, Types.INTEGER);
+                    }
+                    if  (user.getAddress() != null && user.getAddress().getId() > 0) {
+                        ps.setInt(5, user.getAddress().getId());
+                    }  else {
+                        ps.setNull(5, Types.INTEGER);
+                    }
+                    if  (user.getAvatarPath() == null || user.getAvatarPath().isBlank()) {
+                        ps.setNull(6, Types.VARCHAR);
+                    }  else {
+                        ps.setString(6, user.getAvatarPath());
+                    }
+                    ps.setInt(7, user.getId());
+                }
+        );
+        return success;
+    }
+
+    private User mapUser(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getInt("id"));
+        user.setFirstName(rs.getString("first_name"));
+        user.setLastName(rs.getString("last_name"));
+        user.setEmail(rs.getString("e_mail"));
+        user.setPassword(rs.getString("password"));
+        user.setAvatarPath(rs.getString("avatar_path"));
+
+        // Home-Logic
+        Integer homeId = null;
+        Integer tempHomeId = rs.getInt("home_info");
+        if (!rs.wasNull()) homeId = tempHomeId;
+
+        if (homeId != null) {
+            Home home = homeRepository.getHomeById(homeId).orElse(null);
+            user.setHome(home);
+        } else {
+            user.setHome(null);
+        }
+
+        // Address-Logic
+        Integer addressId = null;
+        Integer tempAddressId = rs.getInt("address_info");
+        if (!rs.wasNull()) addressId = tempAddressId;
+        if (addressId != null) {
+            Address address = addressRepository.getAddressById(addressId).orElse(null);
+            user.setAddress(address);
+        }  else {
+            user.setAddress(null);
+        }
+
+        return user;
+    }
 }

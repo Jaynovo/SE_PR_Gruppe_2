@@ -77,15 +77,15 @@ public class ProfileController {
         emailField.setText(current.getEmail());
 
         //Adresse (falls vorhanden) laden
-        addressRepository.getAddressByUser(current).ifPresent(address -> {
-            streetField.setText(address.getStreet());
-            streetNumberField.setText(address.getHouseNumber());
-            cityField.setText(address.getCity());
-            postalCodeField.setText(address.getPostalCode());
-            countryComboBox.setValue(address.getCountry());
-        });
+        if (current.getAddress() != null) {
+            streetField.setText(current.getAddress().getStreet());
+            streetNumberField.setText(current.getAddress().getHouseNumber());
+            cityField.setText(current.getAddress().getCity());
+            postalCodeField.setText(current.getAddress().getPostalCode());
+            countryComboBox.getSelectionModel().select(current.getAddress().getCountry());
+        }
 
-        // Prolifbild wird aktualisiert sobald die Felder geändert werden
+        // Profibild wird aktualisiert, sobald die Felder geändert werden
         firstNameField.textProperty().addListener((obs, oldV, newV) -> refreshAvatarView());
         lastNameField.textProperty().addListener((obs, oldV, newV) -> refreshAvatarView());
         applyCircleClip(avatarImage,80);
@@ -259,33 +259,25 @@ public class ProfileController {
             current.setFirstName(firstName);
             current.setLastName(lastName);
 
-            Optional<Address> result = addressRepository.getAddressByUser(current);
+            Address address = current.getAddress();
 
-            Address address;
-            if (result.isPresent()) {
-                address = result.get();
+            if (address != null && address.getId() > 0) {
+                // Update existing address
                 address.setStreet(street);
                 address.setHouseNumber(streetNumber);
                 address.setCity(city);
                 address.setPostalCode(postalCode);
                 address.setCountry(country);
-                address.setLatitude(Double.NaN);
-                address.setLongitude(Double.NaN);
-                GeoCodingService.enrichWithCoordinates(address);
                 addressRepository.updateAddressInDatabase(address);
-
             } else {
-                address = new Address(
-                        street,
-                        streetNumber,
-                        postalCode,
-                        city,
-                        country
-                );
-                GeoCodingService.enrichWithCoordinates(address);
+                // Create new address
+                address = new  Address(street, streetNumber, city, postalCode, country);
                 addressRepository.createAddressInDatabase(address);
+
+                current.setAddress(address);
             }
-            userRepository.updateUserInDatabase(current);
+
+            userRepository.updateAddress(current, address);
             showAlert(Alert.AlertType.INFORMATION, "Success", "Profile has been updated and saved.");
 
             goTo();

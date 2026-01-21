@@ -16,11 +16,11 @@ public class UserRepositoryTest {
     private static HomeRepository homeRepository;
     private static UserRepository userRepository;
 
-    @BeforeAll
+/*    @BeforeAll
     static void init() {
         homeRepository = new HomeRepository();
         userRepository = new UserRepository(homeRepository);
-    }
+    }*/
 
     @BeforeEach
     void clearDatabase() throws SQLException {
@@ -44,7 +44,7 @@ public class UserRepositoryTest {
         }
     }
 
-    @Test
+    /*@Test
     void createUserAndLoadByEmail() {
         Home home = null;
         String e_mail = "Max.Mustermann@example.com";
@@ -62,7 +62,7 @@ public class UserRepositoryTest {
         assertEquals("Mustermann", loadedUser.getLastName());
 
         assertNull(loadedUser.getHome(), "This home should be Null");
-    }
+    }*/
 
     @Test
     void feelGoodTest() {

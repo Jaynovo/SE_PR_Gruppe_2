@@ -7,26 +7,25 @@ public class User {
     private String lastName;
     private String email;
     private String password;
-
     private Home home;
-
+    private Address address;
     private String avatarPath;
-
 
     public User() {}
 
     //Konstruktor ohne ID
-    public User(String firstName, String lastName, String email, String password, Home home) {
+    public User(String firstName, String lastName, String email, String password, Home home, Address address) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.home = home;
+        this.address = address;
     }
 
     //Konstruktor mit ID (laden aus DB)
-    public User(int id, String firstName, String lastName, String email, String password, Home home) {
-        this(firstName, lastName, email, password, home);
+    public User(int id, String firstName, String lastName, String email, String password, Home home, Address address) {
+        this(firstName, lastName, email, password, home, address);
         this.id = id;
     }
 
@@ -87,6 +86,14 @@ public class User {
     }
     public void setHome(Home home) {
         this.home = home;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
     }
 
     public String getAvatarPath() {
