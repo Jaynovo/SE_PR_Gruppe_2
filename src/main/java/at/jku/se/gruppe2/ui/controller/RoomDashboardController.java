@@ -102,7 +102,29 @@ public class RoomDashboardController {
 
         deviceCard.getChildren().addAll(title, type);
         if (device instanceof Sensor s) {
+            if ("CatSensor".equalsIgnoreCase(device.getTypeLabel()) && s instanceof CatSensor cat) {
+                double conf = cat.getConfidence(); // 0..1
+                String status = cat.isCatDetected() ? "CAT DETECTED" : "No cat detected";
+                Label current = new Label(status + " (" + Math.round(conf * 100) + "%)");
+                current.getStyleClass().add("muted");
+                deviceCard.getChildren().add(current);
+            } else {
+                // bestehender Code für CO2/Noise/...
+                String unit = resolveDisplayUnit(device);
+                unit = (unit == null) ? "Not available!" : unit;
 
+                String formattedValue = formatSensorValue(device.getTypeLabel(), s.getValue());
+                Label current = new Label(
+                        "Current: " + formattedValue + (unit.isBlank() ? "No measurement available!" : " " + unit)
+                );
+                current.getStyleClass().add("muted");
+
+                deviceCard.getChildren().add(current);
+                if (device instanceof Thermometer t) {
+                    deviceCard.getChildren().add(createThermometerUnitToggle(t));
+                }
+            }
+/*
             String unit = resolveDisplayUnit(device);
             unit = (unit == null) ? "Not available!" : unit;
 
@@ -115,7 +137,7 @@ public class RoomDashboardController {
             deviceCard.getChildren().add(current);
             if (device instanceof Thermometer t) {
                 deviceCard.getChildren().add(createThermometerUnitToggle(t));
-            }
+            } */
         }
 
         HBox actions = new HBox(8);

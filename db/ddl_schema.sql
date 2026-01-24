@@ -148,4 +148,5 @@ VALUES  ('SENSOR',   'Thermometer',      '°C'),
         ('ACTUATOR', 'AlarmSystem',       NULL),
         ('SENSOR', 'LightSensor', 'lx'),
         ('ACTUATOR', 'SmartLightActuator', NULL),
+        ('SENSOR','CatSensor',NULL),
         ('ACTUATOR', 'Blinds', NULL);

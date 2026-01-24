@@ -148,6 +148,7 @@ public class DeviceRepository {
             case "NoiseSensor" -> new NoiseSensor();
             case "LightSensor" -> new LightSensor();
             case "HumiditySensor" -> new HumiditySensor();
+            case "CatSensor" -> new CatSensor();
             default -> new Sensor() {
             }; // fallback
         };
