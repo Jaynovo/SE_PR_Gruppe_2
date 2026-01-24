@@ -33,7 +33,7 @@ public class RoomDashboardController {
     @FXML
     private FlowPane cardsFlow;
 
-    private static final Duration REFRESH_INTERVAL = Duration.millis(500);
+    //private static final Duration REFRESH_INTERVAL = Duration.millis(500);
 
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();

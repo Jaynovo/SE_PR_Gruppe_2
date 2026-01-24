@@ -107,7 +107,6 @@ public class SensorSimulationService {
         noiseBaseline.remove(roomId);
         catByRoom.remove(roomId);
         catImageIndexByRoom.remove(roomId);
-        catLastCallMs.remove(roomId);
     }
 
     private void tick() {

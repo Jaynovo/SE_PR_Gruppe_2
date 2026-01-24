@@ -75,6 +75,8 @@ public class RoboflowWorkflowService {
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
 
+            System.out.println("Roboflow: POST " + ENDPOINT + " (body length=" + body.length() + ")");
+
             HttpResponse<String> response =
                     http.send(request, HttpResponse.BodyHandlers.ofString());
 
@@ -82,32 +84,56 @@ public class RoboflowWorkflowService {
                 throw new RuntimeException("Roboflow error " + response.statusCode()
                         + ": " + response.body());
             }
-            System.out.println("Roboflow: POST " + ENDPOINT + " (body length=" + body.length() + ")");
-            return parseResponse(response.body());
+
+            String json = response.body();
+            JsonNode root = mapper.readTree(json);
+            System.out.println("RF top keys: " + root.fieldNames().next()); // optional
+            System.out.println("RF outputs size: " + root.path("outputs").size());
+            DetectionResult r = parseResponse(json);
+            System.out.println("Roboflow parsed: detected=" + r.detected() + " conf=" + r.confidence());
+            return r;
+
         } catch (InterruptedException ie) {
-        Thread.currentThread().interrupt(); // wichtig!
-        throw new RuntimeException("Roboflow request interrupted", ie);
-    } catch (Exception e) {
-        throw new RuntimeException("Roboflow request failed", e);
-    }
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Roboflow request interrupted", ie);
+        } catch (Exception e) {
+            throw new RuntimeException("Roboflow request failed", e);
+        }
     }
 
     private DetectionResult parseResponse(String json) throws Exception {
         JsonNode root = mapper.readTree(json);
 
-        // Workflow Response ist ein Array
-        JsonNode first = root.isArray() && root.size() > 0 ? root.get(0) : null;
-        if (first == null) return new DetectionResult(false, 0.0);
+        // Roboflow Workflow returns: { "outputs": [ { ... } ] }
+        JsonNode first = root.path("outputs");
+        if (!first.isArray() || first.size() == 0) {
+            System.out.println("RF: No outputs[] in response!");
+            return new DetectionResult(false, 0.0);
+        }
 
-        JsonNode predictions = first.path("predictions").path("predictions");
+        JsonNode out0 = first.get(0);
+
+        // optional debug:
+        int count = out0.path("count_objects").asInt(-1);
+        System.out.println("RF: count_objects=" + count);
+
+        // detections are here:
+        JsonNode detections = out0.path("predictions").path("predictions");
+        if (!detections.isArray()) {
+            System.out.println("RF: predictions.predictions not an array!");
+            return new DetectionResult(false, 0.0);
+        }
 
         double bestConfidence = 0.0;
 
-        if (predictions.isArray()) {
-            for (JsonNode p : predictions) {
-                if ("cat".equalsIgnoreCase(p.path("class").asText())) {
-                    bestConfidence = Math.max(bestConfidence, p.path("confidence").asDouble(0.0));
-                }
+        for (JsonNode p : detections) {
+            String cls = p.path("class").asText("");
+            double conf = p.path("confidence").asDouble(0.0);
+
+            System.out.println("RF det: class=" + cls + " conf=" + conf);
+
+            if ("cat".equalsIgnoreCase(cls)) {
+                bestConfidence = Math.max(bestConfidence, conf);
             }
         }
 
