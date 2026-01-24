@@ -2,21 +2,19 @@ package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.model.actuator.*;
 import at.jku.se.gruppe2.model.sensor.*;
 import at.jku.se.gruppe2.persistence.DeviceRepository;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;
+import at.jku.se.gruppe2.ui.component.DeviceCardFactory;
+import at.jku.se.gruppe2.ui.custom.ActuatorConfigDialog;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
@@ -39,9 +37,14 @@ public class RoomDashboardController {
     private final DeviceRepository deviceRepository = new DeviceRepository();
     private final ActuatorService actuatorService = new ActuatorService();
     private final ActuatorConfigService actuatorCfg = new ActuatorConfigService();
+    private final ActuatorConfigDialog actuatorConfigDialog = new ActuatorConfigDialog(actuatorCfg);
     private final SensorSimulationService sensorSim = MainApp.getSensorSim();
     private final RoomDevicesService roomDevicesService = new RoomDevicesService(sensorSim);
     private final RoomAutomationService roomAutomationService = new RoomAutomationService(actuatorService, actuatorCfg);
+    private final DeviceCardFactory deviceCardFactory = new DeviceCardFactory(
+            actuatorCfg, actuatorService,
+            this::handleDeleteDevice, actuatorConfigDialog::show,
+            this::renderDevices);
     private Timeline liveRefresh;
 
     private List<Device> devices = new ArrayList<>();
@@ -71,155 +74,8 @@ public class RoomDashboardController {
     private void renderDevices() {
         cardsFlow.getChildren().clear();
         for (Device device : devices) {
-            cardsFlow.getChildren().add(createDeviceCard(device));
+            cardsFlow.getChildren().add(deviceCardFactory.createDeviceCard(device));
         }
-    }
-
-    private Pane createDeviceCard(Device device) {
-        VBox deviceCard = new VBox(8);
-        deviceCard.getStyleClass().add("card");
-        deviceCard.setPrefWidth(260);
-        deviceCard.setPadding(new Insets(10));
-
-        Label title = new Label(device.getLabel());
-        title.getStyleClass().add("card-title");
-
-        Label type = new Label("Type: " + device.getTypeLabel());
-        type.getStyleClass().add("muted");
-
-        deviceCard.getChildren().addAll(title, type);
-        if (device instanceof Sensor s) {
-
-            String unit = resolveDisplayUnit(device);
-            unit = (unit == null) ? "Not available!" : unit;
-
-            String formattedValue = formatSensorValue(device.getTypeLabel(), s.getValue());
-            Label current = new Label(
-                    "Current: " + formattedValue + (unit.isBlank() ? "No measurement available!" : " " + unit)
-            );
-            current.getStyleClass().add("muted");
-
-            deviceCard.getChildren().add(current);
-            if (device instanceof Thermometer t) {
-                deviceCard.getChildren().add(createThermometerUnitToggle(t));
-            }
-        }
-
-        HBox actions = new HBox(8);
-
-        //DELETE (immer)
-        Button deleteBtn = new Button("Delete");
-        deleteBtn.setOnAction(e -> handleDeleteDevice(device));
-        actions.getChildren().add(deleteBtn);
-
-        //ACTUATOR
-        if (device.getCategory() == Device.DeviceCategory.ACTUATOR) {
-
-            String typeLabel = device.getTypeLabel();
-
-            //AlarmSystem: DISARMED / ARMED / TRIGGERED
-            if ("AlarmSystem".equalsIgnoreCase(typeLabel)) {
-
-                String currentState = actuatorService.getStateOrDefault(device.getId(), "DISARMED");
-                boolean isArmed = "ARMED".equalsIgnoreCase(currentState);
-                boolean isTriggered = "TRIGGERED".equalsIgnoreCase(currentState);
-
-                ToggleButton armToggle = new ToggleButton();
-                armToggle.getStyleClass().add("actuator-toggle");
-
-                // Wenn TRIGGERED: Toggle sperren (User soll Reset drücken)
-                armToggle.setDisable(isTriggered);
-
-                // selected => ARMED, unselected => DISARMED
-                armToggle.setSelected(isArmed);
-                armToggle.setText(isTriggered ? "TRIGGERED" : (isArmed ? "ARMED" : "DISARMED"));
-
-                armToggle.selectedProperty().addListener((obs, oldVal, on) -> {
-                    String newState = on ? "ARMED" : "DISARMED";
-                    armToggle.setText(newState);
-                    actuatorService.setState(device.getId(), newState);
-
-                    // Debounce-Counter zurücksetzen
-                    actuatorCfg.resetAlarmNoiseCounter(device.getId());
-                });
-
-                Button resetBtn = new Button("Reset");
-                resetBtn.setOnAction(e -> {
-                    actuatorService.setState(device.getId(), "DISARMED");
-                    actuatorCfg.resetAlarmNoiseCounter(device.getId());
-                    renderDevices(); // UI neu zeichnen
-                });
-
-                Button configBtn = new Button("Configure");
-                configBtn.setOnAction(e -> handleConfigureActuator(device));
-
-                VBox actionBox = new VBox(6);
-                HBox row1 = new HBox(8);
-                HBox row2 = new HBox(8);
-
-                // Row 1: Status/Arm + Reset
-                row1.getChildren().addAll(armToggle, resetBtn);
-
-                // Row 2: Configure + Delete
-                row2.getChildren().addAll(configBtn, deleteBtn);
-
-                actionBox.getChildren().addAll(row1, row2);
-                deviceCard.getChildren().add(actionBox);
-                return deviceCard;
-
-            } else {
-
-                //Standard Aktor: ON / OFF
-                ToggleButton toggle = new ToggleButton();
-                toggle.getStyleClass().add("actuator-toggle");
-
-                String currentState = actuatorService.getStateOrDefault(device.getId(), "OFF");
-                boolean isOn = "ON".equalsIgnoreCase(currentState);
-
-                toggle.setSelected(isOn);
-                toggle.setText(isOn ? "ON" : "OFF");
-
-                toggle.selectedProperty().addListener((obs, oldVal, on) -> {
-                    String newState = on ? "ON" : "OFF";
-                    toggle.setText(newState);
-                    actuatorService.setState(device.getId(), newState);
-                });
-
-                Button configBtn = new Button("Configure");
-                configBtn.setOnAction(e -> handleConfigureActuator(device));
-
-                actions.getChildren().addAll(toggle, configBtn);
-            }
-        }
-
-        deviceCard.getChildren().add(actions);
-        return deviceCard;
-    }
-
-    private void handleConfigureActuator(Device actuatorDevice) {
-        String type = actuatorDevice.getTypeLabel();
-
-        //TODO: weitere Aktoren hinzufügen
-        if ("Ventilation".equals(type)) {
-            showVentilationConfig(actuatorDevice);
-        } else if ("AlarmSystem".equals(type)) {
-            showAlarmConfig(actuatorDevice);
-        } else {
-            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "No configuration available for: " + type, ButtonType.OK).showAndWait();
-        }
-    }
-
-    private String formatSensorValue(String typeLabel, double value) {
-        if (typeLabel == null) return String.format("%.2f", value);
-
-        if (typeLabel.equalsIgnoreCase("CO2Sensor")) {
-            return String.format("%.0f", value);
-        }
-        // dB 1 Nachkommastelle
-        if (typeLabel.equalsIgnoreCase("NoiseSensor")) {
-            return String.format("%.1f", value);
-        }
-        return String.format("%.2f", value);
     }
 
     private void handleDeleteDevice(Device d) {
@@ -309,161 +165,6 @@ public class RoomDashboardController {
         navigate.goTo(Page.LOGIN.fxml());
     }
 
-    private void showVentilationConfig(Device actuatorDevice) {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Configure Ventilation");
-        dialog.getDialogPane().getStylesheets().add(
-                getClass().getResource("/css/app.css").toExternalForm()
-        );
-
-        VentilationConfig cfg = actuatorCfg.getOrCreateVentilationConfig(actuatorDevice.getId());
-
-        CheckBox autoMode = new CheckBox("Auto mode (based on CO₂)");
-        autoMode.setSelected(cfg.isAutoMode());
-
-        Spinner<Integer> onTh = new Spinner<>(400, 3000, cfg.getOnThresholdPpm());
-        onTh.setEditable(true);
-
-        Spinner<Integer> offTh = new Spinner<>(400, 3000, cfg.getOffThresholdPpm());
-        offTh.setEditable(true);
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-
-        grid.add(new Label("Auto mode:"), 0, 0);
-        grid.add(autoMode, 1, 0);
-
-        grid.add(new Label("Switch ON at (ppm):"), 0, 1);
-        grid.add(onTh, 1, 1);
-
-        grid.add(new Label("Switch OFF at (ppm):"), 0, 2);
-        grid.add(offTh, 1, 2);
-
-        onTh.setEditable(false);
-        offTh.setEditable(false);
-
-        dialog.getDialogPane().setContent(grid);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        dialog.showAndWait().ifPresent(btn -> {
-            if (btn != ButtonType.OK) return;
-
-            int onVal = onTh.getValue();
-            int offVal = offTh.getValue();
-
-            //off muss < on sein
-            if (offVal >= onVal) {
-                UIUtils.styledAlert(Alert.AlertType.ERROR,
-                        "OFF threshold must be smaller than ON threshold.",
-                        ButtonType.OK).showAndWait();
-                return;
-            }
-
-            cfg.setAutoMode(autoMode.isSelected());
-            cfg.setOnThresholdPpm(onVal);
-            cfg.setOffThresholdPpm(offVal);
-
-            actuatorCfg.saveVentilationConfig(actuatorDevice.getId(), cfg);
-
-            UIUtils.styledAlert(Alert.AlertType.INFORMATION,
-                    "Saved ventilation config.", ButtonType.OK).showAndWait();
-        });
-    }
-
-    private void showAlarmConfig(Device actuatorDevice) {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Configure Alarm System");
-        dialog.getDialogPane().getStylesheets().add(
-                getClass().getResource("/css/app.css").toExternalForm()
-        );
-
-        var cfg = actuatorCfg.getOrCreateAlarmConfig(actuatorDevice.getId());
-
-        CheckBox autoMode = new CheckBox("Auto mode (based on Noise)");
-        autoMode.setSelected(cfg.isAutoMode());
-
-        Spinner<Integer> thresholdDb = new Spinner<>(0, 120, cfg.getNoiseThresholdDb());
-        thresholdDb.setEditable(true);
-
-        Spinner<Integer> ticks = new Spinner<>(1, 10, cfg.getRequiredConsecutiveTicks());
-        ticks.setEditable(true);
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-
-        grid.add(new Label("Auto mode:"), 0, 0);
-        grid.add(autoMode, 1, 0);
-
-        grid.add(new Label("Noise threshold (dB):"), 0, 1);
-        grid.add(thresholdDb, 1, 1);
-
-        grid.add(new Label("Ticks required:"), 0, 2);
-        grid.add(ticks, 1, 2);
-
-        thresholdDb.setEditable(false);
-        ticks.setEditable(false);
-
-        dialog.getDialogPane().setContent(grid);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        dialog.showAndWait().ifPresent(btn -> {
-            if (btn != ButtonType.OK) return;
-
-            cfg.setAutoMode(autoMode.isSelected());
-            cfg.setNoiseThresholdDb(thresholdDb.getValue());
-            cfg.setRequiredConsecutiveTicks(ticks.getValue());
-
-            actuatorCfg.saveAlarmConfig(actuatorDevice.getId(), cfg);
-
-            UIUtils.styledAlert(Alert.AlertType.INFORMATION,
-                    "Saved alarm config.", ButtonType.OK).showAndWait();
-        });
-    }
-
-    private void onAlarmTriggered(double noiseValue) {
-        roomAutomationService.onAlarmTriggered(noiseValue);
-    }
-
-    private String resolveDisplayUnit(Device device) {
-        if (device instanceof Thermometer t) {
-            return t.getDisplayUnit(); // °C or °F (instance-specific)
-        }
-        return device.getUnit(); // default from DeviceType
-    }
-
-    private Node createThermometerUnitToggle(Thermometer t) {
-
-        ToggleGroup group = new ToggleGroup();
-
-        RadioButton celsius = new RadioButton("°C");
-        RadioButton fahrenheit = new RadioButton("°F");
-
-        celsius.setToggleGroup(group);
-        fahrenheit.setToggleGroup(group);
-
-        if (t.getTemperatureUnit() == Thermometer.TemperatureUnit.CELSIUS) {
-            celsius.setSelected(true);
-        } else {
-            fahrenheit.setSelected(true);
-        }
-
-        group.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == celsius) {
-                t.setTemperatureUnit(Thermometer.TemperatureUnit.CELSIUS);
-            } else if (newValue == fahrenheit) {
-                t.setTemperatureUnit(Thermometer.TemperatureUnit.FAHRENHEIT);
-            }
-            renderDevices(); // refreshes value display
-        });
-
-        HBox box = new HBox(8, new Label("Unit: "), celsius, fahrenheit);
-        box.getStyleClass().add("muted");
-
-        return box;
-    }
-
     public List<Device> getDevices() {
         return devices;
     }
@@ -486,5 +187,9 @@ public class RoomDashboardController {
 
     public ActuatorConfigService getActuatorCfg() {
         return actuatorCfg;
+    }
+
+    public ActuatorConfigDialog getActuatorConfigDialog() {
+        return actuatorConfigDialog;
     }
 }

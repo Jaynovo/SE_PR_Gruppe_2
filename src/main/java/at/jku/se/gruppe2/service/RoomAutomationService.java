@@ -1,20 +1,17 @@
 package at.jku.se.gruppe2.service;
 
-import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.Device;
-import at.jku.se.gruppe2.model.Room;
 import at.jku.se.gruppe2.model.actuator.AlarmConfig;
 import at.jku.se.gruppe2.model.actuator.VentilationConfig;
 import at.jku.se.gruppe2.model.sensor.Sensor;
 import at.jku.se.gruppe2.ui.UIUtils;
-import at.jku.se.gruppe2.ui.controller.RoomDashboardController;
 
 import java.util.List;
 
 public class RoomAutomationService {
     private final ActuatorConfigService actuatorCfg;
     private final ActuatorService actuatorService;
-    public String lastAlarmState = "DISARMED";
+    private String lastAlarmState = "DISARMED";
 
     public RoomAutomationService(ActuatorService actuatorService,  ActuatorConfigService actuatorCfg) {
         this.actuatorService = actuatorService;
