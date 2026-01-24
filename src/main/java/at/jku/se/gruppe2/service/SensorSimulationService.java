@@ -1,5 +1,6 @@
 package at.jku.se.gruppe2.service;
 
+import at.jku.se.gruppe2.config.LocalSecrets;
 import at.jku.se.gruppe2.model.sensor.CO2Sensor;
 import at.jku.se.gruppe2.model.sensor.CatSensor;
 import at.jku.se.gruppe2.model.sensor.NoiseSensor;
@@ -21,6 +22,9 @@ public class SensorSimulationService {
 
     private final ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
     private final Random rnd = new Random();
+
+    private final java.util.concurrent.ExecutorService roboflowExec =
+            java.util.concurrent.Executors.newSingleThreadExecutor();
 
     private static final List<String> TEST_IMAGES = List.of(
             // cats
@@ -51,11 +55,8 @@ public class SensorSimulationService {
     private volatile boolean running = false;
 
     private final RoboflowWorkflowService roboflow =
-            new RoboflowWorkflowService(System.getenv("ROBOFLOW_API_KEY"), 0.75);
+            new RoboflowWorkflowService(LocalSecrets.ROBOFLOW_API_KEY, 0.75);
 
-    // fürs erste fixes Testbild (später ersetzen wir es durch Snapshot URL)
-    private static final String TEST_CAT_IMAGE_URL =
-            "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg";
 
     /**
      * Registriert Sensoren eines Raumes für die Simulation.
@@ -96,6 +97,7 @@ public class SensorSimulationService {
     public void stop() {
         running = false;
         exec.shutdownNow();
+        roboflowExec.shutdownNow();
     }
 
     public void clearRoom(int roomId) {
@@ -142,14 +144,17 @@ public class SensorSimulationService {
         idx = (idx + 1) % TEST_IMAGES.size();
         catImageIndexByRoom.put(roomId, idx);
 
-        try {
-            RoboflowWorkflowService.DetectionResult result =
-                    roboflow.detectCatFromImageUrl(imageUrl);
+        roboflowExec.submit(() -> {
+            try {
+                RoboflowWorkflowService.DetectionResult result =
+                        roboflow.detectCatFromImageUrlAsBase64(imageUrl);
 
-            sensor.setConfidence(result.confidence());
-        } catch (Exception e) {
-            sensor.setConfidence(0.0);
-        }
+                sensor.updateDetection(result.confidence(), imageUrl);
+            } catch (Exception e) {
+                sensor.updateDetection(0.0, imageUrl);
+                System.err.println("Roboflow failed for: " +imageUrl + " -> " + e.getMessage());
+            }
+        });
     }
 
     private void simulateCo2(int roomId) {

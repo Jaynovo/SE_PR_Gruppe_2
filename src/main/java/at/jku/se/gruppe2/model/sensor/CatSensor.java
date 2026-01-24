@@ -7,15 +7,15 @@ package at.jku.se.gruppe2.model.sensor;
  */
 public class CatSensor extends Sensor {
 
-    // default threshold; can be changed via setter if you want a UI/config later
+    // default threshold; can be changed via setter/config file later
     private double detectionThreshold = 0.75;
+    private String lastImageUrl;
 
     public double getDetectionThreshold() {
         return detectionThreshold;
     }
 
     public void setDetectionThreshold(double detectionThreshold) {
-        // keep it sane
         if (detectionThreshold < 0.0) detectionThreshold = 0.0;
         if (detectionThreshold > 1.0) detectionThreshold = 1.0;
         this.detectionThreshold = detectionThreshold;
@@ -42,5 +42,14 @@ public class CatSensor extends Sensor {
      */
     public boolean isCatDetected() {
         return getConfidence() >= detectionThreshold;
+    }
+
+    public String getLastImageUrl() {
+        return lastImageUrl;
+    }
+
+    public void updateDetection(double confidence, String imageUrl) {
+        setConfidence(confidence);
+        this.lastImageUrl = imageUrl;
     }
 }

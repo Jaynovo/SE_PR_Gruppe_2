@@ -23,6 +23,8 @@ import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class RoomDashboardController {
 
@@ -38,6 +40,10 @@ public class RoomDashboardController {
     private final DeviceRepository deviceRepository = new DeviceRepository();
     private final ActuatorService actuatorService = new ActuatorService();
     private final ActuatorConfigService actuatorCfg = new ActuatorConfigService();
+    private final java.util.Map<Integer, javafx.scene.image.ImageView> catImageViews = new java.util.HashMap<>();
+    private final java.util.Map<Integer, javafx.scene.control.Label> catStatusLabels = new java.util.HashMap<>();
+    private final java.util.Map<Integer, String> catLastShownUrl = new java.util.HashMap<>();
+
 
     private final SensorSimulationService sensorSim = MainApp.getSensorSim();
     private Timeline liveRefresh;
@@ -103,11 +109,27 @@ public class RoomDashboardController {
         deviceCard.getChildren().addAll(title, type);
         if (device instanceof Sensor s) {
             if ("CatSensor".equalsIgnoreCase(device.getTypeLabel()) && s instanceof CatSensor cat) {
-                double conf = cat.getConfidence(); // 0..1
-                String status = cat.isCatDetected() ? "CAT DETECTED" : "No cat detected";
-                Label current = new Label(status + " (" + Math.round(conf * 100) + "%)");
-                current.getStyleClass().add("muted");
-                deviceCard.getChildren().add(current);
+
+                // Status Label (einmalig)
+                Label statusLbl = catStatusLabels.computeIfAbsent(device.getId(), id -> {
+                    Label l = new Label();
+                    l.getStyleClass().add("muted");
+                    return l;
+                });
+
+                // ImageView (einmalig)
+                javafx.scene.image.ImageView imgView = catImageViews.computeIfAbsent(device.getId(), id -> {
+                    javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView();
+                    iv.setFitWidth(220);
+                    iv.setPreserveRatio(true);
+                    iv.setSmooth(true);
+                    return iv;
+                });
+
+                // initialer Render (wird bei jedem renderDevices() aktualisiert, aber ohne Flackern)
+                updateCatCardUI(device.getId(), cat, statusLbl, imgView);
+
+                deviceCard.getChildren().addAll(statusLbl, imgView);
             } else {
                 // bestehender Code für CO2/Noise/...
                 String unit = resolveDisplayUnit(device);
@@ -229,6 +251,25 @@ public class RoomDashboardController {
 
         deviceCard.getChildren().add(actions);
         return deviceCard;
+    }
+    private void updateCatCardUI(int deviceId, CatSensor cat, Label statusLbl, javafx.scene.image.ImageView imgView) {
+
+        double conf = cat.getConfidence(); // 0..1
+        String status = cat.isCatDetected() ? "CAT DETECTED" : "No cat detected";
+        statusLbl.setText(status + " (" + Math.round(conf * 100) + "%)");
+
+        String url = cat.getLastImageUrl(); // musst du in CatSensor speichern
+        if (url == null || url.isBlank()) return;
+
+        // Bild nur updaten, wenn URL sich geändert hat (=> alle 10s)
+        String lastUrl = catLastShownUrl.get(deviceId);
+        if (url.equals(lastUrl)) return;
+
+        catLastShownUrl.put(deviceId, url);
+
+        // backgroundLoading=true, damit es nicht ruckelt
+        javafx.scene.image.Image img = new javafx.scene.image.Image(url, 220, 0, true, true, true);
+        imgView.setImage(img);
     }
 
     private void handleConfigureActuator(Device actuatorDevice) {

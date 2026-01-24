@@ -3,9 +3,12 @@ package at.jku.se.gruppe2.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.*;
 import java.time.Duration;
+import java.util.Base64;
 
 public class RoboflowWorkflowService {
 
@@ -20,65 +23,118 @@ public class RoboflowWorkflowService {
     public RoboflowWorkflowService(String apiKey, double threshold) {
         this.apiKey = apiKey;
         this.threshold = threshold;
+
+        System.out.println("Roboflow key present: " + (apiKey != null && !apiKey.isBlank()));
     }
 
-    public DetectionResult detectCatFromImageUrl(String imageUrl) throws Exception {
-
-        // JSON Body exakt wie bei Roboflow
+    /** URL direkt an Roboflow geben (funktioniert nur, wenn Roboflow die URL abrufen darf) */
+    public DetectionResult detectCatFromImageUrl(String imageUrl) {
         String body = """
             {
               "api_key": "%s",
               "inputs": {
-                "image": {
-                  "type": "url",
-                  "value": "%s"
-                }
+                "image": { "type": "url", "value": "%s" }
               }
             }
-            """.formatted(apiKey, imageUrl);
+            """.formatted(apiKey, escapeJson(imageUrl));
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(ENDPOINT))
-                .timeout(Duration.ofSeconds(20))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
+        return sendAndParse(body);
+    }
 
-        HttpResponse<String> response =
-                http.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() != 200) {
-            throw new RuntimeException("Roboflow error " + response.statusCode()
-                    + ": " + response.body());
+    /** URL lokal laden -> base64 -> an Roboflow senden (empfohlen, löst Imgur-Problem) */
+    public DetectionResult detectCatFromImageUrlAsBase64(String imageUrl) {
+        try {
+            byte[] bytes = download(imageUrl);
+            String b64 = Base64.getEncoder().encodeToString(bytes);
+            return detectCatFromBase64(b64);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch/encode image: " + imageUrl, e);
         }
+    }
 
-        return parseResponse(response.body());
+    /** Base64 direkt an Roboflow senden */
+    public DetectionResult detectCatFromBase64(String base64) {
+        String body = """
+            {
+              "api_key": "%s",
+              "inputs": {
+                "image": { "type": "base64", "value": "%s" }
+              }
+            }
+            """.formatted(apiKey, escapeJson(base64));
+
+        return sendAndParse(body);
+    }
+
+    private DetectionResult sendAndParse(String body) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(ENDPOINT))
+                    .timeout(Duration.ofSeconds(30))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
+
+            HttpResponse<String> response =
+                    http.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Roboflow error " + response.statusCode()
+                        + ": " + response.body());
+            }
+            System.out.println("Roboflow: POST " + ENDPOINT + " (body length=" + body.length() + ")");
+            return parseResponse(response.body());
+        } catch (InterruptedException ie) {
+        Thread.currentThread().interrupt(); // wichtig!
+        throw new RuntimeException("Roboflow request interrupted", ie);
+    } catch (Exception e) {
+        throw new RuntimeException("Roboflow request failed", e);
+    }
     }
 
     private DetectionResult parseResponse(String json) throws Exception {
         JsonNode root = mapper.readTree(json);
 
         // Workflow Response ist ein Array
-        JsonNode first = root.get(0);
+        JsonNode first = root.isArray() && root.size() > 0 ? root.get(0) : null;
         if (first == null) return new DetectionResult(false, 0.0);
 
-        JsonNode predictions =
-                first.path("predictions").path("predictions");
+        JsonNode predictions = first.path("predictions").path("predictions");
 
         double bestConfidence = 0.0;
 
         if (predictions.isArray()) {
             for (JsonNode p : predictions) {
                 if ("cat".equalsIgnoreCase(p.path("class").asText())) {
-                    bestConfidence = Math.max(
-                            bestConfidence,
-                            p.path("confidence").asDouble(0.0)
-                    );
+                    bestConfidence = Math.max(bestConfidence, p.path("confidence").asDouble(0.0));
                 }
             }
         }
 
         return new DetectionResult(bestConfidence >= threshold, bestConfidence);
+    }
+
+    private byte[] download(String url) throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(20))
+                .header("User-Agent", "JKU-SE-Project/1.0 (JavaFX)")
+                .header("Accept", "image/avif,image/webp,image/apng,image/*,*/*;q=0.8")
+                .GET()
+                .build();
+
+        HttpResponse<byte[]> res = http.send(req, HttpResponse.BodyHandlers.ofByteArray());
+
+        if (res.statusCode() != 200) {
+            throw new RuntimeException("Image download failed " + res.statusCode() + " for " + url);
+        }
+        return res.body();
+    }
+
+    /** Minimal JSON string escaping (reicht für URL/Base64) */
+    private static String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     public record DetectionResult(boolean detected, double confidence) {}
