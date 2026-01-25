@@ -3,8 +3,7 @@ package at.jku.se.gruppe2.ui.controller;
 import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
-import at.jku.se.gruppe2.service.GeoCodingService;
-import at.jku.se.gruppe2.service.NavigationService;
+import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.*;
@@ -27,6 +26,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 
+@SuppressWarnings("CallToPrintStackTrace")
 public class ProfileController {
 
     @FXML
