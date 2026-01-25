@@ -1,8 +1,6 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.model.Device;
-import at.jku.se.gruppe2.model.DeviceType;
-import at.jku.se.gruppe2.model.Room;
+import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.model.actuator.*;
 import at.jku.se.gruppe2.model.sensor.*;
 
@@ -140,7 +138,6 @@ public class DeviceRepository {
         return device;
     }
 
-    //TODO: Create more new classes to add here
     private Sensor createSensor(String typeLabel) {
         return switch (typeLabel) {
             case "Thermometer" -> new Thermometer();
@@ -148,8 +145,10 @@ public class DeviceRepository {
             case "NoiseSensor" -> new NoiseSensor();
             case "LightSensor" -> new LightSensor();
             case "HumiditySensor" -> new HumiditySensor();
+            case "MotionSensor" -> new MotionSensor();
+            case "UtilityMeter" -> new UtilityMeterSensor();
             default -> new Sensor() {
-            }; // fallback
+            };
         };
     }
 
@@ -159,8 +158,9 @@ public class DeviceRepository {
             case "AlarmSystem" -> new AlarmSystemActuator();
             case "SmartLightActuator" -> new SmartLightActuator();
             case "BlindsActuator" -> new BlindsActuator();
+            case "SmartPlug" -> new SmartPlugActuator();
             default -> new Actuator() {
-            }; //fallback
+            };
         };
     }
 
