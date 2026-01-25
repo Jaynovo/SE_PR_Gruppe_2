@@ -232,7 +232,6 @@ public class ProfileController {
         iv.setViewport(new Rectangle2D(x, y, size, size)); //center-crop
     }
 
-    //TODO!!!!!!!
     @FXML
     private void onSave() {
         User current = Session.getCurrentUser();

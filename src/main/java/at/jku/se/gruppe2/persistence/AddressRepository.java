@@ -3,12 +3,8 @@ package at.jku.se.gruppe2.persistence;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.service.GeoCodingService;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.sql.*;
+import java.util.*;
 
 public class AddressRepository {
 

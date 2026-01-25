@@ -4,13 +4,9 @@ import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.model.actuator.*;
 import at.jku.se.gruppe2.model.sensor.*;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.sql.*;
+import java.util.*;
 
-/* TODO CHANGE: currently generated class to allow adding rooms*/
 public class DeviceRepository {
 
     public List<Device> getDevicesByRoomId(int roomId) {

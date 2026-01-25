@@ -3,8 +3,7 @@ package at.jku.se.gruppe2.service;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class UserBuildingService {
     private final UserRepository userRepository;
