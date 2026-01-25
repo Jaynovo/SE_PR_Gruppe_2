@@ -151,4 +151,5 @@ VALUES  ('SENSOR',   'Thermometer',        '°C'),
         ('ACTUATOR', 'SmartLightActuator', NULL),
         ('ACTUATOR', 'Blinds',             NULL),
         ('SENSOR',   'MotionSensor',       NULL),
-        ('ACTUATOR', 'SmartPlug',          'state');
+        ('ACTUATOR', 'SmartPlug',          'state'),
+        ('SENSOR',   'UtilityMeter',       'kWh');
