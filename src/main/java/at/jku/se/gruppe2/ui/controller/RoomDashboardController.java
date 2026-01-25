@@ -109,29 +109,31 @@ public class RoomDashboardController {
         deviceCard.getChildren().addAll(title, type);
         if (device instanceof Sensor s) {
             if ("CatSensor".equalsIgnoreCase(device.getTypeLabel()) && s instanceof CatSensor cat) {
-
                 // Status Label (einmalig)
                 Label statusLbl = catStatusLabels.computeIfAbsent(device.getId(), id -> {
                     Label l = new Label();
-                    l.getStyleClass().add("muted");
+                    l.getStyleClass().add("badge");
                     return l;
                 });
 
                 // ImageView (einmalig)
                 javafx.scene.image.ImageView imgView = catImageViews.computeIfAbsent(device.getId(), id -> {
                     javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView();
-                    iv.setFitWidth(220);
-                    iv.setPreserveRatio(true);
+                    iv.setFitWidth(180);
+                    iv.setFitHeight(120);
+                    iv.setPreserveRatio(false);
                     iv.setSmooth(true);
                     return iv;
                 });
-
-                // initialer Render (wird bei jedem renderDevices() aktualisiert, aber ohne Flackern)
                 updateCatCardUI(device.getId(), cat, statusLbl, imgView);
 
-                deviceCard.getChildren().addAll(statusLbl, imgView);
+                StackPane imageCard = new StackPane(imgView);
+                imageCard.getStyleClass().add("mini-image-card");
+                imageCard.setPrefSize(180, 120);
+
+                deviceCard.getChildren().addAll(statusLbl, imageCard);
             } else {
-                // bestehender Code für CO2/Noise/...
+                //CO2/Noise/...
                 String unit = resolveDisplayUnit(device);
                 unit = (unit == null) ? "Not available!" : unit;
 
@@ -252,13 +254,59 @@ public class RoomDashboardController {
         deviceCard.getChildren().add(actions);
         return deviceCard;
     }
+    private void setImageCover(ImageView iv, Image img, double w, double h) {
+        iv.setImage(img);
+        iv.setFitWidth(w);
+        iv.setFitHeight(h);
+        iv.setPreserveRatio(true);
+
+        // Warten bis Bild geladen ist, dann viewport crop setzen
+        if (img.getProgress() < 1.0) {
+            img.progressProperty().addListener((obs, oldV, newV) -> {
+                if (newV.doubleValue() >= 1.0) {
+                    applyCoverViewport(iv, w, h);
+                }
+            });
+        } else {
+            applyCoverViewport(iv, w, h);
+        }
+    }
+
+    private void applyCoverViewport(ImageView iv, double w, double h) {
+        Image img = iv.getImage();
+        if (img == null) return;
+
+        double imgW = img.getWidth();
+        double imgH = img.getHeight();
+        if (imgW <= 0 || imgH <= 0) return;
+
+        double targetRatio = w / h;
+        double imgRatio = imgW / imgH;
+
+        double cropW, cropH;
+        if (imgRatio > targetRatio) {
+            // zu breit -> links/rechts weg
+            cropH = imgH;
+            cropW = imgH * targetRatio;
+        } else {
+            // zu hoch -> oben/unten weg
+            cropW = imgW;
+            cropH = imgW / targetRatio;
+        }
+
+        double x = (imgW - cropW) / 2.0;
+        double y = (imgH - cropH) / 2.0;
+
+        iv.setViewport(new javafx.geometry.Rectangle2D(x, y, cropW, cropH));
+    }
+
     private void updateCatCardUI(int deviceId, CatSensor cat, Label statusLbl, javafx.scene.image.ImageView imgView) {
 
         double conf = cat.getConfidence(); // 0..1
         String status = cat.isCatDetected() ? "CAT DETECTED" : "No cat detected";
         statusLbl.setText(status + " (" + Math.round(conf * 100) + "%)");
 
-        String url = cat.getLastImageUrl(); // musst du in CatSensor speichern
+        String url = cat.getLastImageUrl();
         if (url == null || url.isBlank()) return;
 
         // Bild nur updaten, wenn URL sich geändert hat (=> alle 10s)
@@ -268,8 +316,14 @@ public class RoomDashboardController {
         catLastShownUrl.put(deviceId, url);
 
         // backgroundLoading=true, damit es nicht ruckelt
-        javafx.scene.image.Image img = new javafx.scene.image.Image(url, 220, 0, true, true, true);
-        imgView.setImage(img);
+        Image img = new Image(url, 0, 0, true, true, true);
+        setImageCover(imgView,img,180,120);
+
+        statusLbl.getStyleClass().removeAll("badge-ok", "badge-warn", "badge-off");
+
+        boolean detected = cat.isCatDetected();
+        if (detected) statusLbl.getStyleClass().add("badge-ok");
+        else statusLbl.getStyleClass().add("badge-off");
     }
 
     private void handleConfigureActuator(Device actuatorDevice) {

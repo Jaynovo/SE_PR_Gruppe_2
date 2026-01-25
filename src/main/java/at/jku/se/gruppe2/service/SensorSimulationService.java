@@ -30,9 +30,13 @@ public class SensorSimulationService {
             // cats
             "https://i.imgur.com/BxKNfWu.jpeg",
             "https://i.imgur.com/4XynTW7.jpeg",
+            "https://i.imgur.com/raSXtQ1.jpeg",
+            "https://i.imgur.com/8TRJB5e.jpeg",
 
             // no cats
-            "https://upload.wikimedia.org/wikipedia/commons/9/93/Golden_Retriever_Carlos_%2810581910556%29.jpg"
+            "https://i.imgur.com/tgfa41l.jpeg",
+            "https://i.imgur.com/dm871pH.jpeg",
+            "https://i.imgur.com/IuqtS85.jpeg"
     );
     // pro Raum: welcher Index ist als nächstes dran?
     private final Map<Integer, Integer> catImageIndexByRoom = new ConcurrentHashMap<>();

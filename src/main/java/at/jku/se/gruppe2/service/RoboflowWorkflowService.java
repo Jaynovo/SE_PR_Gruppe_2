@@ -27,20 +27,6 @@ public class RoboflowWorkflowService {
         System.out.println("Roboflow key present: " + (apiKey != null && !apiKey.isBlank()));
     }
 
-    /** URL direkt an Roboflow geben (funktioniert nur, wenn Roboflow die URL abrufen darf) */
-    public DetectionResult detectCatFromImageUrl(String imageUrl) {
-        String body = """
-            {
-              "api_key": "%s",
-              "inputs": {
-                "image": { "type": "url", "value": "%s" }
-              }
-            }
-            """.formatted(apiKey, escapeJson(imageUrl));
-
-        return sendAndParse(body);
-    }
-
     /** URL lokal laden -> base64 -> an Roboflow senden (empfohlen, löst Imgur-Problem) */
     public DetectionResult detectCatFromImageUrlAsBase64(String imageUrl) {
         try {
