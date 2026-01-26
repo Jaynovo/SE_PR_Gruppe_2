@@ -4,6 +4,7 @@ import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.model.user.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
+import at.jku.se.gruppe2.service.user.*;
 import at.jku.se.gruppe2.utils.Session;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -32,6 +33,17 @@ public class ShareHomeDialogController {
 
     public void setHome(Home home) {
         this.home = home;
+
+        AuthorizationService authService = new AuthorizationService();
+        if (!authService.canInviteUsers(home.getId())) {
+            DialogService dialog = new DialogService();
+            dialog.error("Permission Denied",
+                    "Only the home owner can invite users to the home.");
+            Stage stage = (Stage) emailField.getScene().getWindow();
+            stage.close();
+            return;
+        }
+
         initializeRoleComboBox();
         loadPendingInvitations();
     }

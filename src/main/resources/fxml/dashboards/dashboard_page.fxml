@@ -14,6 +14,11 @@
             <Label text="Smart Home Dashboard" styleClass="title"/>
             <Pane HBox.hgrow="ALWAYS"/>
 
+            <Label fx:id="userRoleLabel"
+                   text="Your Role: Guest"
+                   visible="false"
+                   style="-fx-padding: 0 15 0 0; -fx-font-weight: bold;"/>
+
             <MenuButton text="Manage User">
                 <items>
                     <MenuItem text="Profile" onAction="#handleUserProfile"/>
@@ -69,9 +74,10 @@
                             </HBox>
                         </VBox>
                         <VBox spacing="8">
-                            <Button text="Change Home Details" onAction="#changeHomeDetails"/>
-                            <Button text="Share Home" onAction="#shareHome"/>
-                            <Button text="Delete Home" onAction="#deleteHomeButtonClicked" styleClass="danger"/>
+                            <Button fx:id="editHomeButton" text="Change Home Details" onAction="#changeHomeDetails"/>
+                            <Button fx:id="shareHomeButton" text="Share Home" onAction="#shareHome"/>
+                            <Button fx:id="deleteHomeButton" text="Delete Home" onAction="#deleteHomeButtonClicked"
+                                    styleClass="danger"/>
                         </VBox>
                     </HBox>
                 </top>

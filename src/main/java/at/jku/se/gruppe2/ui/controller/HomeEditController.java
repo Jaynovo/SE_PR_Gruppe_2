@@ -1,9 +1,9 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.model.user.User;
+import at.jku.se.gruppe2.model.user.*;
 import at.jku.se.gruppe2.persistence.*;
-import at.jku.se.gruppe2.service.user.ValidationService;
+import at.jku.se.gruppe2.service.user.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
 import at.jku.se.gruppe2.ui.navigation.Page;
@@ -31,6 +31,7 @@ public class HomeEditController extends BaseController implements Initializable 
 
     private final HomeRepository homeRepo = new HomeRepository();
     private final AddressRepository addressRepo = new AddressRepository();
+    private final AuthorizationService authService = new AuthorizationService();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -49,6 +50,13 @@ public class HomeEditController extends BaseController implements Initializable 
         currentHome = homeRepo.getHomeByUser(user).orElse(null);
         if (currentHome == null) {
             dialog.error("Error", "No home found to edit.");
+            navigate.goTo(Page.DASHBOARD.fxml());
+            return;
+        }
+
+        if (!authService.canEditHomeDetails(currentHome.getId())) {
+            dialog.error("Permission Denied",
+                    "Only the home owner can edit home details.");
             navigate.goTo(Page.DASHBOARD.fxml());
             return;
         }
@@ -76,6 +84,13 @@ public class HomeEditController extends BaseController implements Initializable 
 
     @FXML
     public void saveButtonClicked() {
+        // CHECK Permission
+        if (!authService.canEditHomeDetails(currentHome.getId())) {
+            dialog.error("Permission Denied",
+                    "Only the home owner can edit home details.");
+            return;
+        }
+
         // Validate inputs
         if (!validateInputs()) {
             return;
@@ -172,6 +187,13 @@ public class HomeEditController extends BaseController implements Initializable 
 
     @FXML
     public void deleteHomeButtonClicked() {
+        // CHECK Permission
+        if (!authService.canDeleteHome(currentHome.getId())) {
+            dialog.error("Permission Denied",
+                    "Only the home owner can delete the home.");
+            return;
+        }
+
         User user = Session.getCurrentUser();
         if (user == null) {
             dialog.error("Error", "No user logged in");

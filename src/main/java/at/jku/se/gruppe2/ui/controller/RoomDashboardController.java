@@ -4,10 +4,10 @@ import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.model.actuator.*;
 import at.jku.se.gruppe2.model.sensor.*;
-import at.jku.se.gruppe2.persistence.DeviceRepository;
+import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
-import at.jku.se.gruppe2.service.actuator.ActuatorConfigService;
-import at.jku.se.gruppe2.service.actuator.ActuatorService;
+import at.jku.se.gruppe2.service.actuator.*;
+import at.jku.se.gruppe2.service.user.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
@@ -24,10 +24,9 @@ import java.util.*;
 
 public class RoomDashboardController {
 
-    @FXML
-    public Label roomLabel;
-    @FXML
-    private FlowPane cardsFlow;
+    @FXML    public Label roomLabel;
+    @FXML    private FlowPane cardsFlow;
+    @FXML    private Button addDeviceButton;
 
     private static final Duration REFRESH_INTERVAL = Duration.millis(500);
 
@@ -36,6 +35,8 @@ public class RoomDashboardController {
     private final DeviceRepository deviceRepository = new DeviceRepository();
     private final ActuatorService actuatorService = new ActuatorService();
     private final ActuatorConfigService actuatorCfg = new ActuatorConfigService();
+    private final ActuatorPermissionService actuatorPermService = new ActuatorPermissionService();
+    private final AuthorizationService authService = new AuthorizationService();
 
     private final SensorSimulationService sensorSim = MainApp.getSensorSim();
     private Timeline liveRefresh;
@@ -45,10 +46,9 @@ public class RoomDashboardController {
     private String lastAlarmState = "DISARMED";
 
     public void initialize() {
-        int userId = Session.getCurrentUser().getId();
-
         setLabel();
         loadDevicesAndRegisterSensors();
+        updateUIBasedOnPermissions();
         renderDevices();
 
         //Alle 2 Sekunden neu rendern (gleich wie Simulation, alle 2 Sekunden neue Werte erzeugen)
@@ -60,9 +60,28 @@ public class RoomDashboardController {
         liveRefresh.play();
     }
 
+    private void updateUIBasedOnPermissions() {
+        Room room = Session.getSelectedRoom();
+        if (room == null || room.getHome() == null) {
+            return;
+        }
+
+        int homeId = room.getHome().getId();
+
+        // Only residents and owners can add devices
+        if (addDeviceButton != null) {
+            boolean canAddDevices = authService.canAddDevices(homeId);
+            addDeviceButton.setVisible(canAddDevices);
+            addDeviceButton.setManaged(canAddDevices);
+
+            if (!canAddDevices) {
+                addDeviceButton.setTooltip(new Tooltip("Only residents and owners can add devices"));
+            }
+        }
+    }
+
     private void setLabel() {
         String room = Session.getSelectedRoom().getRoomLabel();
-
         roomLabel.setText(room);
     }
 
@@ -81,12 +100,22 @@ public class RoomDashboardController {
 
     private void renderDevices() {
         cardsFlow.getChildren().clear();
+
+        Room room = Session.getSelectedRoom();
+        if (room == null || room.getHome() == null) {
+            return;
+        }
+
+        int homeId = room.getHome().getId();
+        boolean canDelete = authService.canRemoveDevices(homeId);
+        boolean canConfigure = authService.canConfigureActuators(homeId);
+
         for (Device device : devices) {
-            cardsFlow.getChildren().add(createDeviceCard(device));
+            cardsFlow.getChildren().add(createDeviceCard(device, canDelete, canConfigure));
         }
     }
 
-    private Pane createDeviceCard(Device device) {
+    private Pane createDeviceCard(Device device, boolean canDelete, boolean canConfigure) {
         VBox deviceCard = new VBox(8);
         deviceCard.getStyleClass().add("card");
         deviceCard.setPrefWidth(260);
@@ -99,6 +128,7 @@ public class RoomDashboardController {
         type.getStyleClass().add("muted");
 
         deviceCard.getChildren().addAll(title, type);
+
         if (device instanceof Sensor s) {
 
             String unit = resolveDisplayUnit(device);
@@ -118,10 +148,12 @@ public class RoomDashboardController {
 
         HBox actions = new HBox(8);
 
-        //DELETE (immer)
-        Button deleteBtn = new Button("Delete");
-        deleteBtn.setOnAction(e -> handleDeleteDevice(device));
-        actions.getChildren().add(deleteBtn);
+        // DELETE button only shows if user has permission
+        if (canDelete) {
+            Button deleteBtn = new Button("Delete");
+            deleteBtn.setOnAction(e -> handleDeleteDevice(device));
+            actions.getChildren().add(deleteBtn);
+        }
 
         //ACTUATOR
         if (device.getCategory() == Device.DeviceCategory.ACTUATOR) {
@@ -161,7 +193,10 @@ public class RoomDashboardController {
                     renderDevices(); // UI neu zeichnen
                 });
 
+                // CONFIGURE button only shows if user has permission
                 Button configBtn = new Button("Configure");
+                configBtn.setVisible(canConfigure);
+                configBtn.setManaged(canConfigure);
                 configBtn.setOnAction(e -> handleConfigureActuator(device));
 
                 VBox actionBox = new VBox(6);
@@ -171,10 +206,19 @@ public class RoomDashboardController {
                 // Row 1: Status/Arm + Reset
                 row1.getChildren().addAll(armToggle, resetBtn);
 
-                // Row 2: Configure + Delete
-                row2.getChildren().addAll(configBtn, deleteBtn);
+                // Row 2: Configure + Delete (only if permissions allow)
+                if (canConfigure || canDelete) {
+                    if (canConfigure) row2.getChildren().add(configBtn);
+                    if (canDelete) {
+                        Button deleteBtn = new Button("Delete");
+                        deleteBtn.setOnAction(e -> handleDeleteDevice(device));
+                        row2.getChildren().add(deleteBtn);
+                    }
+                    actionBox.getChildren().addAll(row1, row2);
+                } else {
+                    actionBox.getChildren().add(row1);
+                }
 
-                actionBox.getChildren().addAll(row1, row2);
                 deviceCard.getChildren().add(actionBox);
                 return deviceCard;
 
@@ -196,10 +240,14 @@ public class RoomDashboardController {
                     actuatorService.setState(device.getId(), newState);
                 });
 
-                Button configBtn = new Button("Configure");
-                configBtn.setOnAction(e -> handleConfigureActuator(device));
+                actions.getChildren().add(toggle);
 
-                actions.getChildren().addAll(toggle, configBtn);
+                // CONFIGURE button only shows if user has permission
+                if (canConfigure) {
+                    Button configBtn = new Button("Configure");
+                    configBtn.setOnAction(e -> handleConfigureActuator(device));
+                    actions.getChildren().add(configBtn);
+                }
             }
         }
 
@@ -208,6 +256,13 @@ public class RoomDashboardController {
     }
 
     private void handleConfigureActuator(Device actuatorDevice) {
+        // CHECK permission
+        if (!actuatorPermService.canConfigureActuator(actuatorDevice.getId())) {
+            dialog.error("Permission Denied",
+                    "Only residents and owners can configure actuators.");
+            return;
+        }
+
         String type = actuatorDevice.getTypeLabel();
 
         //TODO: weitere Aktoren hinzufügen
@@ -234,6 +289,16 @@ public class RoomDashboardController {
     }
 
     private void handleDeleteDevice(Device d) {
+        // CHECK permission
+        Room room = Session.getSelectedRoom();
+        if (room != null && room.getHome() != null) {
+            if (!authService.canRemoveDevices(room.getHome().getId())) {
+                dialog.error("Permission Denied",
+                        "Only residents and owners can delete devices.");
+                return;
+            }
+        }
+
         Alert confirm = UIUtils.styledConfirm("Delete \"" + d.getLabel() + "\"?");
         confirm.setTitle("Delete Device");
 
@@ -257,6 +322,15 @@ public class RoomDashboardController {
 
     public void handleAddDevice() {
         Room room = Session.getSelectedRoom();
+
+        // CHECK permission
+        if (room != null && room.getHome() != null) {
+            if (!authService.canAddDevices(room.getHome().getId())) {
+                dialog.error("Permission Denied",
+                        "Only residents and owners can add devices.");
+                return;
+            }
+        }
 
         var categories = List.of(Device.DeviceCategory.SENSOR, Device.DeviceCategory.ACTUATOR);
         ChoiceDialog<Device.DeviceCategory> catDialog =

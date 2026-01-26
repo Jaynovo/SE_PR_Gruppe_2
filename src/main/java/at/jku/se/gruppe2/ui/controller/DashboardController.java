@@ -1,17 +1,15 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.model.user.HomeInvitation;
-import at.jku.se.gruppe2.model.user.User;
+import at.jku.se.gruppe2.model.user.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
+import at.jku.se.gruppe2.service.user.AuthorizationService;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.component.*;
-import at.jku.se.gruppe2.ui.custom.CreateRoomDialog;
-import at.jku.se.gruppe2.ui.custom.ShareHomeDialog;
-import at.jku.se.gruppe2.ui.custom.HomeInvitationsDialog;
+import at.jku.se.gruppe2.ui.custom.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -35,6 +33,11 @@ public class DashboardController extends BaseController implements Initializable
     @FXML private Label temperatureLabel;
     @FXML private Button createRoomButton;
 
+    @FXML private Button editHomeButton;
+    @FXML private Button deleteHomeButton;
+    @FXML private Button shareHomeButton;
+    @FXML private Label userRoleLabel;
+
     private Home home;
     private Optional<List<Room>> rooms;
 
@@ -43,6 +46,7 @@ public class DashboardController extends BaseController implements Initializable
     private final DeviceRepository deviceRepo = new DeviceRepository();
     private final RoomService roomService = new RoomService();
     private final HomeInvitationRepository invitationRepo = new HomeInvitationRepository();
+    private final AuthorizationService authService = new AuthorizationService();
 
     private final RoomCardFactory roomCardFactory = new RoomCardFactory();
 
@@ -72,9 +76,65 @@ public class DashboardController extends BaseController implements Initializable
         // Home exists - show it
         this.home = home;
         showHomeState();
+        updateUIBasedOnPermissions();
         displayHomeInfo();
         loadRooms();
         renderRoomCards();
+    }
+
+    private void updateUIBasedOnPermissions() {
+        if (home == null) {
+            return;
+        }
+
+        int homeId = home.getId();
+
+        // Get user's role and display it
+        Optional<UserRole> userRole = authService.getCurrentUserRole(homeId);
+        if (userRole.isPresent()) {
+            UserRole role = userRole.get();
+
+            // Show role badge
+            if (userRoleLabel != null) {
+                userRoleLabel.setText("Your Role: " + role.getDisplayName());
+                userRoleLabel.setVisible(true);
+
+                // Add styling based on role
+                userRoleLabel.getStyleClass().removeAll("role-owner", "role-resident", "role-guest");
+                switch (role) {
+                    case OWNER -> userRoleLabel.getStyleClass().add("role-owner");
+                    case RESIDENT -> userRoleLabel.getStyleClass().add("role-resident");
+                    case GUEST -> userRoleLabel.getStyleClass().add("role-guest");
+                }
+            }
+
+            // Buttons for owners
+            boolean isOwner = authService.canAddRooms(homeId);
+            setButtonVisibility(createRoomButton, isOwner, "Only owners can add rooms");
+            setButtonVisibility(editHomeButton, isOwner, "Only owners can edit home details");
+            setButtonVisibility(deleteHomeButton, isOwner, "Only owners can delete the home");
+            setButtonVisibility(shareHomeButton, isOwner, "Only owners can invite users");
+        }
+    }
+
+    private void setButtonVisibility(Button button, boolean hasPermission, String tooltipText) {
+        if (button == null) return;
+
+        if (hasPermission) {
+            button.setVisible(true);
+            button.setDisable(false);
+            Tooltip.uninstall(button, button.getTooltip());
+        } else {
+            // Option 1: Hide the button completely
+            button.setVisible(false);
+            button.setManaged(false);
+
+            // Option 2: Show but disable with tooltip
+            // button.setVisible(true);
+            // button.setManaged(true);
+            // button.setDisable(true);
+            // button.setTooltip(new Tooltip(tooltipText));
+        }
     }
 
     private void checkPendingInvitations(User user) {
@@ -170,17 +230,23 @@ public class DashboardController extends BaseController implements Initializable
     private void renderRoomCards() {
         cardsFlow.getChildren().clear();
 
+        // Check if user can delete rooms (owner only)
+        boolean canDelete = home != null && authService.canDeleteRooms(home.getId());
+        // Check if user can edit rooms (resident or higher)
+        boolean canEdit = home != null && authService.canEditRoomDetails(home.getId());
+
         rooms.orElse(Collections.emptyList())
-                .forEach(room ->
-                        cardsFlow.getChildren().add(
-                                roomCardFactory.createRoomCard(
-                                        room,
-                                        this::handleManageRoom,
-                                        this::handleDeleteRoom,
-                                        this::handleEditRoom
-                                )
-                        )
-                );
+                .forEach(room -> {
+                    // Pass permission flags to room card factory
+                    cardsFlow.getChildren().add(
+                            roomCardFactory.createRoomCard(
+                                    room,
+                                    this::handleManageRoom,
+                                    canDelete ? this::handleDeleteRoom : null,
+                                    canEdit ? this::handleEditRoom : null
+                            )
+                    );
+                });
     }
 
     public void addHomeButtonClicked() {
@@ -208,6 +274,13 @@ public class DashboardController extends BaseController implements Initializable
     }
 
     public void deleteHomeButtonClicked() {
+        // CHECK Permission
+        if (home != null && !authService.canDeleteHome(home.getId())) {
+            dialog.error("Permission Denied",
+                    "Only the home owner can delete the home.");
+            return;
+        }
+
         User user = Session.getCurrentUser();
         if (user == null) {
             dialog.error("Error", "No user logged in");
@@ -253,6 +326,13 @@ public class DashboardController extends BaseController implements Initializable
     }
 
     public void changeHomeDetails() {
+        // CHECK Permission
+        if (home != null && !authService.canEditHomeDetails(home.getId())) {
+            dialog.error("Permission Denied",
+                    "Only the home owner can edit home details.");
+            return;
+        }
+
         navigate.goTo(Page.HOME_EDIT.fxml());
     }
 
@@ -262,12 +342,26 @@ public class DashboardController extends BaseController implements Initializable
             return;
         }
 
+        // ADD PERMISSION CHECK
+        if (!authService.canAddRooms(home.getId())) {
+            dialog.error("Permission Denied",
+                    "Only the home owner can add rooms.");
+            return;
+        }
+
         CreateRoomDialog createDialog = new CreateRoomDialog(home, roomService);
         createDialog.showAndWait();
         reload();
     }
 
     public void handleDeleteRoom(Room room) {
+        // CHECK Permission
+        if (home != null && !authService.canDeleteRooms(home.getId())) {
+            dialog.error("Permission Denied",
+                    "Only the home owner can delete rooms.");
+            return;
+        }
+
         Alert confirm = UIUtils.styledConfirm(
                 "Delete \"" + room.getRoomLabel() + "\"?\nAll devices in this room will also be deleted."
         );
@@ -292,6 +386,13 @@ public class DashboardController extends BaseController implements Initializable
     }
 
     public void handleEditRoom(Room room) {
+        // CHECK Permission
+        if (home != null && !authService.canEditRoomDetails(home.getId())) {
+            dialog.error("Permission Denied",
+                    "Only residents and owners can edit room details.");
+            return;
+        }
+
         Session.setSelectedRoom(room);
         navigate.goTo(Page.ROOM_EDIT.fxml());
     }
@@ -310,6 +411,13 @@ public class DashboardController extends BaseController implements Initializable
     public void shareHome(ActionEvent actionEvent) {
         if (home == null) {
             dialog.error("Error", "No home available to share.");
+            return;
+        }
+
+        // CHECK Permission
+        if (!authService.canInviteUsers(home.getId())) {
+            dialog.error("Permission Denied",
+                    "Only the home owner can invite users.");
             return;
         }
 

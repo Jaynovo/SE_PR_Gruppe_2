@@ -3,7 +3,7 @@ package at.jku.se.gruppe2.ui.controller;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
-import at.jku.se.gruppe2.service.user.ValidationService;
+import at.jku.se.gruppe2.service.user.*;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
@@ -25,6 +25,7 @@ public class RoomEditController extends BaseController implements Initializable 
     private Room room;
     private final RoomRepository roomRepo = new RoomRepository();
     private final HomeRepository homeRepo = new HomeRepository();
+    private final AuthorizationService authService = new AuthorizationService();
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
 
@@ -34,6 +35,13 @@ public class RoomEditController extends BaseController implements Initializable 
 
         if (room == null) {
             dialog.error("Error", "No room selected for editing.");
+            handleBack();
+            return;
+        }
+
+        if (room.getHome() != null && !authService.canEditRoomDetails(room.getHome().getId())) {
+            dialog.error("Permission Denied",
+                    "Only residents and owners can edit room details.");
             handleBack();
             return;
         }
@@ -97,6 +105,13 @@ public class RoomEditController extends BaseController implements Initializable 
 
     @FXML
     public void handleSave() {
+        // CHECK Permission
+        if (room.getHome() != null && !authService.canEditRoomDetails(room.getHome().getId())) {
+            dialog.error("Permission Denied",
+                    "Only residents and owners can edit room details.");
+            return;
+        }
+
         // Get values
         String label = roomLabelField.getText().trim();
         String floorText = floorField.getText().trim();
@@ -195,5 +210,4 @@ public class RoomEditController extends BaseController implements Initializable 
     protected void handleBack() {
         navigate.goTo(Page.DASHBOARD.fxml());
     }
-
 }

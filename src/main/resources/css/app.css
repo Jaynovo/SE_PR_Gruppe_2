@@ -191,6 +191,22 @@
     -fx-font-size: 11px;
 }
 
+/* Role badge styling */
+.role-owner {
+    -fx-text-fill: #d32f2f;
+    -fx-font-weight: bold;
+}
+
+.role-resident {
+    -fx-text-fill: #1976d2;
+    -fx-font-weight: bold;
+}
+
+.role-guest {
+    -fx-text-fill: #388e3c;
+    -fx-font-weight: bold;
+}
+
 /* =========================================================
    8) METRICS / PILLS
    ========================================================= */
