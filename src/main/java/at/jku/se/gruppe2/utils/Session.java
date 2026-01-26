@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.utils;
 
 import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.model.user.User;
 
 public class Session {
 

@@ -1,6 +1,6 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.model.HomeInvitation;
+import at.jku.se.gruppe2.model.user.HomeInvitation;
 
 import java.sql.*;
 import java.util.List;

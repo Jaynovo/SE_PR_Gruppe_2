@@ -4,7 +4,7 @@ import at.jku.se.gruppe2.service.NavigationService;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
-import at.jku.se.gruppe2.model.User;
+import at.jku.se.gruppe2.model.user.User;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.persistence.UserRepository;
 import at.jku.se.gruppe2.utils.PasswordUtils;

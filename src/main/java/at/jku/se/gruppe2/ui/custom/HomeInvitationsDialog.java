@@ -1,6 +1,6 @@
 package at.jku.se.gruppe2.ui.custom;
 
-import at.jku.se.gruppe2.model.User;
+import at.jku.se.gruppe2.model.user.User;
 import at.jku.se.gruppe2.ui.controller.HomeInvitationsDialogController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

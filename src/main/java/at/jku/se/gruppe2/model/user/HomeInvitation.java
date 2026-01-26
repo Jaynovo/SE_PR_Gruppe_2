@@ -1,4 +1,4 @@
-package at.jku.se.gruppe2.model;
+package at.jku.se.gruppe2.model.user;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +13,7 @@ public class HomeInvitation {
     private int inviterUserId;
     private String inviteeEmail;
     private Status status;
+    private UserRole invitedRole = UserRole.GUEST;
     private LocalDateTime invitedAt;
     private LocalDateTime respondedAt;
 
@@ -20,6 +21,8 @@ public class HomeInvitation {
     private String homeName;
     private String inviterName;
 
+
+    // Constructors
     public HomeInvitation() {
         this.status = Status.PENDING;
         this.invitedAt = LocalDateTime.now();
@@ -103,5 +106,13 @@ public class HomeInvitation {
 
     public void setInviterName(String inviterName) {
         this.inviterName = inviterName;
+    }
+
+    public UserRole getInvitedRole() {
+        return invitedRole;
+    }
+
+    public void setInvitedRole(UserRole invitedRole) {
+        this.invitedRole = invitedRole;
     }
 }

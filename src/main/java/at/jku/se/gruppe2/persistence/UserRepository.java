@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.persistence;
 
 import at.jku.se.gruppe2.model.*; //This is where the Classes for User, Home, etc. should be
+import at.jku.se.gruppe2.model.user.User;
 
 import java.sql.*;
 import java.util.Optional;
