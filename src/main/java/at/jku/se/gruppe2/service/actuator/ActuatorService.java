@@ -1,4 +1,4 @@
-package at.jku.se.gruppe2.service;
+package at.jku.se.gruppe2.service.actuator;
 
 import at.jku.se.gruppe2.persistence.DeviceRepository;
 

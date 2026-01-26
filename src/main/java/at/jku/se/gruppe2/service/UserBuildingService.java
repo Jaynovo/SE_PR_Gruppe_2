@@ -1,7 +1,7 @@
 package at.jku.se.gruppe2.service;
 
 import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.model.user.User;
+import at.jku.se.gruppe2.model.user.*;
 import at.jku.se.gruppe2.persistence.*;
 
 import java.util.*;
@@ -12,6 +12,7 @@ public class UserBuildingService {
     private final HomeRepository homeRepository;
     private final AddressRepository addressRepository;
     private final DeviceRepository deviceRepository;
+    private final UserHomeRepository userHomeRepository;
 
     public UserBuildingService() {
         deviceRepository = new DeviceRepository();
@@ -19,14 +20,16 @@ public class UserBuildingService {
         userRepository = new UserRepository();
         roomRepository = new RoomRepository();
         addressRepository = new AddressRepository();
+        userHomeRepository = new UserHomeRepository();
     }
 
-    public UserBuildingService(UserRepository userRepository, RoomRepository roomRepository, HomeRepository homeRepository, AddressRepository addressRepository, DeviceRepository deviceRepository) {
+    public UserBuildingService(UserRepository userRepository, RoomRepository roomRepository, HomeRepository homeRepository, AddressRepository addressRepository, DeviceRepository deviceRepository, UserHomeRepository userHomeRepository) {
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
         this.homeRepository = homeRepository;
         this.addressRepository = addressRepository;
         this.deviceRepository = deviceRepository;
+        this.userHomeRepository = userHomeRepository;
     }
 
     public User buildUserByEmail(String email) {

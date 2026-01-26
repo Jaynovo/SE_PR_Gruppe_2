@@ -1,8 +1,7 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.model.user.HomeInvitation;
-import at.jku.se.gruppe2.model.user.User;
+import at.jku.se.gruppe2.model.user.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.utils.Session;
@@ -18,6 +17,7 @@ import java.util.regex.Pattern;
 public class ShareHomeDialogController {
 
     @FXML private TextField emailField;
+    @FXML private ComboBox<UserRole> roleComboBox;
     @FXML private Label emailErrorLabel;
     @FXML private VBox invitationsContainer;
     @FXML private Label noInvitationsLabel;
@@ -32,7 +32,39 @@ public class ShareHomeDialogController {
 
     public void setHome(Home home) {
         this.home = home;
+        initializeRoleComboBox();
         loadPendingInvitations();
+    }
+
+    private void initializeRoleComboBox() {
+        roleComboBox.getItems().addAll(UserRole.GUEST, UserRole.RESIDENT);
+        roleComboBox.setValue(UserRole.GUEST);
+
+        // Custom cell factory to show display names
+        roleComboBox.setCellFactory(param -> new ListCell<UserRole>() {
+            @Override
+            protected void updateItem(UserRole item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.getDisplayName());
+                }
+            }
+        });
+
+        // Button cell to show selected value
+        roleComboBox.setButtonCell(new ListCell<UserRole>() {
+            @Override
+            protected void updateItem(UserRole item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.getDisplayName());
+                }
+            }
+        });
     }
 
     @FXML
@@ -46,6 +78,13 @@ public class ShareHomeDialogController {
         User currentUser = Session.getCurrentUser();
         if (currentUser == null) {
             showError("No user logged in");
+            return;
+        }
+
+        // Check that a role is selected
+        UserRole selectedRole = roleComboBox.getValue();
+        if (selectedRole == null) {
+            showError("Please select a role");
             return;
         }
 
@@ -75,6 +114,7 @@ public class ShareHomeDialogController {
                 currentUser.getId(),
                 email
         );
+        invitation.setInvitedRole(selectedRole);
 
         int invitationId = invitationRepo.createInvitation(invitation);
 
@@ -83,14 +123,17 @@ public class ShareHomeDialogController {
             if (inviteeUser == null) {
                 dialog.info("Invitation Sent",
                         "The invitation has been sent to " + email +
+                                " as a " + selectedRole.getDisplayName() +
                                 ".\n\nNote: This email address is not yet registered. " +
                                 "The user will see the invitation when they create an account.");
             } else {
                 dialog.info("Invitation Sent",
-                        "The invitation has been sent to " + email + ".");
+                        "The invitation has been sent to " + email +
+                                " as a " + selectedRole.getDisplayName() + ".");
             }
 
             emailField.clear();
+            roleComboBox.setValue(UserRole.GUEST);  // Reset to default
             hideError();
             loadPendingInvitations();
         } else {
@@ -163,11 +206,14 @@ public class ShareHomeDialogController {
         Label emailLabel = new Label(invitation.getInviteeEmail());
         emailLabel.getStyleClass().add("card-title");
 
+        Label roleLabel = new Label("Role: " + invitation.getInvitedRole().getDisplayName());
+        roleLabel.getStyleClass().add("muted");
+
         Label dateLabel = new Label("Sent: " +
                 invitation.getInvitedAt().toLocalDate().toString());
         dateLabel.getStyleClass().add("muted");
 
-        infoBox.getChildren().addAll(emailLabel, dateLabel);
+        infoBox.getChildren().addAll(emailLabel, roleLabel, dateLabel);
         HBox.setHgrow(infoBox, javafx.scene.layout.Priority.ALWAYS);
 
         Button cancelButton = new Button("Cancel");

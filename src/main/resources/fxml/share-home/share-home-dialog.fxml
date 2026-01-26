@@ -17,6 +17,13 @@
     <VBox spacing="8">
         <Label text="Invite someone to access your home:"/>
         <TextField fx:id="emailField" promptText="Enter email address"/>
+
+        <!-- Role selection -->
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Role:" minWidth="50"/>
+            <ComboBox fx:id="roleComboBox" prefWidth="200"/>
+        </HBox>
+
         <Label fx:id="emailErrorLabel" styleClass="error-label" visible="false" managed="false"/>
     </VBox>
 

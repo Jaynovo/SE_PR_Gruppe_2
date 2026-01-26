@@ -2,12 +2,8 @@ package at.jku.se.gruppe2.persistence;
 
 import at.jku.se.gruppe2.model.user.*;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.sql.*;
+import java.util.*;
 
 public class UserHomeRepository {
 
@@ -38,7 +34,7 @@ public class UserHomeRepository {
         String sql = """
             INSERT INTO home_user (user_id, home_id, role)
             VALUES (?, ?, CAST(? AS user_role))
-            ON CONFLICT (user_id, home_id) 
+            ON CONFLICT (user_id, home_id)
             DO UPDATE SET role = EXCLUDED.role
             """;
 
@@ -95,7 +91,7 @@ public class UserHomeRepository {
      */
     public List<HomeUser> getUsersInHome(int homeId) {
         String sql = """
-            SELECT 
+            SELECT
                 uh.user_id,
                 uh.home_id,
                 uh.role,
@@ -128,7 +124,7 @@ public class UserHomeRepository {
      */
     public List<HomeUser> getHomesForUser(int userId) {
         String sql = """
-            SELECT 
+            SELECT
                 uh.user_id,
                 uh.home_id,
                 uh.role,
@@ -163,7 +159,7 @@ public class UserHomeRepository {
      */
     public List<HomeUser> getHomeOwners(int homeId) {
         String sql = """
-            SELECT 
+            SELECT
                 uh.user_id,
                 uh.home_id,
                 uh.role,

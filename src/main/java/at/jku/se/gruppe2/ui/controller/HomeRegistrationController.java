@@ -1,9 +1,10 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.model.*;
-import at.jku.se.gruppe2.model.user.User;
+import at.jku.se.gruppe2.model.user.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
+import at.jku.se.gruppe2.service.user.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
 import at.jku.se.gruppe2.ui.navigation.Page;
@@ -12,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import java.util.Optional;
 
+@SuppressWarnings("CallToPrintStackTrace")
 public class HomeRegistrationController {
 
     @FXML private TextField homeLabel;
@@ -24,15 +26,16 @@ public class HomeRegistrationController {
 
     private HomeRepository homeRepo = new HomeRepository();
     private final AddressRepository addressRepo = new AddressRepository();
+    private final UserHomeRepository userHomeRepo = new UserHomeRepository();
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
 
     public void setHomeRepo(HomeRepository homeRepo) {
-        this.homeRepo= homeRepo;
+        this.homeRepo = homeRepo;
     }
 
     @FXML
-    public void initialize (){
+    public void initialize() {
         UIUtils.setupCountryComboBox(countryBox);
     }
 
@@ -44,11 +47,7 @@ public class HomeRegistrationController {
         }
 
         try {
-
-            //Location currently without implementation, needs to be changed
-            Location location = new Location(
-                    0, 0
-            );
+            Location location = new Location(0, 0);
 
             Address newAddress = new Address(
                     street.getText(),
@@ -59,7 +58,7 @@ public class HomeRegistrationController {
                     0, 0
             );
 
-            int addressId= addressRepo.createAddressInDatabase(newAddress);
+            int addressId = addressRepo.createAddressInDatabase(newAddress);
             newAddress.setId(addressId);
 
             Home newHome = new Home(
@@ -69,11 +68,19 @@ public class HomeRegistrationController {
             );
 
             if (homeRepo != null) {
-                homeRepo.createHomeInDatabase(newHome);
+                int homeId = homeRepo.createHomeInDatabase(newHome);
+                newHome.setId(homeId);
             }
 
             UserRepository userRepo = new UserRepository();
             User currentUser = Session.getCurrentUser();
+
+            // Adds user as OWNER
+            userHomeRepo.addUserToHome(
+                    currentUser.getId(),
+                    newHome.getId(),
+                    UserRole.OWNER
+            );
 
             currentUser.setHome(newHome);
             userRepo.updateHome(currentUser, newHome);

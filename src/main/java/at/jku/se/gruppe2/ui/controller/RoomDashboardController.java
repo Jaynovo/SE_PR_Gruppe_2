@@ -6,6 +6,8 @@ import at.jku.se.gruppe2.model.actuator.*;
 import at.jku.se.gruppe2.model.sensor.*;
 import at.jku.se.gruppe2.persistence.DeviceRepository;
 import at.jku.se.gruppe2.service.*;
+import at.jku.se.gruppe2.service.actuator.ActuatorConfigService;
+import at.jku.se.gruppe2.service.actuator.ActuatorService;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;

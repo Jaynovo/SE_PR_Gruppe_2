@@ -3,6 +3,7 @@ package at.jku.se.gruppe2.ui.controller;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
+import at.jku.se.gruppe2.service.user.ValidationService;
 import at.jku.se.gruppe2.ui.custom.IntegerField;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;

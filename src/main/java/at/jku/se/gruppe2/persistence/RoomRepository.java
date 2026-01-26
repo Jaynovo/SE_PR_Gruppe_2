@@ -110,7 +110,6 @@ public class RoomRepository {
         );
     }
 
-
     private Room mapRoom(ResultSet rs) throws SQLException {
         Room room = new Room();
 
@@ -128,4 +127,3 @@ public class RoomRepository {
         return room;
     }
 }
-
