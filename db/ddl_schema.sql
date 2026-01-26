@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS address_information CASCADE;
 DROP TYPE IF EXISTS device_category CASCADE;
 DROP TABLE IF EXISTS home, user_information, home_user, room, device, sensor_type, sensor, actuator_type, actuator, sensor_reading, actuator_state CASCADE;
 DROP TABLE IF EXISTS device_type, home_invitation CASCADE;
+DROP TABLE IF EXISTS rule;
 
 create table address_information (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -149,4 +150,5 @@ VALUES  ('SENSOR',   'Thermometer',      '°C'),
         ('SENSOR', 'LightSensor', 'lx'),
         ('ACTUATOR', 'SmartLightActuator', NULL),
         ('SENSOR','CatSensor',NULL),
+        ('ACTUATOR','Cat Feeder',NULL),
         ('ACTUATOR', 'Blinds', NULL);

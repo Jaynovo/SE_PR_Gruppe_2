@@ -314,3 +314,49 @@
 .badge-ok { -fx-background-color: #2e8b57; }   /* grün */
 .badge-warn { -fx-background-color: #d2642b; } /* orange */
 .badge-off { -fx-background-color: #666666; }  /* grau */
+
+/* ===== CatFeeder Status Button ===== */
+
+/* Basis-Stil (für den Status-Button) */
+.feeder-status {
+    -fx-background-radius: 999;
+    -fx-padding: 8 14;
+    -fx-font-weight: 700;
+    -fx-font-size: 13px;
+    -fx-text-fill: white;
+    -fx-border-radius: 999;
+    -fx-border-width: 1;
+}
+
+/* JavaFX dimmt disabled Controls -> verhindern */
+.feeder-status:disabled {
+    -fx-opacity: 1.0;
+}
+
+/* READY = grün */
+.feeder-ready {
+    -fx-background-color: #2ecc71;
+}
+
+/* FEEDING = orange */
+.feeder-feeding {
+    -fx-background-color: #e67e22;
+    -fx-border-color: rgba(255,255,255,0.18);
+}
+
+/* COOLDOWN = grau */
+.feeder-cooldown {
+    -fx-background-color: #8fa9c1;
+    -fx-text-fill: #eef4fa;
+}
+
+@keyframes pulse {
+    0%   { -fx-opacity: 1.0; }
+    50%  { -fx-opacity: 0.75; }
+    100% { -fx-opacity: 1.0; }
+}
+
+.feeder-feeding {
+    -fx-background-color: #e67e22;
+    -fx-animation: pulse 1.2s infinite;
+}
