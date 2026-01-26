@@ -1,18 +1,12 @@
 package at.jku.se.gruppe2.service;
 
-import at.jku.se.gruppe2.model.sensor.CO2Sensor;
-import at.jku.se.gruppe2.model.sensor.NoiseSensor;
-import at.jku.se.gruppe2.model.sensor.Sensor;
+import at.jku.se.gruppe2.model.sensor.*;
 
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
- * Simuliert Sensorwerte (CO2 ppm und Geräusch dB) in festen Intervallen.
+ * Simuliert Sensorwerte (CO₂ ppm und Geräusch dB) in festen Intervallen.
  * Schreibt die Werte direkt in die Sensor-Objekte (setValue()).
  */
 public class SensorSimulationService {
