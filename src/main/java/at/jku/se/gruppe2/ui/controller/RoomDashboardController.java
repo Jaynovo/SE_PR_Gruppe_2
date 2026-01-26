@@ -9,22 +9,18 @@ import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
+import javafx.scene.image.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import java.util.*;
 
 public class RoomDashboardController {
 
