@@ -9,6 +9,7 @@ import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
@@ -17,6 +18,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
+import javafx.scene.image.*;
 
 import java.util.*;
 
@@ -27,13 +29,17 @@ public class RoomDashboardController {
     @FXML
     private FlowPane cardsFlow;
 
-    private static final Duration REFRESH_INTERVAL = Duration.millis(500);
+    //private static final Duration REFRESH_INTERVAL = Duration.millis(500);
 
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
     private final DeviceRepository deviceRepository = new DeviceRepository();
     private final ActuatorService actuatorService = new ActuatorService();
     private final ActuatorConfigService actuatorCfg = new ActuatorConfigService();
+    private final java.util.Map<Integer, javafx.scene.image.ImageView> catImageViews = new java.util.HashMap<>();
+    private final java.util.Map<Integer, javafx.scene.control.Label> catStatusLabels = new java.util.HashMap<>();
+    private final java.util.Map<Integer, String> catLastShownUrl = new java.util.HashMap<>();
+
 
     private final SensorSimulationService sensorSim = MainApp.getSensorSim();
     private Timeline liveRefresh;
@@ -98,7 +104,47 @@ public class RoomDashboardController {
 
         deviceCard.getChildren().addAll(title, type);
         if (device instanceof Sensor s) {
+            if ("CatSensor".equalsIgnoreCase(device.getTypeLabel()) && s instanceof CatSensor cat) {
+                // Status Label (einmalig)
+                Label statusLbl = catStatusLabels.computeIfAbsent(device.getId(), id -> {
+                    Label l = new Label();
+                    l.getStyleClass().add("badge");
+                    return l;
+                });
 
+                // ImageView (einmalig)
+                javafx.scene.image.ImageView imgView = catImageViews.computeIfAbsent(device.getId(), id -> {
+                    javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView();
+                    iv.setFitWidth(180);
+                    iv.setFitHeight(120);
+                    iv.setPreserveRatio(false);
+                    iv.setSmooth(true);
+                    return iv;
+                });
+                updateCatCardUI(device.getId(), cat, statusLbl, imgView);
+
+                StackPane imageCard = new StackPane(imgView);
+                imageCard.getStyleClass().add("mini-image-card");
+                imageCard.setPrefSize(180, 120);
+
+                deviceCard.getChildren().addAll(statusLbl, imageCard);
+            } else {
+                //CO2/Noise/...
+                String unit = resolveDisplayUnit(device);
+                unit = (unit == null) ? "Not available!" : unit;
+
+                String formattedValue = formatSensorValue(device.getTypeLabel(), s.getValue());
+                Label current = new Label(
+                        "Current: " + formattedValue + (unit.isBlank() ? "No measurement available!" : " " + unit)
+                );
+                current.getStyleClass().add("muted");
+
+                deviceCard.getChildren().add(current);
+                if (device instanceof Thermometer t) {
+                    deviceCard.getChildren().add(createThermometerUnitToggle(t));
+                }
+            }
+/*
             String unit = resolveDisplayUnit(device);
             unit = (unit == null) ? "Not available!" : unit;
 
@@ -111,7 +157,7 @@ public class RoomDashboardController {
             deviceCard.getChildren().add(current);
             if (device instanceof Thermometer t) {
                 deviceCard.getChildren().add(createThermometerUnitToggle(t));
-            }
+            } */
         }
 
         HBox actions = new HBox(8);
@@ -176,6 +222,69 @@ public class RoomDashboardController {
                 deviceCard.getChildren().add(actionBox);
                 return deviceCard;
 
+            }
+            if ("Cat Feeder".equalsIgnoreCase(typeLabel)) {
+
+                // Status aus Service holen
+                String feederState = actuatorService.getStateOrDefault(device.getId(), "READY");
+                int cd = actuatorCfg.getCatFeederCooldown(device.getId()); // ticks
+                String stateText = feederState;
+
+                // Cooldown anzeigen
+                if ("COOLDOWN".equalsIgnoreCase(feederState) && cd > 0) {
+                    stateText = "COOLDOWN (" + (cd * 2) + "s)";
+                }
+
+                // Status-Button (nur Anzeige)
+                Button statusBtn = new Button(stateText);
+                statusBtn.setDisable(true);
+
+                // Basis-Klasse
+                statusBtn.getStyleClass().add("feeder-status");
+
+                // alte State-Klassen entfernen (wichtig wegen Re-Render!)
+                statusBtn.getStyleClass().removeAll(
+                        "feeder-ready",
+                        "feeder-feeding",
+                        "feeder-cooldown"
+                );
+                // State-spezifische Klasse setzen
+                if (feederState.equalsIgnoreCase("READY")) {
+                    statusBtn.getStyleClass().add("feeder-ready");
+                } else if (feederState.equalsIgnoreCase("FEEDING")) {
+                    statusBtn.getStyleClass().add("feeder-feeding");
+                } else if (feederState.equalsIgnoreCase("COOLDOWN")) {
+                    statusBtn.getStyleClass().add("feeder-cooldown");
+                } else {
+                    statusBtn.getStyleClass().add("feeder-cooldown");
+                }
+                statusBtn.getStyleClass().add("badge");
+
+                // Farbe je nach State
+                statusBtn.getStyleClass().removeAll("badge-ok", "badge-warn", "badge-off");
+
+                if (feederState.equalsIgnoreCase("READY")) {
+                    statusBtn.getStyleClass().add("badge-off");
+                } else if (feederState.equalsIgnoreCase("FEEDING")) {
+                    statusBtn.getStyleClass().add("badge-warn");
+                } else if (feederState.equalsIgnoreCase("COOLDOWN")) {
+                    statusBtn.getStyleClass().add("badge-off");
+                } else {
+                    statusBtn.getStyleClass().add("badge-off");
+                }
+
+                Button configBtn = new Button("Configure");
+                configBtn.setOnAction(e -> handleConfigureActuator(device));
+
+                // Layout: Status oben, darunter Configure/Delete
+                VBox actionBox = new VBox(8);
+                HBox row = new HBox(8);
+
+                row.getChildren().addAll(configBtn, deleteBtn);
+                actionBox.getChildren().addAll(statusBtn, row);
+
+                deviceCard.getChildren().add(actionBox);
+                return deviceCard;
             } else {
 
                 //Standard Aktor: ON / OFF
@@ -204,6 +313,77 @@ public class RoomDashboardController {
         deviceCard.getChildren().add(actions);
         return deviceCard;
     }
+    private void setImageCover(ImageView iv, Image img, double w, double h) {
+        iv.setImage(img);
+        iv.setFitWidth(w);
+        iv.setFitHeight(h);
+        iv.setPreserveRatio(true);
+
+        // Warten bis Bild geladen ist, dann viewport crop setzen
+        if (img.getProgress() < 1.0) {
+            img.progressProperty().addListener((obs, oldV, newV) -> {
+                if (newV.doubleValue() >= 1.0) {
+                    applyCoverViewport(iv, w, h);
+                }
+            });
+        } else {
+            applyCoverViewport(iv, w, h);
+        }
+    }
+
+    private void applyCoverViewport(ImageView iv, double w, double h) {
+        Image img = iv.getImage();
+        if (img == null) return;
+
+        double imgW = img.getWidth();
+        double imgH = img.getHeight();
+        if (imgW <= 0 || imgH <= 0) return;
+
+        double targetRatio = w / h;
+        double imgRatio = imgW / imgH;
+
+        double cropW, cropH;
+        if (imgRatio > targetRatio) {
+            // zu breit -> links/rechts weg
+            cropH = imgH;
+            cropW = imgH * targetRatio;
+        } else {
+            // zu hoch -> oben/unten weg
+            cropW = imgW;
+            cropH = imgW / targetRatio;
+        }
+
+        double x = (imgW - cropW) / 2.0;
+        double y = (imgH - cropH) / 2.0;
+
+        iv.setViewport(new javafx.geometry.Rectangle2D(x, y, cropW, cropH));
+    }
+
+    private void updateCatCardUI(int deviceId, CatSensor cat, Label statusLbl, javafx.scene.image.ImageView imgView) {
+
+        double conf = cat.getConfidence(); // 0..1
+        String status = cat.isCatDetected() ? "CAT DETECTED" : "No cat detected";
+        statusLbl.setText(status + " (" + Math.round(conf * 100) + "%)");
+
+        String url = cat.getLastImageUrl();
+        if (url == null || url.isBlank()) return;
+
+        // Bild nur updaten, wenn URL sich geändert hat (=> alle 10s)
+        String lastUrl = catLastShownUrl.get(deviceId);
+        if (url.equals(lastUrl)) return;
+
+        catLastShownUrl.put(deviceId, url);
+
+        // backgroundLoading=true, damit es nicht ruckelt
+        Image img = new Image(url, 0, 0, true, true, true);
+        setImageCover(imgView,img,180,120);
+
+        statusLbl.getStyleClass().removeAll("badge-ok", "badge-warn", "badge-off");
+
+        boolean detected = cat.isCatDetected();
+        if (detected) statusLbl.getStyleClass().add("badge-ok");
+        else statusLbl.getStyleClass().add("badge-off");
+    }
 
     private void handleConfigureActuator(Device actuatorDevice) {
         String type = actuatorDevice.getTypeLabel();
@@ -213,6 +393,8 @@ public class RoomDashboardController {
             showVentilationConfig(actuatorDevice);
         } else if ("AlarmSystem".equals(type)) {
             showAlarmConfig(actuatorDevice);
+        } else if ("Cat Feeder".equals(type)) {
+            showCatFeederConfig(actuatorDevice);
         } else {
             UIUtils.styledAlert(Alert.AlertType.INFORMATION, "No configuration available for: " + type, ButtonType.OK).showAndWait();
         }
@@ -433,7 +615,6 @@ public class RoomDashboardController {
     private void evaluateAutomation() {
 
         // Ventilation Automation (CO2)
-
         Sensor co2 = null;
         for (Device d : devices) {
             if (d instanceof Sensor s && "CO2Sensor".equalsIgnoreCase(d.getTypeLabel())) {
@@ -484,37 +665,93 @@ public class RoomDashboardController {
             }
         }
 
-        if (noise == null || alarm == null) return;
+        if (noise != null && alarm != null) {
 
-        double noiseValue = noise.getValue();
+            double noiseValue = noise.getValue();
 
-        AlarmConfig alarmCfg = actuatorCfg.getOrCreateAlarmConfig(alarm.getId());
-        if (!alarmCfg.isAutoMode()) return;
+            AlarmConfig alarmCfg = actuatorCfg.getOrCreateAlarmConfig(alarm.getId());
+            if (alarmCfg.isAutoMode()) {
 
-        String alarmState = actuatorService.getStateOrDefault(alarm.getId(), "DISARMED");
-        boolean armed = "ARMED".equalsIgnoreCase(alarmState);
-        boolean triggered = "TRIGGERED".equalsIgnoreCase(alarmState);
+                String alarmState = actuatorService.getStateOrDefault(alarm.getId(), "DISARMED");
+                boolean armed = "ARMED".equalsIgnoreCase(alarmState);
+                boolean triggered = "TRIGGERED".equalsIgnoreCase(alarmState);
 
-        if (!armed || triggered) {
-            actuatorCfg.resetAlarmNoiseCounter(alarm.getId());
-            lastAlarmState = alarmState;
-            return;
+                if (!armed || triggered) {
+                    actuatorCfg.resetAlarmNoiseCounter(alarm.getId());
+                    lastAlarmState = alarmState;
+                } else {
+
+                    int threshold = alarmCfg.getNoiseThresholdDb();
+                    int requiredTicks = alarmCfg.getRequiredConsecutiveTicks();
+
+                    int counter = actuatorCfg.getAlarmNoiseCounter(alarm.getId());
+                    counter = (noiseValue >= threshold) ? (counter + 1) : 0;
+                    actuatorCfg.setAlarmNoiseCounter(alarm.getId(), counter);
+
+                    if (counter >= requiredTicks) {
+                        actuatorService.setState(alarm.getId(), "TRIGGERED");
+                        actuatorCfg.resetAlarmNoiseCounter(alarm.getId());
+
+                        if (!"TRIGGERED".equalsIgnoreCase(lastAlarmState)) {
+                            lastAlarmState = "TRIGGERED";
+                            onAlarmTriggered(noiseValue);
+                        }
+                    }
+                }
+            }
         }
 
-        int threshold = alarmCfg.getNoiseThresholdDb();
-        int requiredTicks = alarmCfg.getRequiredConsecutiveTicks();
+        // Cat Feeder Automation (CatSensor -> Feed + Cooldown)
+        CatSensor catSensor = null;
+        for (Device d : devices) {
+            if (d instanceof CatSensor cs && "CatSensor".equalsIgnoreCase(d.getTypeLabel())) {
+                catSensor = cs;
+                break;
+            }
+        }
 
-        int counter = actuatorCfg.getAlarmNoiseCounter(alarm.getId());
-        counter = (noiseValue >= threshold) ? (counter + 1) : 0;
-        actuatorCfg.setAlarmNoiseCounter(alarm.getId(), counter);
+        Device feeder = null;
+        for (Device d : devices) {
+            if (d.getCategory() == Device.DeviceCategory.ACTUATOR
+                    && "Cat Feeder".equalsIgnoreCase(d.getTypeLabel())) {
+                feeder = d;
+                break;
+            }
+        }
 
-        if (counter >= requiredTicks) {
-            actuatorService.setState(alarm.getId(), "TRIGGERED");
-            actuatorCfg.resetAlarmNoiseCounter(alarm.getId());
+        if (catSensor != null && feeder != null) {
 
-            if (!"TRIGGERED".equalsIgnoreCase(lastAlarmState)) {
-                lastAlarmState = "TRIGGERED";
-                onAlarmTriggered(noiseValue);
+            CatFeederConfig cfg = actuatorCfg.getOrCreateCatFeederConfig(feeder.getId());
+
+            // 0) Wenn gerade FEEDING "animiert" wird -> nur runterzählen und anzeigen
+            int feedingTicks = actuatorCfg.getCatFeederFeedingTicks(feeder.getId());
+            if (feedingTicks > 0) {
+                actuatorCfg.decrementCatFeederFeedingTicks(feeder.getId());
+                actuatorService.setState(feeder.getId(), "FEEDING");
+                return;
+            }
+
+            // 1) cooldown runterzählen
+            int cd = actuatorCfg.getCatFeederCooldown(feeder.getId());
+            if (cd > 0) {
+                actuatorCfg.decrementCatFeederCooldown(feeder.getId());
+                actuatorService.setState(feeder.getId(), "COOLDOWN");
+                return;
+            }
+
+            // 2) Katze erkannt + confidence prüfen
+            double confidence = catSensor.getConfidence(); // 0..1
+            boolean shouldFeed = catSensor.isCatDetected() && (confidence >= cfg.getMinConfidence());
+
+            if (shouldFeed) {
+                // FEEDING soll z.B. 2-3 Ticks sichtbar sein
+                actuatorCfg.setCatFeederFeedingTicks(feeder.getId(), 2); // 2 ticks = 4 Sekunden FEEDING
+                actuatorService.setState(feeder.getId(), "FEEDING");
+
+                // danach cooldown starten
+                actuatorCfg.setCatFeederCooldown(feeder.getId(), cfg.getCooldownTicks());
+            } else {
+                actuatorService.setState(feeder.getId(), "READY");
             }
         }
     }
@@ -563,5 +800,65 @@ public class RoomDashboardController {
         box.getStyleClass().add("muted");
 
         return box;
+    }
+
+    private void showCatFeederConfig(Device actuatorDevice) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Configure Cat Feeder");
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/css/app.css").toExternalForm()
+        );
+
+        CatFeederConfig cfg = actuatorCfg.getOrCreateCatFeederConfig(actuatorDevice.getId());
+
+        // Confidence als Prozent (0..100)
+        int currentPercent = (int) Math.round(cfg.getMinConfidence() * 100.0);
+
+        Spinner<Integer> minConf = new Spinner<>(0, 100, currentPercent);
+        minConf.setEditable(true);
+
+        Spinner<Integer> cooldownTicks = new Spinner<>(0, 600, cfg.getCooldownTicks()); // bis 20min
+        cooldownTicks.setEditable(true);
+
+        Label cooldownInfo = new Label();
+        cooldownInfo.getStyleClass().add("muted");
+        cooldownInfo.setText("= " + (cooldownTicks.getValue() * 2) + " seconds");
+
+        cooldownTicks.valueProperty().addListener((obs, oldV, newV) -> {
+            int v = (newV == null) ? 0 : newV;
+            cooldownInfo.setText("= " + (v * 2) + " seconds");
+        });
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        grid.add(new Label("Min confidence (%):"), 0, 0);
+        grid.add(minConf, 1, 0);
+
+        grid.add(new Label("Cooldown (ticks):"), 0, 1);
+        grid.add(cooldownTicks, 1, 1);
+        grid.add(cooldownInfo, 1, 2);
+
+        minConf.setEditable(false);
+        cooldownTicks.setEditable(false);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(btn -> {
+            if (btn != ButtonType.OK) return;
+
+            int percent = minConf.getValue();
+            int ticks = cooldownTicks.getValue();
+
+            cfg.setMinConfidence(percent / 100.0);
+            cfg.setCooldownTicks(ticks);
+
+            actuatorCfg.saveCatFeederConfig(actuatorDevice.getId(), cfg);
+
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION,
+                    "Saved cat feeder config.", ButtonType.OK).showAndWait();
+        });
     }
 }
