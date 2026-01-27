@@ -6,13 +6,15 @@ import at.jku.se.gruppe2.model.actuator.*;
 import at.jku.se.gruppe2.model.sensor.*;
 import at.jku.se.gruppe2.model.user.*;
 import at.jku.se.gruppe2.persistence.*;
+import at.jku.se.gruppe2.service.SensorSimulationService;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.service.actuator.*;
+import at.jku.se.gruppe2.service.actuator.ActuatorService;
+import at.jku.se.gruppe2.service.actuator.ActuatorConfigService;
 import at.jku.se.gruppe2.service.user.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
-
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
@@ -340,8 +342,12 @@ public class RoomDashboardController {
                 VBox actionBox = new VBox(8);
                 HBox row = new HBox(8);
 
-                row.getChildren().addAll(configBtn, deleteBtn);
-                actionBox.getChildren().addAll(statusBtn, row);
+                if (canDelete) {
+                    Button deleteBtn = new Button("Delete");
+                    deleteBtn.setOnAction(e -> handleDeleteDevice(device));
+                    row.getChildren().addAll(configBtn, deleteBtn);
+                    actionBox.getChildren().addAll(statusBtn, row);
+                }
 
                 deviceCard.getChildren().add(actionBox);
                 return deviceCard;
