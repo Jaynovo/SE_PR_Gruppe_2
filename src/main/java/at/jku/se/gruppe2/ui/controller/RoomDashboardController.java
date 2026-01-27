@@ -10,6 +10,7 @@ import at.jku.se.gruppe2.ui.component.DeviceCardFactory;
 import at.jku.se.gruppe2.ui.custom.ActuatorConfigDialog;
 import at.jku.se.gruppe2.ui.navigation.Page;
 import at.jku.se.gruppe2.utils.Session;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
@@ -18,9 +19,9 @@ import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
+import javafx.scene.image.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class RoomDashboardController {
 
@@ -30,7 +31,7 @@ public class RoomDashboardController {
     @FXML
     private FlowPane cardsFlow;
 
-    private static final Duration REFRESH_INTERVAL = Duration.millis(500);
+    //private static final Duration REFRESH_INTERVAL = Duration.millis(500);
 
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
@@ -191,5 +192,65 @@ public class RoomDashboardController {
 
     public ActuatorConfigDialog getActuatorConfigDialog() {
         return actuatorConfigDialog;
+    }
+
+    private void showCatFeederConfig(Device actuatorDevice) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Configure Cat Feeder");
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/css/app.css").toExternalForm()
+        );
+
+        CatFeederConfig cfg = actuatorCfg.getOrCreateCatFeederConfig(actuatorDevice.getId());
+
+        // Confidence als Prozent (0..100)
+        int currentPercent = (int) Math.round(cfg.getMinConfidence() * 100.0);
+
+        Spinner<Integer> minConf = new Spinner<>(0, 100, currentPercent);
+        minConf.setEditable(true);
+
+        Spinner<Integer> cooldownTicks = new Spinner<>(0, 600, cfg.getCooldownTicks()); // bis 20min
+        cooldownTicks.setEditable(true);
+
+        Label cooldownInfo = new Label();
+        cooldownInfo.getStyleClass().add("muted");
+        cooldownInfo.setText("= " + (cooldownTicks.getValue() * 2) + " seconds");
+
+        cooldownTicks.valueProperty().addListener((obs, oldV, newV) -> {
+            int v = (newV == null) ? 0 : newV;
+            cooldownInfo.setText("= " + (v * 2) + " seconds");
+        });
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        grid.add(new Label("Min confidence (%):"), 0, 0);
+        grid.add(minConf, 1, 0);
+
+        grid.add(new Label("Cooldown (ticks):"), 0, 1);
+        grid.add(cooldownTicks, 1, 1);
+        grid.add(cooldownInfo, 1, 2);
+
+        minConf.setEditable(false);
+        cooldownTicks.setEditable(false);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(btn -> {
+            if (btn != ButtonType.OK) return;
+
+            int percent = minConf.getValue();
+            int ticks = cooldownTicks.getValue();
+
+            cfg.setMinConfidence(percent / 100.0);
+            cfg.setCooldownTicks(ticks);
+
+            actuatorCfg.saveCatFeederConfig(actuatorDevice.getId(), cfg);
+
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION,
+                    "Saved cat feeder config.", ButtonType.OK).showAndWait();
+        });
     }
 }

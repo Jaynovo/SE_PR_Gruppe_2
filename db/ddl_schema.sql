@@ -2,7 +2,8 @@ DROP TABLE IF EXISTS location_information CASCADE;
 DROP TABLE IF EXISTS address_information CASCADE;
 DROP TYPE IF EXISTS device_category CASCADE;
 DROP TABLE IF EXISTS home, user_information, home_user, room, device, sensor_type, sensor, actuator_type, actuator, sensor_reading, actuator_state CASCADE;
-DROP TABLE IF EXISTS device_type, home_invitation CASCADE;
+DROP TABLE IF EXISTS device_type, home_invitation, rule CASCADE;
+DROP INDEX IF EXISTS idx_home_invitation_email, idx_home_invitation_status, idx_rule_home_enabled_priority;
 
 create table address_information (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -138,14 +139,19 @@ CREATE INDEX idx_rule_home_enabled_priority
 -- ADD Permanent Device below --
 
 INSERT INTO device_type (category, label, unit)
-VALUES  ('SENSOR',   'Thermometer',      '°C'),
-        ('SENSOR',   'HumiditySensor',  '%'),
-        ('ACTUATOR', 'Light Switch',     NULL), -- TODO is this even necessary??
-        ('ACTUATOR', 'Heating',          '%'),
-        ('SENSOR',   'CO2Sensor',   'ppm'),
-        ('SENSOR',   'NoiseSensor', 'dB'),
-        ('ACTUATOR', 'Ventilation', NULL),
-        ('ACTUATOR', 'AlarmSystem',       NULL),
-        ('SENSOR', 'LightSensor', 'lx'),
+VALUES  ('SENSOR',   'Thermometer',        '°C'),
+        ('SENSOR',   'HumiditySensor',     '%'),
+        ('ACTUATOR', 'Light Switch',       NULL), -- TODO is this even necessary??
+        ('ACTUATOR', 'Heating',            '%'),
+        ('SENSOR',   'CO2Sensor',          'ppm'),
+        ('SENSOR',   'NoiseSensor',        'dB'),
+        ('ACTUATOR', 'Ventilation',        NULL),
+        ('ACTUATOR', 'AlarmSystem',        NULL),
+        ('SENSOR',   'LightSensor',        'lx'),
         ('ACTUATOR', 'SmartLightActuator', NULL),
-        ('ACTUATOR', 'Blinds', NULL);
+        ('SENSOR',   'CatSensor',          NULL),
+        ('ACTUATOR', 'Cat Feeder',         NULL),
+        ('ACTUATOR', 'Blinds',             NULL),
+        ('SENSOR',   'MotionSensor',       NULL),
+        ('ACTUATOR', 'SmartPlug',          'state'),
+        ('SENSOR',   'UtilityMeter',       'kWh');

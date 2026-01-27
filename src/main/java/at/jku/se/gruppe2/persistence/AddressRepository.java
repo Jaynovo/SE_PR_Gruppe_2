@@ -3,12 +3,8 @@ package at.jku.se.gruppe2.persistence;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.service.GeoCodingService;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.sql.*;
+import java.util.*;
 
 public class AddressRepository {
 
@@ -25,16 +21,16 @@ public class AddressRepository {
     public int createAddressInDatabase(Address address) {
         GeoCodingService.enrichWithCoordinates(address);
         String request = """
-                INSERT INTO address_information (street, house_nr, post_code, city, country, longitude, latitude)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                RETURNING id;""";
+            INSERT INTO address_information (street, house_nr, post_code, city, country, longitude, latitude)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            RETURNING id;""";
         Optional<Integer> addrIdOpt = JdbcTemplate.queryForValue(
                 request,
                 ps -> {
                     ps.setString(1, address.getStreet());
                     ps.setString(2, address.getHouseNumber());
-                    ps.setString(3, address.getPostalCode());
-                    ps.setString(4, address.getCity());
+                    ps.setString(3, address.getCity());
+                    ps.setString(4, address.getPostalCode());
                     ps.setString(5, address.getCountry());
                     ps.setObject(6, address.getLongitude(), Types.DOUBLE);
                     ps.setObject(7, address.getLatitude(), Types.DOUBLE);
@@ -50,17 +46,17 @@ public class AddressRepository {
     public int updateAddressInDatabase(Address address) {
         GeoCodingService.enrichWithCoordinates(address);
         String request = """
-            UPDATE address_information\s
-            SET street = ?, house_nr = ?, post_code = ?, city = ?, country = ?, longitude = ?, latitude = ?
-            WHERE id = ?
-        """;
+        UPDATE address_information\s
+        SET street = ?, house_nr = ?, post_code = ?, city = ?, country = ?, longitude = ?, latitude = ?
+        WHERE id = ?
+    """;
         int success = JdbcTemplate.executeUpdate(
                 request,
                 ps -> {
                     ps.setString(1, address.getStreet());
                     ps.setString(2, address.getHouseNumber());
-                    ps.setString(3, address.getPostalCode());
-                    ps.setString(4, address.getCity());
+                    ps.setString(3, address.getCity());
+                    ps.setString(4, address.getPostalCode());
                     ps.setString(5, address.getCountry());
                     ps.setObject(6, address.getLongitude(), Types.DOUBLE);
                     ps.setObject(7, address.getLatitude(), Types.DOUBLE);

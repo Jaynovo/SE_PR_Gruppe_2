@@ -1,24 +1,41 @@
 package at.jku.se.gruppe2.service;
 
-import at.jku.se.gruppe2.model.sensor.CO2Sensor;
-import at.jku.se.gruppe2.model.sensor.NoiseSensor;
-import at.jku.se.gruppe2.model.sensor.Sensor;
+import at.jku.se.gruppe2.config.LocalSecrets;
+import at.jku.se.gruppe2.model.sensor.*;
 
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
- * Simuliert Sensorwerte (CO2 ppm und Geräusch dB) in festen Intervallen.
+ * Simuliert Sensorwerte (CO₂ ppm und Geräusch dB) in festen Intervallen.
  * Schreibt die Werte direkt in die Sensor-Objekte (setValue()).
  */
 public class SensorSimulationService {
 
     private final ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
     private final Random rnd = new Random();
+
+    private final java.util.concurrent.ExecutorService roboflowExec =
+            java.util.concurrent.Executors.newSingleThreadExecutor();
+
+    private static final List<String> TEST_IMAGES = List.of(
+            // cats
+            "https://i.imgur.com/BxKNfWu.jpeg",
+            "https://i.imgur.com/4XynTW7.jpeg",
+            "https://i.imgur.com/raSXtQ1.jpeg",
+            "https://i.imgur.com/8TRJB5e.jpeg",
+
+            // no cats
+            "https://i.imgur.com/tgfa41l.jpeg",
+            "https://i.imgur.com/dm871pH.jpeg",
+            "https://i.imgur.com/IuqtS85.jpeg"
+    );
+    // pro Raum: welcher Index ist als nächstes dran?
+    private final Map<Integer, Integer> catImageIndexByRoom = new ConcurrentHashMap<>();
+
+    // nur alle 10s einen Roboflow Call
+    private final Map<Integer, Long> catLastCallMs = new ConcurrentHashMap<>();
+    private static final long CAT_CALL_INTERVAL_MS = 10_000;
 
     // pro Raum je ein Sensor
     //TODO: weitere Sensoren hinzufügen
@@ -29,8 +46,13 @@ public class SensorSimulationService {
     //TODO: weitere Sensoren hinzufügen
     private final Map<Integer, Double> co2Baseline = new ConcurrentHashMap<>();
     private final Map<Integer, Double> noiseBaseline = new ConcurrentHashMap<>();
+    private final Map<Integer, CatSensor> catByRoom = new ConcurrentHashMap<>();
 
     private volatile boolean running = false;
+
+    private final RoboflowWorkflowService roboflow =
+            new RoboflowWorkflowService(LocalSecrets.ROBOFLOW_API_KEY, 0.75);
+
 
     /**
      * Registriert Sensoren eines Raumes für die Simulation.
@@ -45,6 +67,10 @@ public class SensorSimulationService {
         if (sensor instanceof NoiseSensor noise) {
             noiseByRoom.put(roomId, noise);
             noiseBaseline.putIfAbsent(roomId, 35.0);
+        }
+        if (sensor instanceof CatSensor cat) {
+            catByRoom.put(roomId, cat);
+            catImageIndexByRoom.putIfAbsent(roomId, 0);
         }
         //TODO: weitere Sensoren hinzufügen
     }
@@ -67,6 +93,7 @@ public class SensorSimulationService {
     public void stop() {
         running = false;
         exec.shutdownNow();
+        roboflowExec.shutdownNow();
     }
 
     public void clearRoom(int roomId) {
@@ -74,6 +101,8 @@ public class SensorSimulationService {
         noiseByRoom.remove(roomId);
         co2Baseline.remove(roomId);
         noiseBaseline.remove(roomId);
+        catByRoom.remove(roomId);
+        catImageIndexByRoom.remove(roomId);
     }
 
     private void tick() {
@@ -89,8 +118,39 @@ public class SensorSimulationService {
             simulateNoise(roomId);
         }
         //TODO: weitere Sensoren hinzufügen
+        for (Integer roomId : catByRoom.keySet()) {
+            simulateCat(roomId);
+        }
     }
 
+    private void simulateCat(int roomId) {
+        CatSensor sensor = catByRoom.get(roomId);
+        if (sensor == null) return;
+
+        long now = System.currentTimeMillis();
+        long last = catLastCallMs.getOrDefault(roomId, 0L);
+        if (now - last < CAT_CALL_INTERVAL_MS) return;
+        catLastCallMs.put(roomId, now);
+
+        int idx = catImageIndexByRoom.getOrDefault(roomId, 0);
+        String imageUrl = TEST_IMAGES.get(idx);
+
+        // Index weiterdrehen
+        idx = (idx + 1) % TEST_IMAGES.size();
+        catImageIndexByRoom.put(roomId, idx);
+
+        roboflowExec.submit(() -> {
+            try {
+                RoboflowWorkflowService.DetectionResult result =
+                        roboflow.detectCatFromImageUrlAsBase64(imageUrl);
+
+                sensor.updateDetection(result.confidence(), imageUrl);
+            } catch (Exception e) {
+                sensor.updateDetection(0.0, imageUrl);
+                System.err.println("Roboflow failed for: " +imageUrl + " -> " + e.getMessage());
+            }
+        });
+    }
 
     private void simulateCo2(int roomId) {
         CO2Sensor sensor = co2ByRoom.get(roomId);
