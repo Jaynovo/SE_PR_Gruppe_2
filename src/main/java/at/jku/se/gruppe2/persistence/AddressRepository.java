@@ -8,7 +8,6 @@ import java.util.*;
 
 public class AddressRepository {
 
-    // This keys off user, so this is the user-address
     public Optional<Address> getAddressById(int addressInformation) {
         String request = "SELECT * FROM address_information WHERE id = ?";
         return JdbcTemplate.queryForObject(
