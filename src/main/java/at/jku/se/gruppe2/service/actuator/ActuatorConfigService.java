@@ -59,4 +59,52 @@ public class ActuatorConfigService {
     public void resetAlarmNoiseCounter(int actuatorDeviceId) {
         alarmNoiseCounterByActuatorId.put(actuatorDeviceId, 0);
     }
+    //CAT FEEDER
+    private final Map<Integer, CatFeederConfig> catFeederCfg = new ConcurrentHashMap<>();
+    private final Map<Integer, Integer> catFeederCooldown = new ConcurrentHashMap<>();
+    private final java.util.Map<Integer, Integer> catFeederFeedingTicks = new java.util.HashMap<>();
+
+    public int getCatFeederFeedingTicks(int actuatorId) {
+        return catFeederFeedingTicks.getOrDefault(actuatorId, 0);
+    }
+
+    public void setCatFeederFeedingTicks(int actuatorId, int ticks) {
+        catFeederFeedingTicks.put(actuatorId, Math.max(0, ticks));
+    }
+
+    public int decrementCatFeederFeedingTicks(int actuatorId) {
+        int current = getCatFeederFeedingTicks(actuatorId);
+        if (current <= 0) return 0;
+        int next = current - 1;
+        setCatFeederFeedingTicks(actuatorId, next);
+        return next;
+    }
+
+    public CatFeederConfig getOrCreateCatFeederConfig(int actuatorId) {
+        return catFeederCfg.computeIfAbsent(actuatorId, id -> new CatFeederConfig());
+    }
+
+    public void saveCatFeederConfig(int actuatorId, CatFeederConfig cfg) {
+        catFeederCfg.put(actuatorId, cfg);
+    }
+
+    public int getCatFeederCooldown(int actuatorId) {
+        return catFeederCooldown.getOrDefault(actuatorId, 0);
+    }
+
+    public void setCatFeederCooldown(int actuatorId, int ticks) {
+        catFeederCooldown.put(actuatorId, Math.max(0, ticks));
+    }
+
+    public int decrementCatFeederCooldown(int actuatorId) {
+        int current = getCatFeederCooldown(actuatorId);
+        if (current <= 0) return 0;
+        int next = current - 1;
+        setCatFeederCooldown(actuatorId, next);
+        return next;
+    }
+
+    public void resetCatFeederCooldown(int actuatorId) {
+        catFeederCooldown.remove(actuatorId);
+    }
 }
