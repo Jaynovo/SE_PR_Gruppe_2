@@ -4,6 +4,7 @@ import at.jku.se.gruppe2.model.Device;
 import at.jku.se.gruppe2.model.actuator.AlarmConfig;
 import at.jku.se.gruppe2.model.actuator.VentilationConfig;
 import at.jku.se.gruppe2.model.sensor.Sensor;
+import at.jku.se.gruppe2.service.actuator.*;
 import at.jku.se.gruppe2.ui.UIUtils;
 
 import java.util.List;

@@ -4,6 +4,7 @@ DROP TYPE IF EXISTS device_category CASCADE;
 DROP TABLE IF EXISTS home, user_information, home_user, room, device, sensor_type, sensor, actuator_type, actuator, sensor_reading, actuator_state CASCADE;
 DROP TABLE IF EXISTS device_type, home_invitation, rule CASCADE;
 DROP INDEX IF EXISTS idx_home_invitation_email, idx_home_invitation_status, idx_rule_home_enabled_priority;
+Drop TYPE IF EXISTS user_role CASCADE;
 
 -- Create the user_role enum type
 CREATE TYPE user_role AS ENUM ('OWNER', 'RESIDENT', 'GUEST');
