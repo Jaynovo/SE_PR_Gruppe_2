@@ -193,17 +193,17 @@
 
 /* Role badge styling */
 .role-owner {
-    -fx-text-fill: #d32f2f;
+    -fx-text-fill: #f59e0b; /* Warm amber/gold for owner */
     -fx-font-weight: bold;
 }
 
 .role-resident {
-    -fx-text-fill: #1976d2;
+    -fx-text-fill: #60a5fa; /* Soft blue for resident */
     -fx-font-weight: bold;
 }
 
 .role-guest {
-    -fx-text-fill: #388e3c;
+    -fx-text-fill: #94a3b8; /* Muted slate for guest */
     -fx-font-weight: bold;
 }
 

@@ -439,4 +439,21 @@ public class DashboardController extends BaseController implements Initializable
         // Reload the dashboard to reflect any accepted invitations
         navigate.goTo(Page.DASHBOARD.fxml());
     }
+
+    public void manageHomeUsers(ActionEvent actionEvent) {
+        if (home == null) {
+            dialog.error("Error", "No home available to manage.");
+            return;
+        }
+
+        // CHECK Permission
+        if (!authService.canManageUsers(home.getId())) {
+            dialog.error("Permission Denied",
+                    "Only the home owner can manage users.");
+            return;
+        }
+
+        ManageUsersDialog manageUsersDialogDialog = new ManageUsersDialog(home);
+        manageUsersDialogDialog.showAndWait();
+    }
 }
