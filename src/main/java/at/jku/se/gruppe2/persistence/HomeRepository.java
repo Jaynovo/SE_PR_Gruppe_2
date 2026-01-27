@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.persistence;
 
 import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.model.user.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

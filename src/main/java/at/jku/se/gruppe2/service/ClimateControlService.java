@@ -3,6 +3,7 @@ package at.jku.se.gruppe2.service;
 import at.jku.se.gruppe2.model.Room;
 import at.jku.se.gruppe2.model.actuator.HeatingActuator;
 import at.jku.se.gruppe2.model.sensor.Thermometer;
+import at.jku.se.gruppe2.service.actuator.ActuatorService;
 
 import java.util.Optional;
 

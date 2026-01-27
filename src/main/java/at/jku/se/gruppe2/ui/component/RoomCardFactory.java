@@ -12,6 +12,14 @@ import javafx.scene.layout.*;
 import java.util.function.Consumer;
 
 public class RoomCardFactory {
+    /**
+     * Creates a room card with optional delete and edit handlers
+     * @param room The room to display
+     * @param onManage Handler for "Manage" button (required)
+     * @param onDelete Handler for "Delete" button (can be null if user doesn't have permission)
+     * @param onEdit Handler for "Edit" button (can be null if user doesn't have permission)
+     * @return Pane containing the room card
+     */
     public Pane createRoomCard(
             Room room,
             Consumer<Room> onManage,
@@ -26,14 +34,8 @@ public class RoomCardFactory {
         Label name = new Label(room.getRoomLabel());
         name.getStyleClass().add("card-title");
 
-        // Create edit button with pen icon
-        Button editButton = new Button("✏");
-        editButton.getStyleClass().addAll("icon-button", "edit-button");
-        editButton.setOnAction(e -> onEdit.accept(room));
-        editButton.setStyle("-fx-font-size: 14px; -fx-padding: 2 6 2 6; -fx-cursor: hand;");
-
-        HBox topBar = new HBox(name, new Region(), editButton);
-        HBox.setHgrow(topBar.getChildren().get(1), Priority.ALWAYS);
+        // Create top bar with optional edit button
+        HBox topBar = createTopBar(name, room, onEdit);
 
         VBox roomDetails = createRoomDetails(room);
         VBox deviceSection = createDeviceSection(room);
@@ -42,6 +44,27 @@ public class RoomCardFactory {
 
         card.getChildren().addAll(topBar, roomDetails, deviceSection, buttons);
         return card;
+    }
+
+    /**
+     * Creates the top bar with room name and optional edit button
+     */
+    private HBox createTopBar(Label nameLabel, Room room, Consumer<Room> onEdit) {
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox topBar = new HBox(nameLabel, spacer);
+
+        // Only add edit button if handler is provided
+        if (onEdit != null) {
+            Button editButton = new Button("✏");
+            editButton.getStyleClass().addAll("icon-button", "edit-button");
+            editButton.setOnAction(e -> onEdit.accept(room));
+            editButton.setStyle("-fx-font-size: 14px; -fx-padding: 2 6 2 6; -fx-cursor: hand;");
+            topBar.getChildren().add(editButton);
+        }
+
+        return topBar;
     }
 
     private VBox createRoomDetails(Room room) {
@@ -105,7 +128,7 @@ public class RoomCardFactory {
         VBox box = new VBox(3);
         box.setPadding(new Insets(6, 0, 0, 0));
 
-        if (!room.getDevices().isEmpty()) {
+        if (room.getDevices() != null && !room.getDevices().isEmpty()) {
             Label header = new Label("Devices in this room:");
             header.getStyleClass().add("muted");
             box.getChildren().add(header);
@@ -133,17 +156,31 @@ public class RoomCardFactory {
         return label;
     }
 
+    /**
+     * Creates button bar with manage and optional delete button
+     */
     private HBox createButtons(Room room,
                                Consumer<Room> onManage,
                                Consumer<Room> onDelete) {
         Button manage = new Button("Manage Room");
         manage.getStyleClass().add("muted");
-        manage.setOnAction(e -> onManage.accept(room));
+        manage.setOnAction(e -> {
+            if (onManage != null) {
+                onManage.accept(room);
+            }
+        });
 
-        Button delete = new Button("Delete Room");
-        delete.getStyleClass().add("danger");
-        delete.setOnAction(e -> onDelete.accept(room));
+        HBox buttonBox = new HBox(10);
+        buttonBox.getChildren().add(manage);
 
-        return new HBox(10, manage, delete);
+        // Only add delete button if handler is provided
+        if (onDelete != null) {
+            Button delete = new Button("Delete Room");
+            delete.getStyleClass().add("danger");
+            delete.setOnAction(e -> onDelete.accept(room));
+            buttonBox.getChildren().add(delete);
+        }
+
+        return buttonBox;
     }
 }

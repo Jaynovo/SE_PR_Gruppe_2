@@ -5,6 +5,9 @@ DROP TABLE IF EXISTS home, user_information, home_user, room, device, sensor_typ
 DROP TABLE IF EXISTS device_type, home_invitation, rule CASCADE;
 DROP INDEX IF EXISTS idx_home_invitation_email, idx_home_invitation_status, idx_rule_home_enabled_priority;
 
+-- Create the user_role enum type
+CREATE TYPE user_role AS ENUM ('OWNER', 'RESIDENT', 'GUEST');
+
 create table address_information (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     street VARCHAR(200),
@@ -37,10 +40,11 @@ create table user_information
 );
 
 create table home_user
-( -- define a house-user in case we want to use roles later
-    home_id INTEGER NOT NULL REFERENCES home (id),
-    user_id INTEGER NOT NULL REFERENCES user_information (id),
-    role    VARCHAR(20) DEFAULT 'MEMBER',
+(
+    home_id INTEGER NOT NULL REFERENCES home (id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES user_information (id) ON DELETE CASCADE,
+    role    user_role NOT NULL DEFAULT 'GUEST',
+    joined_at TIMESTAMP DEFAULT now(),
     PRIMARY KEY (home_id, user_id)
 );
 
@@ -109,6 +113,7 @@ CREATE TABLE home_invitation (
                                  inviter_user_id INTEGER NOT NULL REFERENCES user_information(id) ON DELETE CASCADE,
                                  invitee_email VARCHAR(100) NOT NULL,
                                  invitation_status VARCHAR(20) DEFAULT 'PENDING' CHECK (invitation_status IN ('PENDING', 'ACCEPTED', 'DECLINED', 'CANCELLED')),
+                                 invited_role user_role DEFAULT 'GUEST',
                                  invited_at TIMESTAMP NOT NULL DEFAULT now(),
                                  responded_at TIMESTAMP,
                                  CONSTRAINT unique_pending_invitation UNIQUE (home_id, invitee_email, invitation_status)
@@ -137,7 +142,6 @@ CREATE INDEX idx_rule_home_enabled_priority
     ON rule(home_id, enabled, priority DESC, updated_at DESC);
 
 -- ADD Permanent Device below --
-
 INSERT INTO device_type (category, label, unit)
 VALUES  ('SENSOR',   'Thermometer',        '°C'),
         ('SENSOR',   'HumiditySensor',     '%'),

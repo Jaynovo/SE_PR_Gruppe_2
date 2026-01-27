@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.ui.controller;
 
 import at.jku.se.gruppe2.model.*;
+import at.jku.se.gruppe2.model.user.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.DialogService;
 import javafx.fxml.FXML;
@@ -21,6 +22,7 @@ public class HomeInvitationsDialogController {
     private final HomeInvitationRepository invitationRepo = new HomeInvitationRepository();
     private final HomeRepository homeRepo = new HomeRepository();
     private final UserRepository userRepo = new UserRepository();
+    private final UserHomeRepository userHomeRepo = new UserHomeRepository();
     private final DialogService dialog = new DialogService();
 
     private static final DateTimeFormatter DATE_FORMATTER =
@@ -80,7 +82,11 @@ public class HomeInvitationsDialogController {
                 invitation.getInvitedAt().format(DATE_FORMATTER));
         dateLabel.getStyleClass().add("muted");
 
-        detailsBox.getChildren().addAll(inviterLabel, dateLabel);
+        Label roleLabel = new Label("Role: " + invitation.getInvitedRole().getDisplayName());
+        roleLabel.getStyleClass().add("muted");
+        roleLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: -fx-primary;");
+
+        detailsBox.getChildren().addAll(inviterLabel, dateLabel, roleLabel);
 
         // Buttons
         HBox buttonBox = new HBox(10);
@@ -131,6 +137,18 @@ public class HomeInvitationsDialogController {
             return;
         }
 
+        // Adds user with invited role
+        int userHomeResult = userHomeRepo.addUserToHome(
+                user.getId(),
+                home.getId(),
+                invitation.getInvitedRole()
+        );
+
+        if (userHomeResult <= 0) {
+            dialog.error("Error", "Failed to add you to the home.");
+            return;
+        }
+
         // Update user's home
         user.setHome(home);
         userRepo.updateHome(user, home);
@@ -146,7 +164,8 @@ public class HomeInvitationsDialogController {
         }
 
         dialog.info("Invitation Accepted",
-                "You have successfully joined \"" + invitation.getHomeName() + "\"!");
+                "You have successfully joined \"" + invitation.getHomeName() +
+                        "\" as a " + invitation.getInvitedRole().getDisplayName() + "!");
 
         loadInvitations();
     }

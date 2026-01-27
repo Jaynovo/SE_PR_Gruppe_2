@@ -1,7 +1,7 @@
 package at.jku.se.gruppe2.ui.custom;
 
-import at.jku.se.gruppe2.model.user.User;
-import at.jku.se.gruppe2.ui.controller.HomeInvitationsDialogController;
+import at.jku.se.gruppe2.model.Home;
+import at.jku.se.gruppe2.ui.controller.*;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -10,24 +10,28 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class HomeInvitationsDialog {
+/**
+ * Dialog for managing users in a home (owners only)
+ * Allows viewing all members, changing roles, and removing users
+ */
+public class ManageUsersDialog {
 
     private final Stage stage;
-    private final HomeInvitationsDialogController controller;
+    private final ManageUsersDialogController controller;
 
-    public HomeInvitationsDialog(User user) {
+    public ManageUsersDialog(Home home) {
         stage = new Stage();
-        stage.setTitle("Home Invitations");
+        stage.setTitle("Manage Home Members");
         stage.initModality(Modality.APPLICATION_MODAL);
 
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/share-home/home-invitations-dialog.fxml")
+                    getClass().getResource("/fxml/share-home/manage-users-dialog.fxml")
             );
             Parent root = loader.load();
 
             controller = loader.getController();
-            controller.setUser(user);
+            controller.setHome(home);
 
             Scene scene = new Scene(root);
 
@@ -37,15 +41,21 @@ public class HomeInvitationsDialog {
             );
 
             stage.setScene(scene);
-            stage.setResizable(false);
+            stage.setResizable(true);
+            stage.setMinWidth(650);
+            stage.setMinHeight(500);
 
         } catch (IOException e) {
-            System.err.println("Error loading HomeInvitationsDialog: " + e.getMessage());
+            System.err.println("Error loading ManageUsersDialog: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
     public void showAndWait() {
         stage.showAndWait();
+    }
+
+    public Stage getStage() {
+        return stage;
     }
 }

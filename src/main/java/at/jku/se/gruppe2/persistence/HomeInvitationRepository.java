@@ -1,10 +1,9 @@
 package at.jku.se.gruppe2.persistence;
 
-import at.jku.se.gruppe2.model.HomeInvitation;
+import at.jku.se.gruppe2.model.user.*;
 
 import java.sql.*;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class HomeInvitationRepository {
 
@@ -12,7 +11,7 @@ public class HomeInvitationRepository {
         // First check if there's an existing cancelled/declined invitation
         String checkSql = """
             SELECT id FROM home_invitation
-            WHERE home_id = ? AND invitee_email = ? 
+            WHERE home_id = ? AND invitee_email = ?
             AND invitation_status IN ('CANCELLED', 'DECLINED')
             """;
 
@@ -29,15 +28,19 @@ public class HomeInvitationRepository {
         if (existingId.isPresent()) {
             String reactivateSql = """
                 UPDATE home_invitation
-                SET invitation_status = 'PENDING', 
+                SET invitation_status = 'PENDING',
                     invited_at = now(),
-                    responded_at = NULL
+                    responded_at = NULL,
+                    invited_role = CAST(? AS user_role)
                 WHERE id = ?
                 """;
 
             int success = JdbcTemplate.executeUpdate(
                     reactivateSql,
-                    ps -> ps.setInt(1, existingId.get())
+                    ps -> {
+                        ps.setString(1, invitation.getInvitedRole().name());
+                        ps.setInt(2, existingId.get());
+                    }
             );
 
             return success > 0 ? existingId.get() : -1;
@@ -45,8 +48,8 @@ public class HomeInvitationRepository {
 
         // Otherwise create a new invitation
         String sql = """
-            INSERT INTO home_invitation (home_id, inviter_user_id, invitee_email, invitation_status)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO home_invitation (home_id, inviter_user_id, invitee_email, invitation_status, invited_role)
+            VALUES (?, ?, ?, ?, CAST(? AS user_role))
             RETURNING id
             """;
 
@@ -57,6 +60,7 @@ public class HomeInvitationRepository {
                     ps.setInt(2, invitation.getInviterUserId());
                     ps.setString(3, invitation.getInviteeEmail().toLowerCase().trim());
                     ps.setString(4, invitation.getStatus().name());
+                    ps.setString(5, invitation.getInvitedRole().name());
                 },
                 rs -> rs.getInt("id")
         );
@@ -66,7 +70,7 @@ public class HomeInvitationRepository {
 
     public Optional<List<HomeInvitation>> getPendingInvitationsByEmail(String email) {
         String sql = """
-            SELECT hi.*, h.label as home_name, 
+            SELECT hi.*, h.label as home_name,
                    u.first_name || ' ' || u.last_name as inviter_name
             FROM home_invitation hi
             JOIN home h ON hi.home_id = h.id
@@ -158,6 +162,14 @@ public class HomeInvitationRepository {
         invitation.setInviterUserId(rs.getInt("inviter_user_id"));
         invitation.setInviteeEmail(rs.getString("invitee_email"));
         invitation.setStatus(HomeInvitation.Status.valueOf(rs.getString("invitation_status")));
+
+        // Map the role - NEW CODE
+        String roleStr = rs.getString("invited_role");
+        if (roleStr != null) {
+            invitation.setInvitedRole(UserRole.valueOf(roleStr.toUpperCase()));
+        } else {
+            invitation.setInvitedRole(UserRole.GUEST); // Default fallback
+        }
 
         Timestamp invitedAt = rs.getTimestamp("invited_at");
         if (invitedAt != null) {

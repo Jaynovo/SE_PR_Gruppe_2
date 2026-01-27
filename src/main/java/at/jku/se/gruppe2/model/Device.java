@@ -2,8 +2,9 @@ package at.jku.se.gruppe2.model;
 
 public abstract class Device {
     private int id;
+    private int roomId;
     private String label;
-    private DeviceType type; //statt typeLabel/unit/category
+    private DeviceType type;
 
     public int getId() {
         return id;
@@ -11,6 +12,14 @@ public abstract class Device {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
     }
 
     public String getLabel() {
