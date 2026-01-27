@@ -2,7 +2,9 @@ package at.jku.se.gruppe2.service;
 
 import at.jku.se.gruppe2.model.Device;
 import at.jku.se.gruppe2.model.actuator.AlarmConfig;
+import at.jku.se.gruppe2.model.actuator.CatFeederConfig;
 import at.jku.se.gruppe2.model.actuator.VentilationConfig;
+import at.jku.se.gruppe2.model.sensor.CatSensor;
 import at.jku.se.gruppe2.model.sensor.Sensor;
 import at.jku.se.gruppe2.service.actuator.*;
 import at.jku.se.gruppe2.ui.UIUtils;
@@ -14,7 +16,7 @@ public class RoomAutomationService {
     private final ActuatorService actuatorService;
     private String lastAlarmState = "DISARMED";
 
-    public RoomAutomationService(ActuatorService actuatorService,  ActuatorConfigService actuatorCfg) {
+    public RoomAutomationService(ActuatorService actuatorService, ActuatorConfigService actuatorCfg) {
         this.actuatorService = actuatorService;
         this.actuatorCfg = actuatorCfg;
     }
@@ -22,6 +24,7 @@ public class RoomAutomationService {
     public void evaluateAutomation(List<Device> devices) {
         evaluateVentilation(devices);
         evaluateAlarm(devices);
+        evaluateCatFeeder(devices);
     }
 
     private void evaluateVentilation(List<Device> devices) {
@@ -118,4 +121,60 @@ public class RoomAutomationService {
                 noiseValue
         );
     }
+
+    private void evaluateCatFeeder(List<Device> devices) {
+
+        // 1) CatSensor finden
+        CatSensor cat = null;
+        for (Device d : devices) {
+            if (d instanceof CatSensor cs && "CatSensor".equalsIgnoreCase(d.getTypeLabel())) {
+                cat = cs;
+                break;
+            }
+            // falls CatSensor nicht direkt als Klasse in devices steckt, aber als Sensor:
+            if (d instanceof Sensor s && "CatSensor".equalsIgnoreCase(d.getTypeLabel()) && s instanceof CatSensor cs2) {
+                cat = cs2;
+                break;
+            }
+        }
+
+        // 2) Cat Feeder (Actuator Device) finden
+        Device feeder = null;
+        for (Device d : devices) {
+            if (d.getCategory() == Device.DeviceCategory.ACTUATOR
+                    && "Cat Feeder".equalsIgnoreCase(d.getTypeLabel())) {
+                feeder = d;
+                break;
+            }
+        }
+
+        if (cat == null || feeder == null) return;
+
+        // 3) Config + Cooldown holen
+        CatFeederConfig cfg = actuatorCfg.getOrCreateCatFeederConfig(feeder.getId());
+        int cd = actuatorCfg.getCatFeederCooldown(feeder.getId()); // ticks
+
+        // 4) Wenn Cooldown aktiv: runterzählen + COOLDOWN setzen
+        if (cd > 0) {
+            actuatorCfg.setCatFeederCooldown(feeder.getId(), cd - 1);
+            actuatorService.setState(feeder.getId(), "COOLDOWN");
+            return;
+        }
+
+        // 5) Trigger-Bedingung
+        boolean detected = cat.isCatDetected();
+        double conf = cat.getConfidence();
+
+        if (detected && conf >= cfg.getMinConfidence()) {
+            // FEEDING zeigen
+            actuatorService.setState(feeder.getId(), "FEEDING");
+
+            // danach Cooldown starten
+            actuatorCfg.setCatFeederCooldown(feeder.getId(), cfg.getCooldownTicks());
+            return;
+        }
+        // 6) Sonst READY
+        actuatorService.setState(feeder.getId(), "READY");
+    }
+
 }
