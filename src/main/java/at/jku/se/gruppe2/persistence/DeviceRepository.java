@@ -11,24 +11,26 @@ public class DeviceRepository {
 
     public List<Device> getDevicesByRoomId(int roomId) {
         String sql = """
-                SELECT  d.id,
-                        d.label,
-                        dt.id       AS type_id,
-                        dt.label    AS type_label,
-                        dt.category AS type_category,
-                        dt.unit     AS type_unit
-                    FROM device d
-                    LEFT JOIN sensor s   ON s.device_id = d.id
-                    LEFT JOIN actuator a ON a.device_id = d.id
-                    LEFT JOIN device_type dt ON dt.id = s.sensor_type_id OR dt.id = a.actuator_type_id
-                    WHERE d.room_id = ?
-                    ORDER BY d.id;
-                """;
+            SELECT  d.id,
+                    d.room_id,
+                    d.label,
+                    dt.id       AS type_id,
+                    dt.label    AS type_label,
+                    dt.category AS type_category,
+                    dt.unit     AS type_unit
+                FROM device d
+                LEFT JOIN sensor s   ON s.device_id = d.id
+                LEFT JOIN actuator a ON a.device_id = d.id
+                LEFT JOIN device_type dt ON (dt.id = s.sensor_type_id AND s.device_id IS NOT NULL) 
+                                         OR (dt.id = a.actuator_type_id AND a.device_id IS NOT NULL)
+                WHERE d.room_id = ?
+                ORDER BY d.id;
+            """;
 
         Optional<List<Device>> devicesOpt = JdbcTemplate.queryForMultipleObjects(
                 sql,
                 ps -> ps.setInt(1, roomId),
-                this::mapDevice
+                this::mapDeviceWithRoomId  // Use the version that sets roomId
         );
 
         return devicesOpt.orElse(Collections.emptyList());
@@ -91,47 +93,6 @@ public class DeviceRepository {
                 request,
                 ps -> ps.setInt(1, roomId)
         );
-    }
-
-    /**
-     * Maps a database row into a Device object.
-     */
-    private Device mapDevice(ResultSet rs) throws SQLException {
-        int id = rs.getInt("id");
-        String label = rs.getString("label");
-
-        Integer typeId = (Integer) rs.getObject("type_id");
-        String typeLabel = rs.getString("type_label");
-        String typeCategory = rs.getString("type_category");
-        String typeUnit = rs.getString("type_unit");
-
-        Device device;
-
-        if (typeId == null) {
-            device = new Device() {
-            };
-        } else {
-            Device.DeviceCategory category =
-                    Device.DeviceCategory.valueOf(typeCategory);
-
-            device = switch (category) {
-                case SENSOR -> createSensor(typeLabel);
-                case ACTUATOR -> createActuator(typeLabel);
-            };
-
-            //Create and set DeviceType
-            DeviceType dt = new DeviceType();
-            dt.setId(typeId);
-            dt.setCategory(category);
-            dt.setLabel(typeLabel);
-            dt.setUnit(typeUnit);
-
-            device.setType(dt);
-        }
-
-        device.setId(id);
-        device.setLabel(label);
-        return device;
     }
 
     private Sensor createSensor(String typeLabel) {
@@ -253,9 +214,11 @@ public class DeviceRepository {
         );
     }
 
-    private Device mapDeviceWithRoomId(ResultSet rs) throws SQLException {
+    /**
+     * Maps a database row into a Device object.
+     */
+    private Device mapDevice(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
-        int roomId = rs.getInt("room_id");
         String label = rs.getString("label");
 
         Integer typeId = (Integer) rs.getObject("type_id");
@@ -276,7 +239,7 @@ public class DeviceRepository {
                 case ACTUATOR -> createActuator(typeLabel);
             };
 
-            // Create and set DeviceType
+            //Create and set DeviceType
             DeviceType dt = new DeviceType();
             dt.setId(typeId);
             dt.setCategory(category);
@@ -287,8 +250,13 @@ public class DeviceRepository {
         }
 
         device.setId(id);
-        device.setRoomId(roomId);
         device.setLabel(label);
+        return device;
+    }
+
+    private Device mapDeviceWithRoomId(ResultSet rs) throws SQLException {
+        Device device = mapDevice(rs);  // Reuse the mapping logic
+        device.setRoomId(rs.getInt("room_id"));
         return device;
     }
 

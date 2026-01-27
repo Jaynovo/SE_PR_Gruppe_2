@@ -4,6 +4,7 @@ import at.jku.se.gruppe2.app.MainApp;
 import at.jku.se.gruppe2.model.*;
 import at.jku.se.gruppe2.model.actuator.*;
 import at.jku.se.gruppe2.model.sensor.*;
+import at.jku.se.gruppe2.model.user.*;
 import at.jku.se.gruppe2.persistence.*;
 import at.jku.se.gruppe2.service.*;
 import at.jku.se.gruppe2.service.actuator.*;
@@ -46,6 +47,19 @@ public class RoomDashboardController {
     private String lastAlarmState = "DISARMED";
 
     public void initialize() {
+        Room room = Session.getSelectedRoom();
+
+        if (room != null && room.getHome() == null) {
+            // Load the home for this room
+            HomeRepository homeRepo = new HomeRepository();
+            User currentUser = Session.getCurrentUser();
+            if (currentUser != null) {
+                Home home = homeRepo.getHomeByUser(currentUser).orElse(null);
+                room.setHome(home);
+                Session.setSelectedRoom(room);  // Update session with complete room
+            }
+        }
+
         setLabel();
         loadDevicesAndRegisterSensors();
         updateUIBasedOnPermissions();
