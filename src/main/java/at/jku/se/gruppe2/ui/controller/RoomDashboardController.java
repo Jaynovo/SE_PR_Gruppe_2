@@ -26,9 +26,12 @@ import java.util.*;
 
 public class RoomDashboardController {
 
-    @FXML public Label roomLabel;
-    @FXML private FlowPane cardsFlow;
-    @FXML private Button addDeviceButton;
+    @FXML
+    public Label roomLabel;
+    @FXML
+    private FlowPane cardsFlow;
+    @FXML
+    private Button addDeviceButton;
 
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
@@ -126,9 +129,15 @@ public class RoomDashboardController {
 
     private void handleConfigureActuator(Device actuatorDevice) {
         // CHECK permission
-        if (!actuatorPermService.canConfigureActuator(actuatorDevice.getId())) {
-            dialog.error("Permission Denied",
-                    "Only residents and owners can configure actuators.");
+        Room room = Session.getSelectedRoom();
+        if (room == null || room.getHome() == null) {
+            dialog.error("Permission Denied", "No home context available.");
+            return;
+        }
+
+        int homeId = room.getHome().getId();
+        if (!authService.canConfigureActuators(homeId)) {
+            dialog.error("Permission Denied", "Only residents and owners can configure actuators.");
             return;
         }
 
