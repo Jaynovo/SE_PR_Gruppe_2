@@ -1,8 +1,7 @@
-package at.jku.se.gruppe2.service;
+package at.jku.se.gruppe2.service.user;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class ValidationService {
 

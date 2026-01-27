@@ -1,4 +1,6 @@
-package at.jku.se.gruppe2.model;
+package at.jku.se.gruppe2.model.user;
+
+import at.jku.se.gruppe2.model.*;
 
 public class User {
 

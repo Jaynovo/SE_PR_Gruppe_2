@@ -110,6 +110,19 @@ public class RoomRepository {
         );
     }
 
+    public Optional<Room> getRoomById(int roomId) {
+        String request = """
+            SELECT *
+            FROM room
+            WHERE id = ?;
+            """;
+
+        return JdbcTemplate.queryForObject(
+                request,
+                ps -> ps.setInt(1, roomId),
+                this::mapRoom
+        );
+    }
 
     private Room mapRoom(ResultSet rs) throws SQLException {
         Room room = new Room();
@@ -128,4 +141,3 @@ public class RoomRepository {
         return room;
     }
 }
-

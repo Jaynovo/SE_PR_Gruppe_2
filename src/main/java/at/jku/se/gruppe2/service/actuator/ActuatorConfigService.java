@@ -1,19 +1,21 @@
-package at.jku.se.gruppe2.service;
+package at.jku.se.gruppe2.service.actuator;
 
-import at.jku.se.gruppe2.model.actuator.AlarmConfig;
-import at.jku.se.gruppe2.model.actuator.CatFeederConfig;
-import at.jku.se.gruppe2.model.actuator.VentilationConfig;
+import at.jku.se.gruppe2.model.actuator.*;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Service for managing actuator configurations.
+ * Permission checks should be done in the UI controllers that call these methods.
+ */
 public class ActuatorConfigService {
 
     // VENTILATION
-    //config pro actuator-device-id
+    // config pro actuator-device-id
     private final Map<Integer, VentilationConfig> ventilationConfigByActuatorId = new ConcurrentHashMap<>();
 
-    //manueller state (wenn autoMode=false)
+    // manueller state (wenn autoMode=false)
     private final Map<Integer, Boolean> manualOnByActuatorId = new ConcurrentHashMap<>();
 
     public VentilationConfig getOrCreateVentilationConfig(int actuatorDeviceId) {
