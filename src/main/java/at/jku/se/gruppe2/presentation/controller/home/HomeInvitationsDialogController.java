@@ -1,0 +1,199 @@
+package at.jku.se.gruppe2.presentation.controller.home;
+
+import at.jku.se.gruppe2.domain.model.home.Home;
+import at.jku.se.gruppe2.domain.model.user.HomeInvitation;
+import at.jku.se.gruppe2.domain.model.user.User;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.HomeInvitationRepository;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.HomeRepository;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.UserHomeRepository;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.UserRepository;
+import at.jku.se.gruppe2.presentation.service.DialogService;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+public class HomeInvitationsDialogController {
+
+    @FXML private VBox invitationsContainer;
+    @FXML private Label noInvitationsLabel;
+
+    private User user;
+    private final HomeInvitationRepository invitationRepo = new HomeInvitationRepository();
+    private final HomeRepository homeRepo = new HomeRepository();
+    private final UserRepository userRepo = new UserRepository();
+    private final UserHomeRepository userHomeRepo = new UserHomeRepository();
+    private final DialogService dialog = new DialogService();
+
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("MMM dd, yyyy");
+
+    public void setUser(User user) {
+        this.user = user;
+        loadInvitations();
+    }
+
+    @FXML
+    private void handleClose() {
+        Stage stage = (Stage) invitationsContainer.getScene().getWindow();
+        stage.close();
+    }
+
+    private void loadInvitations() {
+        if (user == null) {
+            return;
+        }
+
+        List<HomeInvitation> invitations =
+                invitationRepo.getPendingInvitationsByEmail(user.getEmail())
+                        .orElse(java.util.Collections.emptyList());
+
+        invitationsContainer.getChildren().clear();
+
+        if (invitations.isEmpty()) {
+            noInvitationsLabel.setVisible(true);
+            invitationsContainer.getChildren().add(noInvitationsLabel);
+        } else {
+            noInvitationsLabel.setVisible(false);
+
+            for (HomeInvitation invitation : invitations) {
+                invitationsContainer.getChildren().add(createInvitationCard(invitation));
+            }
+        }
+    }
+
+    private VBox createInvitationCard(HomeInvitation invitation) {
+        VBox card = new VBox(12);
+        card.getStyleClass().add("card");
+        card.setStyle("-fx-padding: 16; -fx-border-color: -fx-primary; " +
+                "-fx-border-width: 2; -fx-border-radius: 12;");
+
+        // Home name
+        Label homeLabel = new Label(invitation.getHomeName());
+        homeLabel.getStyleClass().add("title");
+
+        // Invitation details
+        VBox detailsBox = new VBox(4);
+
+        Label inviterLabel = new Label("Invited by: " + invitation.getInviterName());
+        inviterLabel.getStyleClass().add("muted");
+
+        Label dateLabel = new Label("Invited on: " +
+                invitation.getInvitedAt().format(DATE_FORMATTER));
+        dateLabel.getStyleClass().add("muted");
+
+        Label roleLabel = new Label("Role: " + invitation.getInvitedRole().getDisplayName());
+        roleLabel.getStyleClass().add("muted");
+        roleLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: -fx-primary;");
+
+        detailsBox.getChildren().addAll(inviterLabel, dateLabel, roleLabel);
+
+        // Buttons
+        HBox buttonBox = new HBox(10);
+        buttonBox.setStyle("-fx-alignment: center-right;");
+
+        Button acceptButton = new Button("Accept");
+        acceptButton.setStyle("-fx-background-color: #24a211;");
+        acceptButton.setOnAction(e -> handleAcceptInvitation(invitation));
+
+        Button declineButton = new Button("Decline");
+        declineButton.getStyleClass().add("danger");
+        declineButton.setOnAction(e -> handleDeclineInvitation(invitation));
+
+        buttonBox.getChildren().addAll(acceptButton, declineButton);
+
+        card.getChildren().addAll(homeLabel, detailsBox, buttonBox);
+
+        return card;
+    }
+
+    private void handleAcceptInvitation(HomeInvitation invitation) {
+        // Reload user from database to get the latest state
+        User freshUser = userRepo.findUserById(user.getId()).orElse(user);
+
+        // Check if user already has a home
+        if (freshUser.getHome() != null) {
+            Optional<ButtonType> result = dialog.confirm(
+                    "Replace Current Home",
+                    "You already have a home.\n\n" +
+                            "Accepting this invitation will replace your current home with \"" +
+                            invitation.getHomeName() + "\".\n\n" +
+                            "Do you want to continue?"
+            );
+
+            if (result.isEmpty() || result.get() != ButtonType.OK) {
+                return;
+            }
+        }
+
+        acceptInvitation(invitation);
+    }
+
+    private void acceptInvitation(HomeInvitation invitation) {
+        // Get the home to assign
+        Home home = homeRepo.getHomeById(invitation.getHomeId()).orElse(null);
+        if (home == null) {
+            dialog.error("Error", "Home no longer exists.");
+            return;
+        }
+
+        // Adds user with invited role
+        int userHomeResult = userHomeRepo.addUserToHome(
+                user.getId(),
+                home.getId(),
+                invitation.getInvitedRole()
+        );
+
+        if (userHomeResult <= 0) {
+            dialog.error("Error", "Failed to add you to the home.");
+            return;
+        }
+
+        // Update user's home
+        user.setHome(home);
+        userRepo.updateHome(user, home);
+
+        // Update invitation status
+        int success = invitationRepo.updateInvitationStatus(
+                invitation.getId(), HomeInvitation.Status.ACCEPTED
+        );
+
+        if (success == 0) {
+            dialog.error("Error", "Failed to update invitation status.");
+            return;
+        }
+
+        dialog.info("Invitation Accepted",
+                "You have successfully joined \"" + invitation.getHomeName() +
+                        "\" as a " + invitation.getInvitedRole().getDisplayName() + "!");
+
+        loadInvitations();
+    }
+
+    private void handleDeclineInvitation(HomeInvitation invitation) {
+        Optional<ButtonType> result = dialog.confirm(
+                "Decline Invitation",
+                "Decline invitation to \"" + invitation.getHomeName() + "\"?\n\n" +
+                        "You can ask for a new invitation later if needed."
+        );
+
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            int success = invitationRepo.updateInvitationStatus(
+                    invitation.getId(), HomeInvitation.Status.DECLINED
+            );
+
+            if (success > 0) {
+                dialog.info("Invitation Declined",
+                        "You have declined the invitation to \"" +
+                                invitation.getHomeName() + "\".");
+                loadInvitations();
+            } else {
+                dialog.error("Error", "Failed to decline invitation.");
+            }
+        }
+    }
+}

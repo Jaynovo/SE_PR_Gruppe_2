@@ -8,7 +8,7 @@
 <BorderPane prefHeight="600.0" prefWidth="640.0"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="at.jku.se.gruppe2.ui.controller.RoomDashboardController">
+            fx:controller="at.jku.se.gruppe2.presentation.controller.room.RoomDashboardController">
 
     <top>
         <ToolBar BorderPane.alignment="CENTER">

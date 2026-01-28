@@ -6,4 +6,4 @@ target/
 .idea/
 *.iml
 out/
-src/main/java/at/jku/se/gruppe2/config/LocalSecrets.java
+src/main/java/at/jku/se/gruppe2/infrastructure/config/LocalSecrets.java

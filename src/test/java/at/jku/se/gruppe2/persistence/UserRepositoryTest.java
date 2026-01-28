@@ -1,14 +1,15 @@
 package at.jku.se.gruppe2.persistence;
 
+import at.jku.se.gruppe2.infrastructure.persistence.config.Database;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.HomeRepository;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.UserRepository;
 import at.jku.se.gruppe2.model.*;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 

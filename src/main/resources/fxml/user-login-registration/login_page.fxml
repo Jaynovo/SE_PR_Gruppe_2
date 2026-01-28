@@ -7,7 +7,7 @@
 <StackPane prefHeight="600.0" prefWidth="640.0"
            xmlns="http://javafx.com/javafx/17.0.12"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="at.jku.se.gruppe2.ui.controller.LoginController">
+           fx:controller="at.jku.se.gruppe2.presentation.controller.auth.LoginController">
 
     <VBox alignment="CENTER" maxHeight="210" maxWidth="360" spacing="12" styleClass="card">
 
