@@ -10,7 +10,7 @@
             prefWidth="680.0"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="at.jku.se.gruppe2.ui.controller.ProfileController">
+            fx:controller="at.jku.se.gruppe2.presentation.controller.auth.ProfileController">
 
     <top>
         <HBox spacing="10" styleClass="card">

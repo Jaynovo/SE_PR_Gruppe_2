@@ -4,13 +4,13 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
-<?import at.jku.se.gruppe2.ui.custom.IntegerField?>
+<?import at.jku.se.gruppe2.presentation.component.custom.IntegerField?>
 
 <BorderPane prefHeight="600.0"
             prefWidth="640.0"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="at.jku.se.gruppe2.ui.controller.RoomEditController">
+            fx:controller="at.jku.se.gruppe2.presentation.controller.room.RoomEditController">
 
     <top>
         <HBox spacing="10" styleClass="card">

@@ -7,7 +7,7 @@
 <BorderPane prefHeight="600.0" prefWidth="640.0"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="at.jku.se.gruppe2.ui.controller.DashboardController">
+            fx:controller="at.jku.se.gruppe2.presentation.controller.home.DashboardController">
 
     <top>
         <ToolBar BorderPane.alignment="CENTER">

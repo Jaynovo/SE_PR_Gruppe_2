@@ -6,7 +6,7 @@
 
 <VBox spacing="15" prefWidth="650" prefHeight="500" styleClass="card" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="at.jku.se.gruppe2.ui.controller.ManageUsersDialogController">
+      fx:controller="at.jku.se.gruppe2.presentation.controller.home.ManageUsersDialogController">
 
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>

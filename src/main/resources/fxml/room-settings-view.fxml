@@ -5,7 +5,7 @@
 
 <VBox spacing="12" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="at.jku.se.gruppe2.ui.controller.RoomSettingsController">
+      fx:controller="at.jku.se.gruppe2.presentation.controller.room.RoomSettingsController">
 
     <Label text="Room Settings"
            style="-fx-font-size: 18px; -fx-font-weight: bold;" />
