@@ -4,6 +4,7 @@ import app.MainApp;
 import at.jku.se.gruppe2.domain.model.home.Address;
 import at.jku.se.gruppe2.application.navigation.NavigationService;
 import at.jku.se.gruppe2.domain.model.user.User;
+import at.jku.se.gruppe2.domain.service.user.ValidationService;
 import at.jku.se.gruppe2.infrastructure.persistence.repository.AddressRepository;
 import at.jku.se.gruppe2.infrastructure.persistence.repository.UserRepository;
 import at.jku.se.gruppe2.infrastructure.security.PasswordUtils;
@@ -12,6 +13,7 @@ import at.jku.se.gruppe2.infrastructure.storage.AvatarStorage;
 import at.jku.se.gruppe2.presentation.util.UIUtils;
 import at.jku.se.gruppe2.presentation.navigation.Page;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.*;
 import javafx.scene.canvas.*;
@@ -25,21 +27,31 @@ import java.io.IOException;
 import java.util.Optional;
 
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import java.io.File;
 
 @SuppressWarnings("CallToPrintStackTrace")
 public class ProfileController {
 
-    @FXML    private TextField firstNameField;
-    @FXML    private TextField lastNameField;
-    @FXML    private TextField emailField;
-    @FXML    private TextField streetField;
-    @FXML    private TextField streetNumberField;
-    @FXML    private TextField cityField;
-    @FXML    private TextField postalCodeField;
-    @FXML    private ComboBox<String> countryComboBox;
-    @FXML    private ImageView avatarImage;
+    @FXML
+    private TextField firstNameField;
+    @FXML
+    private TextField lastNameField;
+    @FXML
+    private TextField emailField;
+    @FXML
+    private TextField streetField;
+    @FXML
+    private TextField streetNumberField;
+    @FXML
+    private TextField cityField;
+    @FXML
+    private TextField postalCodeField;
+    @FXML
+    private ComboBox<String> countryComboBox;
+    @FXML
+    private ImageView avatarImage;
 
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
@@ -226,44 +238,113 @@ public class ProfileController {
             UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
             return;
         }
+
+        // Clear any previous error styling
+        clearFieldErrors();
+
         String firstName = firstNameField.getText();
         String lastName = lastNameField.getText();
-
-        if (firstName.isEmpty() || lastName.isEmpty()) {
-            UIUtils.styledAlert(Alert.AlertType.ERROR, "First and last name must not be empty.", ButtonType.OK).showAndWait();
-            return;
-        }
-
         String street = streetField.getText();
         String streetNumber = streetNumberField.getText();
         String city = cityField.getText();
         String postalCode = postalCodeField.getText();
         String country = countryComboBox.getValue();
 
+        boolean hasErrors = false;
+
+        // Validate first name
+        if (firstName == null || firstName.trim().isEmpty()) {
+            setFieldError(firstNameField, "First name is required.");
+            hasErrors = true;
+        } else if (firstName.trim().length() < 2) {
+            setFieldError(firstNameField, "First name must be at least 2 characters long.");
+            hasErrors = true;
+        } else if (firstName.trim().length() > 100) {
+            setFieldError(firstNameField, "First name must not exceed 100 characters.");
+            hasErrors = true;
+        }
+
+        // Validate last name
+        if (lastName == null || lastName.trim().isEmpty()) {
+            setFieldError(lastNameField, "Last name is required.");
+            hasErrors = true;
+        } else if (lastName.trim().length() < 2) {
+            setFieldError(lastNameField, "Last name must be at least 2 characters long.");
+            hasErrors = true;
+        } else if (lastName.trim().length() > 100) {
+            setFieldError(lastNameField, "Last name must not exceed 100 characters.");
+            hasErrors = true;
+        }
+
+        // Validate address fields (only if any are filled - address is optional)
+        boolean hasAnyAddressField = (street != null && !street.trim().isEmpty())
+                || (streetNumber != null && !streetNumber.trim().isEmpty())
+                || (city != null && !city.trim().isEmpty())
+                || (postalCode != null && !postalCode.trim().isEmpty())
+                || (country != null && !country.trim().isEmpty());
+
+        if (hasAnyAddressField) {
+            // If any address field is filled, validate all required address fields
+            ValidationService.ValidationResult streetResult = ValidationService.validateStreet(street);
+            if (!streetResult.isValid()) {
+                setFieldError(streetField, streetResult.getErrorMessage());
+                hasErrors = true;
+            }
+
+            ValidationService.ValidationResult houseResult = ValidationService.validateHouseNumber(streetNumber);
+            if (!houseResult.isValid()) {
+                setFieldError(streetNumberField, houseResult.getErrorMessage());
+                hasErrors = true;
+            }
+
+            ValidationService.ValidationResult cityResult = ValidationService.validateCity(city);
+            if (!cityResult.isValid()) {
+                setFieldError(cityField, cityResult.getErrorMessage());
+                hasErrors = true;
+            }
+
+            ValidationService.ValidationResult postalResult = ValidationService.validatePostalCode(postalCode);
+            if (!postalResult.isValid()) {
+                setFieldError(postalCodeField, postalResult.getErrorMessage());
+                hasErrors = true;
+            }
+
+            ValidationService.ValidationResult countryResult = ValidationService.validateCountry(country);
+            if (!countryResult.isValid()) {
+                setFieldError(countryComboBox, countryResult.getErrorMessage());
+                hasErrors = true;
+            }
+        }
+
+        if (hasErrors) {
+            return;
+        }
+
         try {
             //User aktualisieren
-            current.setFirstName(firstName);
-            current.setLastName(lastName);
+            current.setFirstName(firstName.trim());
+            current.setLastName(lastName.trim());
 
             Address address = current.getAddress();
 
-            if (address != null && address.getId() > 0) {
-                // Update existing address
-                address.setStreet(street);
-                address.setHouseNumber(streetNumber);
-                address.setCity(city);
-                address.setPostalCode(postalCode);
-                address.setCountry(country);
-                addressRepository.updateAddressInDatabase(address);
-            } else {
-                // Create new address
-                address = new  Address(street, streetNumber, city, postalCode, country);
-                addressRepository.createAddressInDatabase(address);
-
-                current.setAddress(address);
+            if (hasAnyAddressField) {
+                if (address != null && address.getId() > 0) {
+                    // Update existing address
+                    address.setStreet(street.trim());
+                    address.setHouseNumber(streetNumber.trim());
+                    address.setPostalCode(postalCode.trim());
+                    address.setCity(city.trim());
+                    address.setCountry(country);
+                    addressRepository.updateAddressInDatabase(address);
+                } else {
+                    // Create new address
+                    address = new Address(street.trim(), streetNumber.trim(), postalCode.trim(), city.trim(), country);
+                    addressRepository.createAddressInDatabase(address);
+                    current.setAddress(address);
+                }
+                userRepository.updateAddress(current, address);
             }
 
-            userRepository.updateAddress(current, address);
             UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Profile has been updated and saved.", ButtonType.OK).showAndWait();
 
             goTo();
@@ -272,7 +353,6 @@ public class ProfileController {
             e.printStackTrace();
             UIUtils.styledAlert(Alert.AlertType.ERROR, "Could not save profile", ButtonType.OK).showAndWait();
         }
-        navigate.goTo(Page.DASHBOARD.fxml());
     }
 
     @FXML
@@ -356,5 +436,50 @@ public class ProfileController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Helper method to check if a string is null or empty
+     */
+    private boolean isNullOrEmpty(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+
+    /**
+     * Sets an error style on a control and shows a tooltip with the error message
+     */
+    private void setFieldError(Control control, String errorMessage) {
+        control.setStyle("-fx-border-color: #ef4444; -fx-border-width: 2px;");
+
+        Tooltip tooltip = new Tooltip(errorMessage);
+        tooltip.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 12px;");
+        Tooltip.install(control, tooltip);
+
+        // Show tooltip immediately
+        tooltip.show(control,
+                control.localToScreen(control.getBoundsInLocal()).getMinX(),
+                control.localToScreen(control.getBoundsInLocal()).getMaxY() + 5);
+    }
+
+    /**
+     * Clears error styling from all input fields
+     */
+    private void clearFieldErrors() {
+        firstNameField.setStyle("");
+        lastNameField.setStyle("");
+        streetField.setStyle("");
+        streetNumberField.setStyle("");
+        cityField.setStyle("");
+        postalCodeField.setStyle("");
+        countryComboBox.setStyle("");
+
+        // Remove all tooltips
+        Tooltip.uninstall(firstNameField, firstNameField.getTooltip());
+        Tooltip.uninstall(lastNameField, lastNameField.getTooltip());
+        Tooltip.uninstall(streetField, streetField.getTooltip());
+        Tooltip.uninstall(streetNumberField, streetNumberField.getTooltip());
+        Tooltip.uninstall(cityField, cityField.getTooltip());
+        Tooltip.uninstall(postalCodeField, postalCodeField.getTooltip());
+        Tooltip.uninstall(countryComboBox, countryComboBox.getTooltip());
     }
 }
