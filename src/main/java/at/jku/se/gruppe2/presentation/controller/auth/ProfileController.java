@@ -12,7 +12,6 @@ import at.jku.se.gruppe2.infrastructure.storage.AvatarStorage;
 import at.jku.se.gruppe2.presentation.util.UIUtils;
 import at.jku.se.gruppe2.presentation.navigation.Page;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.*;
 import javafx.scene.canvas.*;
@@ -26,31 +25,21 @@ import java.io.IOException;
 import java.util.Optional;
 
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 import java.io.File;
 
 @SuppressWarnings("CallToPrintStackTrace")
 public class ProfileController {
 
-    @FXML
-    private TextField firstNameField;
-    @FXML
-    private TextField lastNameField;
-    @FXML
-    private TextField emailField;
-    @FXML
-    private TextField streetField;
-    @FXML
-    private TextField streetNumberField;
-    @FXML
-    private TextField cityField;
-    @FXML
-    private TextField postalCodeField;
-    @FXML
-    private ComboBox<String> countryComboBox;
-    @FXML
-    private ImageView avatarImage;
+    @FXML    private TextField firstNameField;
+    @FXML    private TextField lastNameField;
+    @FXML    private TextField emailField;
+    @FXML    private TextField streetField;
+    @FXML    private TextField streetNumberField;
+    @FXML    private TextField cityField;
+    @FXML    private TextField postalCodeField;
+    @FXML    private ComboBox<String> countryComboBox;
+    @FXML    private ImageView avatarImage;
 
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
@@ -166,7 +155,7 @@ public class ProfileController {
     private void onChangeAvatar() {
         User current = Session.getCurrentUser();
         if (current == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "No user in session");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
             return;
         }
 
@@ -180,14 +169,14 @@ public class ProfileController {
         if (file == null) return;
 
         if (file.length() > 5 * 1024 * 1024) {
-            showAlert(Alert.AlertType.ERROR, "Zu groß", "Bild darf max. 5MB groß sein.");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Bild darf max. 5MB groß sein.", ButtonType.OK).showAndWait();
             return;
         }
 
         try {
             Image img = new Image(file.toURI().toString(), 256, 256, true, true);
             if (img.isError()) {
-                showAlert(Alert.AlertType.ERROR, "Fehler", "Bild konnte nicht geladen werden.");
+                UIUtils.styledAlert(Alert.AlertType.ERROR, "Bild konnte nicht geladen werden.", ButtonType.OK).showAndWait();
                 return;
             }
 
@@ -196,11 +185,11 @@ public class ProfileController {
             userRepository.updateAvatarPath(current, path);
 
             refreshAvatarView();
-            showAlert(Alert.AlertType.INFORMATION, "Erfolg", "Profilbild aktualisiert.");
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Profilbild aktualisiert.", ButtonType.OK).showAndWait();
 
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Profilbild konnte nicht gespeichert werden.");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Profilbild konnte nicht gespeichert werden.", ButtonType.OK).showAndWait();
         }
     }
 
@@ -208,14 +197,14 @@ public class ProfileController {
     private void onRemoveAvatar() {
         User current = Session.getCurrentUser();
         if (current == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "No user in session");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
             return;
         }
         current.setAvatarPath(null);
         userRepository.updateAvatarPath(current, null);
 
         refreshAvatarView();
-        showAlert(Alert.AlertType.INFORMATION, "Erfolg", "Profilbild entfernt.");
+        UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Profilbild entfernt.", ButtonType.OK).showAndWait();
     }
 
     //Helper Methode
@@ -234,14 +223,14 @@ public class ProfileController {
     private void onSave() {
         User current = Session.getCurrentUser();
         if (current == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "No user in session");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
             return;
         }
         String firstName = firstNameField.getText();
         String lastName = lastNameField.getText();
 
         if (firstName.isEmpty() || lastName.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Invalid data", "First and last name must not be empty.");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "First and last name must not be empty.", ButtonType.OK).showAndWait();
             return;
         }
 
@@ -275,13 +264,13 @@ public class ProfileController {
             }
 
             userRepository.updateAddress(current, address);
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Profile has been updated and saved.");
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Profile has been updated and saved.", ButtonType.OK).showAndWait();
 
             goTo();
 
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not save profile");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Could not save profile", ButtonType.OK).showAndWait();
         }
         navigate.goTo(Page.DASHBOARD.fxml());
     }
@@ -296,7 +285,7 @@ public class ProfileController {
 
         User current = Session.getCurrentUser();
         if (current == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "No user in session");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
             return;
         }
 
@@ -336,12 +325,12 @@ public class ProfileController {
         String confirmPw = confirmPassword.getText();
 
         if (oldPw.isEmpty() || newPw.isEmpty() || confirmPw.isEmpty() || !newPw.equals(confirmPw)) {
-            showAlert(Alert.AlertType.ERROR, "Invalid data", "All fields must be filled and new password and new password must match.");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "All fields must be filled and new password and new password must match.", ButtonType.OK).showAndWait();
             return;
         }
         Optional<String> pwOpt = userRepository.findPasswordByUserEmail(current.getEmail());
         if (pwOpt.isEmpty() || !PasswordUtils.verifyPassword(oldPw, pwOpt.get())) {
-            showAlert(Alert.AlertType.ERROR, "Invalid password", "Current password is incorrect.");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Current password is incorrect.", ButtonType.OK).showAndWait();
             return;
         }
 
@@ -349,15 +338,9 @@ public class ProfileController {
         userRepository.updatePassword(current, hashedPw);
         current.setPassword(hashedPw);
 
-        showAlert(Alert.AlertType.CONFIRMATION, "Success", "Password changed!");
+        UIUtils.styledAlert(Alert.AlertType.CONFIRMATION, "Password changed!", ButtonType.OK).showAndWait();
 
         //TODO: Passwort checken und speichern
-    }
-
-    private void showAlert(Alert.AlertType type, String title, String message) {
-        Alert alert = new Alert(type, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.showAndWait();
     }
 
     private void goTo() {
