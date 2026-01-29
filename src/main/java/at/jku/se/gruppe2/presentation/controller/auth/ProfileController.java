@@ -221,12 +221,12 @@ public class ProfileController {
 
         // Check if user has an address to unlink
         if (current.getAddress() == null) {
-            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "You don't have a linked address.", ButtonType.OK).showAndWait();
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "You don't have an address.", ButtonType.OK).showAndWait();
             return;
         }
 
         // Confirm with user
-        Alert confirm = UIUtils.styledConfirm("Are you sure you want to unlink your address? This will not delete the address, just remove the link from your profile.");
+        Alert confirm = UIUtils.styledConfirm("This will delete your address! Continue?\n (Your home address will not be affected by this)");
         Optional<ButtonType> result = confirm.showAndWait();
 
         if (result.isEmpty() || result.get() != ButtonType.OK) {
@@ -246,11 +246,11 @@ public class ProfileController {
             countryComboBox.getSelectionModel().clearSelection();
             countryComboBox.setValue(null);
 
-            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Address successfully unlinked from your profile.", ButtonType.OK).showAndWait();
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Address successfully removed from your profile.", ButtonType.OK).showAndWait();
 
         } catch (Exception e) {
             e.printStackTrace();
-            UIUtils.styledAlert(Alert.AlertType.ERROR, "Could not unlink address. Please try again.", ButtonType.OK).showAndWait();
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Could not remove address. Please try again.", ButtonType.OK).showAndWait();
         }
     }
 
