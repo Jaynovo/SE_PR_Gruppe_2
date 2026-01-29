@@ -83,20 +83,10 @@ public class RoomEditController extends BaseController implements Initializable 
 
     private void updateAreaLabel() {
         try {
-            String lengthText = lengthField.getText().trim();
-            String widthText = widthField.getText().trim();
+            Double length = parseDoubleOrNull(lengthField.getText());
+            Double width  = parseDoubleOrNull(widthField.getText());
 
-            // Handle empty fields gracefully
-            if (lengthText.isEmpty() || widthText.isEmpty()) {
-                areaLabel.setText("--");
-                return;
-            }
-
-            double length = Double.parseDouble(lengthText);
-            double width = Double.parseDouble(widthText);
-
-            // Optional: validate positive values
-            if (length <= 0 || width <= 0) {
+            if (length == null || width == null || length <= 0 || width <= 0) {
                 areaLabel.setText("--");
                 return;
             }
@@ -179,31 +169,20 @@ public class RoomEditController extends BaseController implements Initializable 
     }
 
     private Room buildRoomFromForm() {
-        // Update the existing room object
-        room.setRoomLabel(roomLabelField.getText().trim());
 
-        // Floor (required - validation already passed)
+        room.setRoomLabel(roomLabelField.getText().trim());
         room.setFloor(Integer.parseInt(floorField.getText().trim()));
 
-        // Length (optional)
-        String lengthText = lengthField.getText().trim();
-        if (!lengthText.isEmpty()) {
-            room.setLength(Double.parseDouble(lengthText));
-        } else {
-            room.setLength(null);
-        }
+        // Length
+        Double length = parseDoubleOrNull(lengthField.getText());
+        room.setLength(length);
 
-        // Width (optional)
-        String widthText = widthField.getText().trim();
-        if (!widthText.isEmpty()) {
-            room.setWidth(Double.parseDouble(widthText));
-        } else {
-            room.setWidth(null);
-        }
+        // Width
+        Double width = parseDoubleOrNull(widthField.getText());
+        room.setWidth(width);
 
-        // Calculate area only if both dimensions exist
-        if (room.getLength() != null && room.getWidth() != null) {
-            room.setArea(room.getLength() * room.getWidth());
+        if (length != null && width != null) {
+            room.setArea(length * width);
         } else {
             room.setArea(null);
         }
@@ -214,5 +193,13 @@ public class RoomEditController extends BaseController implements Initializable 
     @FXML
     protected void handleBack() {
         navigate.goTo(Page.DASHBOARD.fxml());
+    }
+
+    private Double parseDoubleOrNull(String text) {
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+        String normalized = text.trim().replace(',', '.');
+        return Double.parseDouble(normalized);
     }
 }

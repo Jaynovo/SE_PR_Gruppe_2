@@ -75,6 +75,8 @@ public class RoomSettingsController {
         if (text == null || text.isBlank()) {
             return null;
         }
-        return Double.parseDouble(text.trim());
+
+        String normalized = text.trim().replace(',', '.');
+        return Double.parseDouble(normalized);
     }
 }

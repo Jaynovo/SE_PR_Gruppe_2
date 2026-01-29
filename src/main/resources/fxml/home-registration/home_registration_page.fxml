@@ -14,8 +14,8 @@
 
     <top>
         <HBox
-              spacing="10"
-              styleClass="card">
+                spacing="10"
+                styleClass="card">
 
             <Button text="Dashboard" onAction="#handleDashboard"/>
         </HBox>
@@ -38,20 +38,42 @@
                 </font>
             </Label>
 
-            <TextField fx:id="homeLabel" promptText="Name your Home:" />
-            <IntegerField fx:id="floorLevels" promptText="Number of floors:" />
+            <VBox spacing="4">
+                <Label text="Home Name" styleClass="field-label"/>
+                <TextField fx:id="homeLabel"/>
+            </VBox>
+
+            <VBox spacing="4">
+                <Label text="Number of Floors" styleClass="field-label"/>
+                <IntegerField fx:id="floorLevels"/>
+            </VBox>
 
             <HBox spacing="10">
-                <TextField fx:id="street" promptText="Street Name:" HBox.hgrow="ALWAYS"/>
-                <IntegerField fx:id="streetNumber" promptText="Number:" prefWidth="100"/>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Street Name" styleClass="field-label"/>
+                    <TextField fx:id="street"/>
+                </VBox>
+                <VBox spacing="4" prefWidth="100">
+                    <Label text="Number" styleClass="field-label"/>
+                    <IntegerField fx:id="streetNumber"/>
+                </VBox>
             </HBox>
 
             <HBox spacing="10">
-                <IntegerField fx:id="postalCode" promptText="Postal Code:" prefWidth="150" />
-                <TextField fx:id="city" promptText="City:" HBox.hgrow="ALWAYS" />
+                <VBox spacing="4" prefWidth="150">
+                    <Label text="Postal Code" styleClass="field-label"/>
+                    <IntegerField fx:id="postalCode"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="City" styleClass="field-label"/>
+                    <TextField fx:id="city"/>
+                </VBox>
             </HBox>
 
-            <ComboBox fx:id="countryBox" promptText="Choose Country:" prefWidth="Infinity"/>
+            <VBox spacing="4">
+                <Label text="Country" styleClass="field-label"/>
+                <ComboBox fx:id="countryBox" prefWidth="Infinity"/>
+            </VBox>
 
             <HBox alignment="TOP_RIGHT" spacing="10">
 

@@ -44,6 +44,40 @@ public class HomeRegistrationController {
     @FXML
     public void initialize() {
         UIUtils.setupCountryComboBox(countryBox);
+        populateUserAddress();
+    }
+
+    /**
+     * Populates the address fields with the current user's address information if available
+     */
+    private void populateUserAddress() {
+        User currentUser = Session.getCurrentUser();
+
+        if (currentUser != null && currentUser.getAddress() != null) {
+            Address userAddress = currentUser.getAddress();
+
+            // Populate fields with user's address information
+            if (userAddress.getStreet() != null && !userAddress.getStreet().isEmpty()) {
+                street.setText(userAddress.getStreet());
+            }
+
+            if (userAddress.getHouseNumber() != null && !userAddress.getHouseNumber().isEmpty()) {
+                streetNumber.setText(userAddress.getHouseNumber());
+            }
+
+            if (userAddress.getPostalCode() != null && !userAddress.getPostalCode().isEmpty()) {
+                postalCode.setText(userAddress.getPostalCode());
+            }
+
+            if (userAddress.getCity() != null && !userAddress.getCity().isEmpty()) {
+                city.setText(userAddress.getCity());
+            }
+
+            if (userAddress.getCountry() != null && !userAddress.getCountry().isEmpty()) {
+                // Set the country in the ComboBox
+                countryBox.setValue(userAddress.getCountry());
+            }
+        }
     }
 
     @FXML

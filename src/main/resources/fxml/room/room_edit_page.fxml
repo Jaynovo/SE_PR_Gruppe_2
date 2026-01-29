@@ -21,7 +21,7 @@
     <!-- MAIN CONTAINER -->
     <center>
         <VBox alignment="TOP_CENTER"
-              spacing="15"
+              spacing="10"
               styleClass="card">
 
             <padding>
@@ -34,19 +34,29 @@
                 </font>
             </Label>
 
-            <TextField fx:id="roomLabelField" promptText="Room Name:" />
-            <IntegerField fx:id="floorField" promptText="Floor Number:" />
+            <VBox spacing="0" HBox.hgrow="ALWAYS">
+                <Label text="Room Name:"/>
+                <TextField fx:id="roomLabelField"/>
+            </VBox>
+            <VBox spacing="0" prefWidth="150">
+                <Label text="Floor Number:"/>
+                <IntegerField fx:id="floorField"/>
+            </VBox>
 
             <Separator />
 
-            <Label text="Room Dimensions" styleClass="card-title"/>
+            <Label text="Room Dimensions">
+                <font>
+                    <Font size="15" />
+                </font>
+            </Label>
 
             <HBox spacing="10">
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <VBox spacing="0" HBox.hgrow="ALWAYS">
                     <Label text="Length (meters):"/>
                     <TextField fx:id="lengthField" promptText="e.g., 5.5"/>
                 </VBox>
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <VBox spacing="0" HBox.hgrow="ALWAYS">
                     <Label text="Width (meters):"/>
                     <TextField fx:id="widthField" promptText="e.g., 4.0"/>
                 </VBox>

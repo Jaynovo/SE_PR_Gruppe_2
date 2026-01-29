@@ -121,6 +121,13 @@
     -fx-border-width: 1;
 }
 
+.field-label {
+    -fx-text-fill: -fx-text;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-padding: 0 0 4 0;
+}
+
 
 /* =========================================================
    6) BUTTONS

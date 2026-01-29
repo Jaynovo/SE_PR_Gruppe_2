@@ -16,13 +16,13 @@
             <ColumnConstraints minWidth="200"/>
         </columnConstraints>
 
-        <Label text="Room:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <Label text="Room:" styleClass="field-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
         <Label fx:id="roomLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-        <Label text="Min Temperature (°C):" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <Label text="Min Temperature (°C):" styleClass="field-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
         <TextField fx:id="minTempField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-        <Label text="Max Temperature (°C):" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <Label text="Max Temperature (°C):" styleClass="field-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <TextField fx:id="maxTempField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
     </GridPane>
 

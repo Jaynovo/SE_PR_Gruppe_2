@@ -12,7 +12,7 @@
            fx:controller="at.jku.se.gruppe2.presentation.controller.auth.RegistrationController">
 
     <VBox alignment="CENTER"
-          spacing="15"
+          spacing="10"
           styleClass="card">
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
@@ -24,25 +24,51 @@
             </font>
         </Label>
 
-        <TextField fx:id="firstNameField" promptText="First Name:"/>
-        <TextField fx:id="lastNameField" promptText="Last Name:"/>
-
         <HBox spacing="10">
-            <TextField fx:id="streetNameField" promptText="Street Name:" HBox.hgrow="ALWAYS"/>
-            <IntegerField fx:id="streetNumberField" promptText="Number:" prefWidth="100"/>
+            <VBox spacing="0" HBox.hgrow="ALWAYS">
+                <Label text="First Name:"/>
+                <TextField fx:id="firstNameField" promptText="First Name:"/>
+            </VBox>
+            <VBox spacing="0" HBox.hgrow="ALWAYS">
+                <Label text="Last Name:"/>
+                <TextField fx:id="lastNameField" promptText="Last Name:"/>
+            </VBox>
         </HBox>
 
-        <HBox spacing="10">
-            <IntegerField fx:id="postalCodeField" promptText="PostalCode:" prefWidth="150"/>
-            <TextField fx:id="cityField" promptText="City:" HBox.hgrow="ALWAYS"/>
-        </HBox>
+        <VBox spacing="0">
+            <Label text="Address:"/>
+            <HBox spacing="10">
+                <TextField fx:id="streetNameField" promptText="Street Name:" HBox.hgrow="ALWAYS"/>
+                <IntegerField fx:id="streetNumberField" promptText="Number:" prefWidth="100"/>
+            </HBox>
+        </VBox>
 
-        <ComboBox fx:id="countryBox" promptText="Choose Country:" prefWidth="Infinity">
-        </ComboBox>
+        <VBox spacing="0">
+            <HBox spacing="10">
+                <IntegerField fx:id="postalCodeField" promptText="PostalCode:" prefWidth="150"/>
+                <TextField fx:id="cityField" promptText="City:" HBox.hgrow="ALWAYS"/>
+            </HBox>
+        </VBox>
 
-        <TextField fx:id="emailField" promptText="E-Mail:"/>
-        <PasswordField fx:id="passwordField" promptText="Password:"/>
-        <PasswordField fx:id="confirmPasswordField" promptText="Confirm Password:"/>
+        <VBox spacing="0">
+            <Label text="Country:"/>
+            <ComboBox fx:id="countryBox" promptText="Choose Country:" prefWidth="Infinity"/>
+        </VBox>
+
+        <VBox spacing="0">
+            <Label text="E-Mail:"/>
+            <TextField fx:id="emailField" promptText="E-Mail:"/>
+        </VBox>
+
+        <VBox spacing="0">
+            <Label text="Password:"/>
+            <PasswordField fx:id="passwordField" promptText="Password:"/>
+        </VBox>
+
+        <VBox spacing="0">
+            <Label text="Confirm Password:"/>
+            <PasswordField fx:id="confirmPasswordField" promptText="Confirm Password:"/>
+        </VBox>
 
         <HBox alignment="TOP_CENTER"
               spacing="10">

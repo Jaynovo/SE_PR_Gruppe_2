@@ -66,12 +66,6 @@ public class ProfileController {
             MainApp.setRoot(Page.LOGIN.fxml());
             return;
         }
-        Platform.runLater(() -> {
-            Stage stage = (Stage) avatarImage.getScene().getWindow();
-            stage.setWidth(800);
-            stage.setHeight(820);
-            stage.centerOnScreen();
-        });
 
         UIUtils.setupCountryComboBox(countryComboBox);
 

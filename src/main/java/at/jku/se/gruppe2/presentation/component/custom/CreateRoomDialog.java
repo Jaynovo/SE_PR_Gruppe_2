@@ -137,9 +137,11 @@ public class CreateRoomDialog extends Dialog<Void> {
     private Double parseOptionalPositive(String value) {
         if (value == null || value.isBlank()) return null;
 
+        String normalized = value.trim().replace(',', '.');
+
         double d;
         try {
-            d = Double.parseDouble(value);
+            d = Double.parseDouble(normalized);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Dimensions must be numbers");
         }
