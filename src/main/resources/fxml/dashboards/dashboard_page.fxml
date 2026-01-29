@@ -73,13 +73,17 @@
                                 <Label fx:id="homeFloors" text="--"/>
                             </HBox>
                         </VBox>
-                        <VBox spacing="8">
-                            <Button fx:id="editHomeButton" text="Change Home Details" onAction="#changeHomeDetails"/>
-                            <Button fx:id="shareHomeButton" text="Share Home" onAction="#shareHome"/>
-                            <Button fx:id="manageHomeUsers" text="Manage Home Users" onAction="#manageHomeUsers"/>
-                            <Button fx:id="deleteHomeButton" text="Delete Home" onAction="#deleteHomeButtonClicked"
-                                    styleClass="danger"/>
-                        </VBox>
+                        <HBox spacing="15">
+                            <VBox spacing="8">
+                                <Button fx:id="shareHomeButton" text="Share Home" onAction="#shareHome" maxWidth="Infinity"/>
+                                <Button fx:id="manageHomeUsers" text="Manage Home Users" onAction="#manageHomeUsers" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="8">
+                                <Button fx:id="editHomeButton" text="Change Home Details" onAction="#changeHomeDetails" maxWidth="Infinity"/>
+                                <Button fx:id="deleteHomeButton" text="Delete Home" onAction="#deleteHomeButtonClicked"
+                                        styleClass="danger" maxWidth="Infinity"/>
+                            </VBox>
+                        </HBox>
                     </HBox>
                 </top>
 
