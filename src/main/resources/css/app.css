@@ -121,6 +121,13 @@
     -fx-border-width: 1;
 }
 
+.field-label {
+    -fx-text-fill: -fx-text;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-padding: 0 0 4 0;
+}
+
 
 /* =========================================================
    6) BUTTONS
@@ -152,6 +159,25 @@
     -fx-background-color: transparent;
     -fx-font-size: 14px;
 }
+
+.button.share {
+
+    -fx-background-color: #24a230;
+    -fx-text-fill: white;
+}
+
+.button.share:hover {
+    -fx-background-color: #45d654;
+}
+
+.button.manage {
+    -fx-background-color: #8b5cf6; /* purple */
+}
+
+.button.manage:hover {
+    -fx-background-color: #a78bfa;
+}
+
 
 
 /* =========================================================

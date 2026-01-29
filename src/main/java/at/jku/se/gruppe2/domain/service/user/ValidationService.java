@@ -194,8 +194,10 @@ public class ValidationService {
             return result; // OK → optional
         }
 
+        String normalized = lengthText.trim().replace(',', '.');
+
         try {
-            double length = Double.parseDouble(lengthText.trim());
+            double length = Double.parseDouble(normalized);
             if (length <= 0) {
                 result.addError("Room length must be greater than 0.");
             } else if (length > 100) {
@@ -218,8 +220,10 @@ public class ValidationService {
             return result; // OK → optional
         }
 
+        String normalized = widthText.trim().replace(',', '.');
+
         try {
-            double width = Double.parseDouble(widthText.trim());
+            double width = Double.parseDouble(normalized);
             if (width <= 0) {
                 result.addError("Room width must be greater than 0.");
             } else if (width > 100) {

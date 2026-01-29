@@ -14,32 +14,32 @@ public class Address {
 
     public Address() {}
 
-    public Address(String street, String houseNumber, String city, String postalCode, String country, double longitude, double latitude) {
+    public Address(String street, String houseNumber, String postalCode, String city, String country, double longitude, double latitude) {
         this.street = street;
         this.houseNumber = houseNumber;
-        this.city = city;
-        this.postalCode = postalCode;
+        this.city = postalCode;
+        this.postalCode = city;
         this.country = country;
         this.longitude = longitude;
         this.latitude = latitude;
     }
 
-    public Address(int id, String street , String houseNumber, String city, String postalCode, double longitude, String country, double latitude) {
+    public Address(int id, String street, String houseNumber, String postalCode, String city, String country, double longitude, double latitude) {
         this.id = id;
         this.street = street;
         this.houseNumber = houseNumber;
-        this.city = city;
-        this.postalCode = postalCode;
-        this.longitude = longitude;
+        this.city = postalCode;
+        this.postalCode = city;
         this.country = country;
+        this.longitude = longitude;
         this.latitude = latitude;
     }
 
     public Address(String street, String houseNumber, String postalCode, String city, String country) {
         this.street = street;
         this.houseNumber = houseNumber;
-        this.postalCode = postalCode;
-        this.city = city;
+        this.city = postalCode;
+        this.postalCode = city;
         this.country = country;
         this.longitude = Double.NaN;
         this.latitude = Double.NaN;

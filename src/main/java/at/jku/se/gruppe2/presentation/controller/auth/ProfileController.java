@@ -4,6 +4,7 @@ import app.MainApp;
 import at.jku.se.gruppe2.domain.model.home.Address;
 import at.jku.se.gruppe2.application.navigation.NavigationService;
 import at.jku.se.gruppe2.domain.model.user.User;
+import at.jku.se.gruppe2.domain.service.user.ValidationService;
 import at.jku.se.gruppe2.infrastructure.persistence.repository.AddressRepository;
 import at.jku.se.gruppe2.infrastructure.persistence.repository.UserRepository;
 import at.jku.se.gruppe2.infrastructure.security.PasswordUtils;
@@ -33,24 +34,16 @@ import java.io.File;
 @SuppressWarnings("CallToPrintStackTrace")
 public class ProfileController {
 
-    @FXML
-    private TextField firstNameField;
-    @FXML
-    private TextField lastNameField;
-    @FXML
-    private TextField emailField;
-    @FXML
-    private TextField streetField;
-    @FXML
-    private TextField streetNumberField;
-    @FXML
-    private TextField cityField;
-    @FXML
-    private TextField postalCodeField;
-    @FXML
-    private ComboBox<String> countryComboBox;
-    @FXML
-    private ImageView avatarImage;
+    @FXML    private TextField firstNameField;
+    @FXML    private TextField lastNameField;
+    @FXML    private TextField emailField;
+    @FXML    private TextField streetField;
+    @FXML    private TextField streetNumberField;
+    @FXML    private TextField cityField;
+    @FXML    private TextField postalCodeField;
+    @FXML    private ComboBox<String> countryComboBox;
+    @FXML    private ImageView avatarImage;
+    @FXML    private Button unlinkAddressButton;
 
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
@@ -66,12 +59,6 @@ public class ProfileController {
             MainApp.setRoot(Page.LOGIN.fxml());
             return;
         }
-        Platform.runLater(() -> {
-            Stage stage = (Stage) avatarImage.getScene().getWindow();
-            stage.setWidth(800);
-            stage.setHeight(820);
-            stage.centerOnScreen();
-        });
 
         UIUtils.setupCountryComboBox(countryComboBox);
 
@@ -172,7 +159,7 @@ public class ProfileController {
     private void onChangeAvatar() {
         User current = Session.getCurrentUser();
         if (current == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "No user in session");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
             return;
         }
 
@@ -186,14 +173,14 @@ public class ProfileController {
         if (file == null) return;
 
         if (file.length() > 5 * 1024 * 1024) {
-            showAlert(Alert.AlertType.ERROR, "Zu groß", "Bild darf max. 5MB groß sein.");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Bild darf max. 5MB groß sein.", ButtonType.OK).showAndWait();
             return;
         }
 
         try {
             Image img = new Image(file.toURI().toString(), 256, 256, true, true);
             if (img.isError()) {
-                showAlert(Alert.AlertType.ERROR, "Fehler", "Bild konnte nicht geladen werden.");
+                UIUtils.styledAlert(Alert.AlertType.ERROR, "Bild konnte nicht geladen werden.", ButtonType.OK).showAndWait();
                 return;
             }
 
@@ -202,11 +189,11 @@ public class ProfileController {
             userRepository.updateAvatarPath(current, path);
 
             refreshAvatarView();
-            showAlert(Alert.AlertType.INFORMATION, "Erfolg", "Profilbild aktualisiert.");
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Profilbild aktualisiert.", ButtonType.OK).showAndWait();
 
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Profilbild konnte nicht gespeichert werden.");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Profilbild konnte nicht gespeichert werden.", ButtonType.OK).showAndWait();
         }
     }
 
@@ -214,14 +201,57 @@ public class ProfileController {
     private void onRemoveAvatar() {
         User current = Session.getCurrentUser();
         if (current == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "No user in session");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
             return;
         }
         current.setAvatarPath(null);
         userRepository.updateAvatarPath(current, null);
 
         refreshAvatarView();
-        showAlert(Alert.AlertType.INFORMATION, "Erfolg", "Profilbild entfernt.");
+        UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Profilbild entfernt.", ButtonType.OK).showAndWait();
+    }
+
+    @FXML
+    private void onUnlinkAddress() {
+        User current = Session.getCurrentUser();
+        if (current == null) {
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
+            return;
+        }
+
+        // Check if user has an address to unlink
+        if (current.getAddress() == null) {
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "You don't have a linked address.", ButtonType.OK).showAndWait();
+            return;
+        }
+
+        // Confirm with user
+        Alert confirm = UIUtils.styledConfirm("Are you sure you want to unlink your address? This will not delete the address, just remove the link from your profile.");
+        Optional<ButtonType> result = confirm.showAndWait();
+
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
+
+        try {
+            // Unlink address from user
+            current.setAddress(null);
+            userRepository.updateAddress(current, null);
+
+            // Clear address fields in UI
+            streetField.clear();
+            streetNumberField.clear();
+            cityField.clear();
+            postalCodeField.clear();
+            countryComboBox.getSelectionModel().clearSelection();
+            countryComboBox.setValue(null);
+
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Address successfully unlinked from your profile.", ButtonType.OK).showAndWait();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Could not unlink address. Please try again.", ButtonType.OK).showAndWait();
+        }
     }
 
     //Helper Methode
@@ -240,56 +270,124 @@ public class ProfileController {
     private void onSave() {
         User current = Session.getCurrentUser();
         if (current == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "No user in session");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
             return;
         }
+
+        // Clear any previous error styling
+        clearFieldErrors();
+
         String firstName = firstNameField.getText();
         String lastName = lastNameField.getText();
-
-        if (firstName.isEmpty() || lastName.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Invalid data", "First and last name must not be empty.");
-            return;
-        }
-
         String street = streetField.getText();
         String streetNumber = streetNumberField.getText();
         String city = cityField.getText();
         String postalCode = postalCodeField.getText();
         String country = countryComboBox.getValue();
 
+        boolean hasErrors = false;
+
+        // Validate first name
+        if (firstName == null || firstName.trim().isEmpty()) {
+            setFieldError(firstNameField, "First name is required.");
+            hasErrors = true;
+        } else if (firstName.trim().length() < 2) {
+            setFieldError(firstNameField, "First name must be at least 2 characters long.");
+            hasErrors = true;
+        } else if (firstName.trim().length() > 100) {
+            setFieldError(firstNameField, "First name must not exceed 100 characters.");
+            hasErrors = true;
+        }
+
+        // Validate last name
+        if (lastName == null || lastName.trim().isEmpty()) {
+            setFieldError(lastNameField, "Last name is required.");
+            hasErrors = true;
+        } else if (lastName.trim().length() < 2) {
+            setFieldError(lastNameField, "Last name must be at least 2 characters long.");
+            hasErrors = true;
+        } else if (lastName.trim().length() > 100) {
+            setFieldError(lastNameField, "Last name must not exceed 100 characters.");
+            hasErrors = true;
+        }
+
+        // Validate address fields (only if any are filled - address is optional)
+        boolean hasAnyAddressField = (street != null && !street.trim().isEmpty())
+                || (streetNumber != null && !streetNumber.trim().isEmpty())
+                || (city != null && !city.trim().isEmpty())
+                || (postalCode != null && !postalCode.trim().isEmpty())
+                || (country != null && !country.trim().isEmpty());
+
+        if (hasAnyAddressField) {
+            // If any address field is filled, validate all required address fields
+            ValidationService.ValidationResult streetResult = ValidationService.validateStreet(street);
+            if (!streetResult.isValid()) {
+                setFieldError(streetField, streetResult.getErrorMessage());
+                hasErrors = true;
+            }
+
+            ValidationService.ValidationResult houseResult = ValidationService.validateHouseNumber(streetNumber);
+            if (!houseResult.isValid()) {
+                setFieldError(streetNumberField, houseResult.getErrorMessage());
+                hasErrors = true;
+            }
+
+            ValidationService.ValidationResult cityResult = ValidationService.validateCity(city);
+            if (!cityResult.isValid()) {
+                setFieldError(cityField, cityResult.getErrorMessage());
+                hasErrors = true;
+            }
+
+            ValidationService.ValidationResult postalResult = ValidationService.validatePostalCode(postalCode);
+            if (!postalResult.isValid()) {
+                setFieldError(postalCodeField, postalResult.getErrorMessage());
+                hasErrors = true;
+            }
+
+            ValidationService.ValidationResult countryResult = ValidationService.validateCountry(country);
+            if (!countryResult.isValid()) {
+                setFieldError(countryComboBox, countryResult.getErrorMessage());
+                hasErrors = true;
+            }
+        }
+
+        if (hasErrors) {
+            return;
+        }
+
         try {
             //User aktualisieren
-            current.setFirstName(firstName);
-            current.setLastName(lastName);
+            current.setFirstName(firstName.trim());
+            current.setLastName(lastName.trim());
 
             Address address = current.getAddress();
 
-            if (address != null && address.getId() > 0) {
-                // Update existing address
-                address.setStreet(street);
-                address.setHouseNumber(streetNumber);
-                address.setCity(city);
-                address.setPostalCode(postalCode);
-                address.setCountry(country);
-                addressRepository.updateAddressInDatabase(address);
-            } else {
-                // Create new address
-                address = new  Address(street, streetNumber, city, postalCode, country);
-                addressRepository.createAddressInDatabase(address);
-
-                current.setAddress(address);
+            if (hasAnyAddressField) {
+                if (address != null && address.getId() > 0) {
+                    // Update existing address
+                    address.setStreet(street.trim());
+                    address.setHouseNumber(streetNumber.trim());
+                    address.setPostalCode(postalCode.trim());
+                    address.setCity(city.trim());
+                    address.setCountry(country);
+                    addressRepository.updateAddressInDatabase(address);
+                } else {
+                    // Create new address
+                    address = new Address(street.trim(), streetNumber.trim(), postalCode.trim(), city.trim(), country);
+                    addressRepository.createAddressInDatabase(address);
+                    current.setAddress(address);
+                }
+                userRepository.updateAddress(current, address);
             }
 
-            userRepository.updateAddress(current, address);
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Profile has been updated and saved.");
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Profile has been updated and saved.", ButtonType.OK).showAndWait();
 
             goTo();
 
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not save profile");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Could not save profile", ButtonType.OK).showAndWait();
         }
-        navigate.goTo(Page.DASHBOARD.fxml());
     }
 
     @FXML
@@ -302,7 +400,7 @@ public class ProfileController {
 
         User current = Session.getCurrentUser();
         if (current == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "No user in session");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
             return;
         }
 
@@ -342,12 +440,12 @@ public class ProfileController {
         String confirmPw = confirmPassword.getText();
 
         if (oldPw.isEmpty() || newPw.isEmpty() || confirmPw.isEmpty() || !newPw.equals(confirmPw)) {
-            showAlert(Alert.AlertType.ERROR, "Invalid data", "All fields must be filled and new password and new password must match.");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "All fields must be filled and new password and new password must match.", ButtonType.OK).showAndWait();
             return;
         }
         Optional<String> pwOpt = userRepository.findPasswordByUserEmail(current.getEmail());
         if (pwOpt.isEmpty() || !PasswordUtils.verifyPassword(oldPw, pwOpt.get())) {
-            showAlert(Alert.AlertType.ERROR, "Invalid password", "Current password is incorrect.");
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Current password is incorrect.", ButtonType.OK).showAndWait();
             return;
         }
 
@@ -355,15 +453,9 @@ public class ProfileController {
         userRepository.updatePassword(current, hashedPw);
         current.setPassword(hashedPw);
 
-        showAlert(Alert.AlertType.CONFIRMATION, "Success", "Password changed!");
+        UIUtils.styledAlert(Alert.AlertType.CONFIRMATION, "Password changed!", ButtonType.OK).showAndWait();
 
         //TODO: Passwort checken und speichern
-    }
-
-    private void showAlert(Alert.AlertType type, String title, String message) {
-        Alert alert = new Alert(type, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.showAndWait();
     }
 
     private void goTo() {
@@ -379,5 +471,50 @@ public class ProfileController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Helper method to check if a string is null or empty
+     */
+    private boolean isNullOrEmpty(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+
+    /**
+     * Sets an error style on a control and shows a tooltip with the error message
+     */
+    private void setFieldError(Control control, String errorMessage) {
+        control.setStyle("-fx-border-color: #ef4444; -fx-border-width: 2px;");
+
+        Tooltip tooltip = new Tooltip(errorMessage);
+        tooltip.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 12px;");
+        Tooltip.install(control, tooltip);
+
+        // Show tooltip immediately
+        tooltip.show(control,
+                control.localToScreen(control.getBoundsInLocal()).getMinX(),
+                control.localToScreen(control.getBoundsInLocal()).getMaxY() + 5);
+    }
+
+    /**
+     * Clears error styling from all input fields
+     */
+    private void clearFieldErrors() {
+        firstNameField.setStyle("");
+        lastNameField.setStyle("");
+        streetField.setStyle("");
+        streetNumberField.setStyle("");
+        cityField.setStyle("");
+        postalCodeField.setStyle("");
+        countryComboBox.setStyle("");
+
+        // Remove all tooltips
+        Tooltip.uninstall(firstNameField, firstNameField.getTooltip());
+        Tooltip.uninstall(lastNameField, lastNameField.getTooltip());
+        Tooltip.uninstall(streetField, streetField.getTooltip());
+        Tooltip.uninstall(streetNumberField, streetNumberField.getTooltip());
+        Tooltip.uninstall(cityField, cityField.getTooltip());
+        Tooltip.uninstall(postalCodeField, postalCodeField.getTooltip());
+        Tooltip.uninstall(countryComboBox, countryComboBox.getTooltip());
     }
 }

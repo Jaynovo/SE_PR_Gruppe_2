@@ -59,6 +59,7 @@ public class RoomDashboardController {
             actuatorService,
             this::handleDeleteDevice,
             this::handleConfigureActuator,
+            this::handleEditDevice,
             this::renderDevices
     );
 
@@ -133,6 +134,57 @@ public class RoomDashboardController {
         for (Device device : devices) {
             cardsFlow.getChildren().add(deviceCardFactory.createDeviceCard(device, canDelete, canConfigure));
         }
+    }
+
+    /**
+     * Handles editing a device's name
+     */
+    private void handleEditDevice(Device device) {
+        // CHECK permission
+        Room room = Session.getSelectedRoom();
+        if (room != null && room.getHome() != null) {
+            if (!authService.canEditRoomDetails(room.getHome().getId())) {
+                dialog.error("Permission Denied",
+                        "Only residents and owners can edit device names.");
+                return;
+            }
+        }
+
+        // Create styled dialog for editing device name
+        TextInputDialog nameDialog = UIUtils.styledTextInputDialog("Device name:");
+        nameDialog.setTitle("Edit Device: " + device.getLabel());
+        nameDialog.getEditor().setText(device.getLabel());
+
+        nameDialog.showAndWait().ifPresent(newName -> {
+            String trimmedName = newName.trim();
+
+            // Validate name is not empty
+            if (trimmedName.isEmpty()) {
+                dialog.error("Validation Error", "Device name cannot be empty.");
+                return;
+            }
+
+            // Validate name length (reasonable limit)
+            if (trimmedName.length() > 100) {
+                dialog.error("Validation Error", "Device name cannot exceed 100 characters.");
+                return;
+            }
+
+            // Update device name
+            device.setLabel(trimmedName);
+
+            // Save to database
+            int updated = deviceRepository.updateDevice(device);
+
+            if (updated > 0) {
+                dialog.info("Success", "Device name updated successfully!");
+                // Reload devices to ensure consistency
+                devices = roomDevicesService.loadDevicesAndRegisterSensors(room);
+                renderDevices();
+            } else {
+                dialog.error("Error", "Failed to update device name. Please try again.");
+            }
+        });
     }
 
     private void handleConfigureActuator(Device actuatorDevice) {
