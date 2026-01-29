@@ -21,6 +21,7 @@ public class DeviceCardFactory {
     private final ActuatorConfigService actuatorCfg;
     private final java.util.function.Consumer<Device> onDelete;
     private final java.util.function.Consumer<Device> onConfigure;
+    private final java.util.function.Consumer<Device> onEdit;
     private final Runnable requestRender;
 
     // Cat sensor image tracking
@@ -33,11 +34,13 @@ public class DeviceCardFactory {
             ActuatorService actuatorService,
             java.util.function.Consumer<Device> onDelete,
             java.util.function.Consumer<Device> onConfigure,
+            java.util.function.Consumer<Device> onEdit,
             Runnable requestRender) {
         this.actuatorService = actuatorService;
         this.actuatorCfg = actuatorConfigService;
         this.onDelete = onDelete;
         this.onConfigure = onConfigure;
+        this.onEdit = onEdit;
         this.requestRender = requestRender;
     }
 
@@ -54,13 +57,13 @@ public class DeviceCardFactory {
         deviceCard.setPrefWidth(260);
         deviceCard.setPadding(new Insets(10));
 
-        Label title = new Label(device.getLabel());
-        title.getStyleClass().add("card-title");
+        // Create top bar with title and edit button
+        HBox topBar = createTopBar(device);
 
         Label type = new Label("Type: " + device.getTypeLabel());
         type.getStyleClass().add("muted");
 
-        deviceCard.getChildren().addAll(title, type);
+        deviceCard.getChildren().addAll(topBar, type);
 
         // Handle sensors
         if (device instanceof Sensor s) {
@@ -82,6 +85,30 @@ public class DeviceCardFactory {
         deviceCard.getChildren().add(actions);
 
         return deviceCard;
+    }
+
+    /**
+     * Creates the top bar with device name and edit button
+     */
+    private HBox createTopBar(Device device) {
+        Label title = new Label(device.getLabel());
+        title.getStyleClass().add("card-title");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox topBar = new HBox(title, spacer);
+
+        // Add edit button
+        if (onEdit != null) {
+            Button editButton = new Button("✏");
+            editButton.getStyleClass().addAll("icon-button", "edit-button");
+            editButton.setOnAction(e -> onEdit.accept(device));
+            editButton.setStyle("-fx-font-size: 14px; -fx-padding: 2 6 2 6; -fx-cursor: hand;");
+            topBar.getChildren().add(editButton);
+        }
+
+        return topBar;
     }
 
     /**

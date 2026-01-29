@@ -34,24 +34,16 @@ import java.io.File;
 @SuppressWarnings("CallToPrintStackTrace")
 public class ProfileController {
 
-    @FXML
-    private TextField firstNameField;
-    @FXML
-    private TextField lastNameField;
-    @FXML
-    private TextField emailField;
-    @FXML
-    private TextField streetField;
-    @FXML
-    private TextField streetNumberField;
-    @FXML
-    private TextField cityField;
-    @FXML
-    private TextField postalCodeField;
-    @FXML
-    private ComboBox<String> countryComboBox;
-    @FXML
-    private ImageView avatarImage;
+    @FXML    private TextField firstNameField;
+    @FXML    private TextField lastNameField;
+    @FXML    private TextField emailField;
+    @FXML    private TextField streetField;
+    @FXML    private TextField streetNumberField;
+    @FXML    private TextField cityField;
+    @FXML    private TextField postalCodeField;
+    @FXML    private ComboBox<String> countryComboBox;
+    @FXML    private ImageView avatarImage;
+    @FXML    private Button unlinkAddressButton;
 
     private final UserRepository userRepository = new UserRepository();
     private final AddressRepository addressRepository = new AddressRepository();
@@ -217,6 +209,49 @@ public class ProfileController {
 
         refreshAvatarView();
         UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Profilbild entfernt.", ButtonType.OK).showAndWait();
+    }
+
+    @FXML
+    private void onUnlinkAddress() {
+        User current = Session.getCurrentUser();
+        if (current == null) {
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "No user in session", ButtonType.OK).showAndWait();
+            return;
+        }
+
+        // Check if user has an address to unlink
+        if (current.getAddress() == null) {
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "You don't have a linked address.", ButtonType.OK).showAndWait();
+            return;
+        }
+
+        // Confirm with user
+        Alert confirm = UIUtils.styledConfirm("Are you sure you want to unlink your address? This will not delete the address, just remove the link from your profile.");
+        Optional<ButtonType> result = confirm.showAndWait();
+
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
+
+        try {
+            // Unlink address from user
+            current.setAddress(null);
+            userRepository.updateAddress(current, null);
+
+            // Clear address fields in UI
+            streetField.clear();
+            streetNumberField.clear();
+            cityField.clear();
+            postalCodeField.clear();
+            countryComboBox.getSelectionModel().clearSelection();
+            countryComboBox.setValue(null);
+
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Address successfully unlinked from your profile.", ButtonType.OK).showAndWait();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            UIUtils.styledAlert(Alert.AlertType.ERROR, "Could not unlink address. Please try again.", ButtonType.OK).showAndWait();
+        }
     }
 
     //Helper Methode

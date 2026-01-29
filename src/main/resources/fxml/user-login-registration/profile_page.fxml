@@ -69,7 +69,14 @@
                     </VBox>
 
                     <VBox spacing="0">
-                        <Label text="Address:"/>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="Address:"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="unlinkAddressButton"
+                                    text="Unlink Address"
+                                    onAction="#onUnlinkAddress"
+                                    styleClass="secondary-button"/>
+                        </HBox>
                         <HBox spacing="10">
                             <TextField fx:id="streetField" promptText="Street" HBox.hgrow="ALWAYS"/>
                             <TextField fx:id="streetNumberField" promptText="Nr." prefWidth="110"/>

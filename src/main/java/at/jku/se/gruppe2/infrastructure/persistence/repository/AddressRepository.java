@@ -30,8 +30,8 @@ public class AddressRepository {
                 ps -> {
                     ps.setString(1, address.getStreet());
                     ps.setString(2, address.getHouseNumber());
-                    ps.setString(3, address.getCity());
-                    ps.setString(4, address.getPostalCode());
+                    ps.setString(3, address.getPostalCode());  // FIXED: Was getCity()
+                    ps.setString(4, address.getCity());        // FIXED: Was getPostalCode()
                     ps.setString(5, address.getCountry());
                     ps.setObject(6, address.getLongitude(), Types.DOUBLE);
                     ps.setObject(7, address.getLatitude(), Types.DOUBLE);
@@ -56,8 +56,8 @@ public class AddressRepository {
                 ps -> {
                     ps.setString(1, address.getStreet());
                     ps.setString(2, address.getHouseNumber());
-                    ps.setString(3, address.getCity());
-                    ps.setString(4, address.getPostalCode());
+                    ps.setString(3, address.getPostalCode());  // FIXED: Was getCity()
+                    ps.setString(4, address.getCity());        // FIXED: Was getPostalCode()
                     ps.setString(5, address.getCountry());
                     ps.setObject(6, address.getLongitude(), Types.DOUBLE);
                     ps.setObject(7, address.getLatitude(), Types.DOUBLE);
