@@ -23,16 +23,18 @@ public class SensorSimulationService {
             java.util.concurrent.Executors.newSingleThreadExecutor();
 
     private static final List<String> TEST_IMAGES = List.of(
+            //waschbär
+            "https://i.imgur.com/t6gGR4V.jpg",
+
             // cats
             "https://i.imgur.com/BxKNfWu.jpeg",
             "https://i.imgur.com/4XynTW7.jpeg",
-            "https://i.imgur.com/raSXtQ1.jpeg",
-            "https://i.imgur.com/8TRJB5e.jpeg",
 
             // no cats
+            "https://i.imgur.com/IuqtS85.jpeg",
             "https://i.imgur.com/tgfa41l.jpeg",
-            "https://i.imgur.com/dm871pH.jpeg",
-            "https://i.imgur.com/IuqtS85.jpeg"
+            "https://i.imgur.com/dm871pH.jpeg"
+
     );
     // pro Raum: welcher Index ist als nächstes dran?
     private final Map<Integer, Integer> catImageIndexByRoom = new ConcurrentHashMap<>();
