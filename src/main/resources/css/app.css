@@ -160,6 +160,25 @@
     -fx-font-size: 14px;
 }
 
+.button.share {
+
+    -fx-background-color: #24a230;
+    -fx-text-fill: white;
+}
+
+.button.share:hover {
+    -fx-background-color: #45d654;
+}
+
+.button.manage {
+    -fx-background-color: #8b5cf6; /* purple */
+}
+
+.button.manage:hover {
+    -fx-background-color: #a78bfa;
+}
+
+
 
 /* =========================================================
    7) BADGES
