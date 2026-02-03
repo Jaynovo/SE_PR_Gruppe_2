@@ -142,6 +142,18 @@ CREATE TABLE rule (
 CREATE INDEX idx_rule_home_enabled_priority
     ON rule(home_id, enabled, priority DESC, updated_at DESC);
 
+CREATE INDEX IF NOT EXISTS idx_sensor_reading_sensor_time
+    ON sensor_reading(sensor_id, time);
+
+CREATE INDEX IF NOT EXISTS idx_actuator_state_actuator_time
+    ON actuator_state(actuator_id, time);
+
+CREATE INDEX IF NOT EXISTS idx_device_room
+    ON device(room_id);
+
+CREATE INDEX IF NOT EXISTS idx_room_home
+    ON room(home_info);
+
 -- ADD Permanent Device below --
 INSERT INTO device_type (category, label, unit)
 VALUES  ('SENSOR',   'Thermometer',        '°C'),
