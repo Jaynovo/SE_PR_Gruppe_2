@@ -15,7 +15,6 @@ import java.util.Optional;
 
 public class SensorReadingRepository {
 
-    // This is the PK from the table
     public Optional<SensorReading> findByDeviceId(int id) {
         String request = "SELECT * FROM sensor_reading WHERE id = ?";
         return JdbcTemplate.queryForObject(
@@ -124,29 +123,6 @@ public class SensorReadingRepository {
                 request,
                 ps -> ps.setTimestamp(1, Timestamp.from(timestamp))
         );
-    }
-
-    // Use this in the Dashboard or Room Overview
-    public List<SensorReading> findLatestReadingsByRoomId(int room_id) {
-        String request = """
-                SELECT sr.*
-                FROM sensor_reading sr
-                JOIN sensor s ON s.device_id = sr.sensor_id
-                JOIN device d ON d.device_id = s.device_id
-                WHERE d.room_id = ?
-                AND sr.time = (
-                    SELECT MAX(sr2.time) 
-                    FROM sensor_reading sr2
-                    WHERE sr2.sensor_id = sr.sensor_id
-                    )
-                ORDER BY sr.sensor_id
-        """;
-
-        return JdbcTemplate.queryForMultipleObjects(
-                request,
-                ps -> ps.setInt(1, room_id),
-                this::mapSensorReading
-        ).orElse(Collections.emptyList());
     }
 
     private SensorReading mapSensorReading(ResultSet rs) throws SQLException {
