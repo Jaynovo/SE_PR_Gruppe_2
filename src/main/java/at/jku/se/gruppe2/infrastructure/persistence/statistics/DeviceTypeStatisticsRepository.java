@@ -35,7 +35,7 @@ public class DeviceTypeStatisticsRepository {
     private List<DeviceType> findByCategory(Device.DeviceCategory category) {
         String sql = """
             SELECT * FROM device_type
-            WHERE category = ?
+            WHERE category = ?::device_category
             ORDER BY label
         """;
 

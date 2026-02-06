@@ -99,6 +99,11 @@
                                         onAction="#deleteHomeButtonClicked"
                                         styleClass="danger"
                                         maxWidth="Infinity"/>
+                                <Button fx:id="statisticsDashboard"
+                                        text="Stats!"
+                                        onAction="#openStatisticsDashboard"
+                                        styleClass="danger"
+                                        maxWidth="Infinity"/>
                             </VBox>
                         </HBox>
 
@@ -130,7 +135,6 @@
                     </VBox>
                 </center>
             </BorderPane>
-
         </VBox>
     </center>
 

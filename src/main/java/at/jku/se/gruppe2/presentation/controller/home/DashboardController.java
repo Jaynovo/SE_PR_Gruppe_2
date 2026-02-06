@@ -473,4 +473,5 @@ public class DashboardController extends BaseController implements Initializable
         ManageUsersDialog manageUsersDialogDialog = new ManageUsersDialog(home);
         manageUsersDialogDialog.showAndWait();
     }
+
 }
