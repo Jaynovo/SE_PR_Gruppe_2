@@ -1,8 +1,6 @@
 package at.jku.se.gruppe2.domain.service.device;
 
-import at.jku.se.gruppe2.domain.model.device.config.AlarmConfig;
-import at.jku.se.gruppe2.domain.model.device.config.CatFeederConfig;
-import at.jku.se.gruppe2.domain.model.device.config.VentilationConfig;
+import at.jku.se.gruppe2.domain.model.device.config.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -104,6 +102,26 @@ public class ActuatorConfigService {
         int next = current - 1;
         setCatFeederCooldown(actuatorId, next);
         return next;
+    }
+
+    // HEATING
+    private final Map<Integer, HeatingConfig> heatingCfgByActuatorId = new ConcurrentHashMap<>();
+
+    public HeatingConfig getOrCreateHeatingConfig(int actuatorId) {
+        return heatingCfgByActuatorId.computeIfAbsent(actuatorId, id -> new HeatingConfig());
+    }
+
+    public void saveHeatingConfig(int actuatorId, HeatingConfig cfg) {
+        heatingCfgByActuatorId.put(actuatorId, cfg);
+    }
+    // BLINDS
+    private final Map<Integer, BlindsConfig> blindsCfgByActuatorId = new ConcurrentHashMap<>();
+
+    public BlindsConfig getOrCreateBlindsConfig(int actuatorId) {
+        return blindsCfgByActuatorId.computeIfAbsent(actuatorId, id -> new BlindsConfig());
+    }
+    public void saveBlindsConfig(int actuatorId, BlindsConfig cfg) {
+        blindsCfgByActuatorId.put(actuatorId, cfg);
     }
 
     public void resetCatFeederCooldown(int actuatorId) {

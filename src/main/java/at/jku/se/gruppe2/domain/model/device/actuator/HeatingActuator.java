@@ -1,19 +1,35 @@
 package at.jku.se.gruppe2.domain.model.device.actuator;
 
-public class HeatingActuator extends Actuator{
+import at.jku.se.gruppe2.domain.model.device.Device;
 
-    public static final String STATE_ON = "ON";
-    public static final String STATE_OFF = "OFF";
+public class HeatingActuator extends Device {
+    private int percent = 0; // 0..100
 
-    public void turnOn() {
-        setState(STATE_ON);
+    public int getPercent() {
+        return percent;
     }
 
-    public void turnOff() {
-        setState(STATE_OFF);
+    public void setPercent(int percent) {
+        this.percent = Math.max(0, Math.min(100, percent));
     }
 
     public boolean isOn() {
-        return STATE_ON.equals(getState());
+        return percent > 0;
+    }
+
+    // optional
+    public void turnOn() { setPercent(100); }
+    public void turnOff() { setPercent(0); }
+
+    public String getState() {
+        return String.valueOf(percent);
+    }
+
+    public void applyState(String state) {
+        try {
+            setPercent(Integer.parseInt(state));
+        } catch (Exception ignored) {
+            setPercent(0);
+        }
     }
 }

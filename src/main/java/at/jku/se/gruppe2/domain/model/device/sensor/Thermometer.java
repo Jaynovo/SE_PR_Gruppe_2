@@ -38,6 +38,15 @@ public class Thermometer extends Sensor {
             return symbol;
         }
     }
+    public double getValueInSelectedUnit() {
+        double c = getValue(); // intern immer Celsius
+        if (temperatureUnit == TemperatureUnit.CELSIUS) return c;
+        return (c * 9.0 / 5.0) + 32.0;
+    }
+
+    public void setUnit(TemperatureUnit unit) {
+        this.temperatureUnit = unit;
+    }
 }
 
 

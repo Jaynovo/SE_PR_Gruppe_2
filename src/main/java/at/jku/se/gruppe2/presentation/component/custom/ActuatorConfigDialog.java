@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.presentation.component.custom;
 
 import at.jku.se.gruppe2.domain.model.device.Device;
+import at.jku.se.gruppe2.domain.model.device.config.BlindsConfig;
 import at.jku.se.gruppe2.domain.model.device.config.VentilationConfig;
 import at.jku.se.gruppe2.domain.service.device.ActuatorConfigService;
 import at.jku.se.gruppe2.presentation.util.UIUtils;
@@ -25,13 +26,64 @@ public class ActuatorConfigDialog {
             case "AlarmSystem":
                 showAlarmConfig(actuatorDevice);
                 break;
+            case "Blinds":
+                showBlindsConfig(actuatorDevice);
+                break;
             default:
                 UIUtils.styledAlert(Alert.AlertType.INFORMATION, "No configuration available for: " + type, ButtonType.OK).showAndWait();
         }
     }
 
+    private void showBlindsConfig(Device actuatorDevice) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Configure Blinds");
+        dialog.getDialogPane().getStylesheets().add(
+                actuatorCfg.getClass().getResource("/css/app.css").toExternalForm()
+        );
+
+        BlindsConfig cfg = actuatorCfg.getOrCreateBlindsConfig(actuatorDevice.getId());
+
+        CheckBox autoMode = new CheckBox("Auto mode (based on Light)");
+        autoMode.setSelected(cfg.isAutoMode());
+
+        Spinner<Double> closeLux = new Spinner<>(0.0, 100_000.0, cfg.getCloseAtLux(), 50);
+        Spinner<Double> openLux  = new Spinner<>(0.0, 100_000.0, cfg.getOpenAtLux(), 50);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        grid.add(autoMode, 0, 0, 2, 1);
+        grid.add(new Label("Close blinds above (Lux):"), 0, 1);
+        grid.add(closeLux, 1, 1);
+        grid.add(new Label("Open blinds below (Lux):"), 0, 2);
+        grid.add(openLux, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(btn -> {
+            if (btn != ButtonType.OK) return;
+
+            if (openLux.getValue() >= closeLux.getValue()) {
+                UIUtils.styledAlert(
+                        Alert.AlertType.ERROR,
+                        "Open-Lux must be smaller than Close-Lux",
+                        ButtonType.OK
+                ).showAndWait();
+                return;
+            }
+
+            cfg.setAutoMode(autoMode.isSelected());
+            cfg.setCloseAtLux(closeLux.getValue());
+            cfg.setOpenAtLux(openLux.getValue());
+
+            actuatorCfg.saveBlindsConfig(actuatorDevice.getId(), cfg);
+        });
+    }
+
     public void showVentilationConfig(Device actuatorDevice) {
-        Dialog<ButtonType> dialog = new Dialog<ButtonType>();
+        Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Configure Ventilation");
         dialog.getDialogPane().getStylesheets().add(
                 actuatorCfg.getClass().getResource("/css/app.css").toExternalForm()
@@ -39,14 +91,21 @@ public class ActuatorConfigDialog {
 
         VentilationConfig cfg = actuatorCfg.getOrCreateVentilationConfig(actuatorDevice.getId());
 
-        CheckBox autoMode = new CheckBox("Auto mode (based on CO₂)");
+        CheckBox autoMode = new CheckBox("Auto mode (CO₂ / Humidity)");
         autoMode.setSelected(cfg.isAutoMode());
 
-        Spinner<Integer> onTh = new Spinner<Integer>(400, 3000, cfg.getOnThresholdPpm());
-        onTh.setEditable(true);
+        // CO2 thresholds (ppm)
+        Spinner<Integer> onTh = new Spinner<>(400, 3000, cfg.getOnThresholdPpm(), 50);
+        Spinner<Integer> offTh = new Spinner<>(400, 3000, cfg.getOffThresholdPpm(), 50);
 
-        Spinner<Integer> offTh = new Spinner<Integer>(400, 3000, cfg.getOffThresholdPpm());
-        offTh.setEditable(true);
+        // Humidity thresholds (%)
+        Spinner<Double> humOnTh = new Spinner<>(20.0, 90.0, cfg.getOnThresholdHumidity(), 0.5);
+        Spinner<Double> humOffTh = new Spinner<>(20.0, 90.0, cfg.getOffThresholdHumidity(), 0.5);
+
+        onTh.setEditable(false);
+        offTh.setEditable(false);
+        humOnTh.setEditable(false);
+        humOffTh.setEditable(false);
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -61,8 +120,11 @@ public class ActuatorConfigDialog {
         grid.add(new Label("Switch OFF at (ppm):"), 0, 2);
         grid.add(offTh, 1, 2);
 
-        onTh.setEditable(false);
-        offTh.setEditable(false);
+        grid.add(new Label("Switch ON at (%):"), 0, 3);
+        grid.add(humOnTh, 1, 3);
+
+        grid.add(new Label("Switch OFF at (%):"), 0, 4);
+        grid.add(humOffTh, 1, 4);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -73,10 +135,21 @@ public class ActuatorConfigDialog {
             int onVal = onTh.getValue();
             int offVal = offTh.getValue();
 
-            //off muss < on sein
+            double humOnVal = humOnTh.getValue();
+            double humOffVal = humOffTh.getValue();
+
+            // OFF muss < ON sein (CO2)
             if (offVal >= onVal) {
                 UIUtils.styledAlert(Alert.AlertType.ERROR,
-                        "OFF threshold must be smaller than ON threshold.",
+                        "OFF threshold (CO₂) must be smaller than ON threshold.",
+                        ButtonType.OK).showAndWait();
+                return;
+            }
+
+            // OFF muss < ON sein (Humidity)
+            if (humOffVal >= humOnVal) {
+                UIUtils.styledAlert(Alert.AlertType.ERROR,
+                        "OFF threshold (Humidity) must be smaller than ON threshold.",
                         ButtonType.OK).showAndWait();
                 return;
             }
@@ -84,8 +157,11 @@ public class ActuatorConfigDialog {
             cfg.setAutoMode(autoMode.isSelected());
             cfg.setOnThresholdPpm(onVal);
             cfg.setOffThresholdPpm(offVal);
+            cfg.setOnThresholdHumidity(humOnVal);
+            cfg.setOffThresholdHumidity(humOffVal);
 
             actuatorCfg.saveVentilationConfig(actuatorDevice.getId(), cfg);
+
 
             UIUtils.styledAlert(Alert.AlertType.INFORMATION,
                     "Saved ventilation config.", ButtonType.OK).showAndWait();

@@ -1,10 +1,7 @@
 package at.jku.se.gruppe2.domain.service.device;
 
+import at.jku.se.gruppe2.domain.model.device.sensor.*;
 import at.jku.se.gruppe2.infrastructure.config.LocalSecrets;
-import at.jku.se.gruppe2.domain.model.device.sensor.CO2Sensor;
-import at.jku.se.gruppe2.domain.model.device.sensor.CatSensor;
-import at.jku.se.gruppe2.domain.model.device.sensor.NoiseSensor;
-import at.jku.se.gruppe2.domain.model.device.sensor.Sensor;
 import at.jku.se.gruppe2.application.integration.RoboflowWorkflowService;
 
 import java.util.*;
@@ -47,12 +44,18 @@ public class SensorSimulationService {
     //TODO: weitere Sensoren hinzufügen
     private final Map<Integer, CO2Sensor> co2ByRoom = new ConcurrentHashMap<>();
     private final Map<Integer, NoiseSensor> noiseByRoom = new ConcurrentHashMap<>();
+    private final Map<Integer, Thermometer> thermoByRoom = new ConcurrentHashMap<>();
+    private final Map<Integer, HumiditySensor> humidityByRoom = new ConcurrentHashMap<>();
+    private final Map<Integer, LightSensor> lightByRoom = new ConcurrentHashMap<>();
 
     // "Grundniveau" pro Raum (damit es nicht komplett zufällig springt)
     //TODO: weitere Sensoren hinzufügen
     private final Map<Integer, Double> co2Baseline = new ConcurrentHashMap<>();
     private final Map<Integer, Double> noiseBaseline = new ConcurrentHashMap<>();
     private final Map<Integer, CatSensor> catByRoom = new ConcurrentHashMap<>();
+    private final Map<Integer, Double> thermoBaseline = new ConcurrentHashMap<>();
+    private final Map<Integer, Double> humidityBaseline = new ConcurrentHashMap<>();
+    private final Map<Integer, Double> lightBaseline = new ConcurrentHashMap<>();
 
     private volatile boolean running = false;
 
@@ -77,6 +80,18 @@ public class SensorSimulationService {
         if (sensor instanceof CatSensor cat) {
             catByRoom.put(roomId, cat);
             catImageIndexByRoom.putIfAbsent(roomId, 0);
+        }
+        if (sensor instanceof Thermometer t) {
+            thermoByRoom.put(roomId, t);
+            thermoBaseline.putIfAbsent(roomId, 21.0); // z.B. Start bei 21°C
+        }
+        if (sensor instanceof HumiditySensor h) {
+            humidityByRoom.put(roomId, h);
+            humidityBaseline.putIfAbsent(roomId, 45.0); // Start: 45%
+        }
+        if (sensor instanceof LightSensor l) {
+            lightByRoom.put(roomId, l);
+            lightBaseline.putIfAbsent(roomId, 300.0); // Start z.B. 300 lux
         }
         //TODO: weitere Sensoren hinzufügen
     }
@@ -109,6 +124,12 @@ public class SensorSimulationService {
         noiseBaseline.remove(roomId);
         catByRoom.remove(roomId);
         catImageIndexByRoom.remove(roomId);
+        thermoByRoom.remove(roomId);
+        thermoBaseline.remove(roomId);
+        humidityByRoom.remove(roomId);
+        humidityBaseline.remove(roomId);
+        lightByRoom.remove(roomId);
+        lightBaseline.remove(roomId);
     }
 
     private void tick() {
@@ -123,10 +144,81 @@ public class SensorSimulationService {
         for (Integer roomId : noiseByRoom.keySet()) {
             simulateNoise(roomId);
         }
+        for (Integer roomId : thermoByRoom.keySet()) {
+            simulateThermometer(roomId);
+        }
+        for (Integer roomId : humidityByRoom.keySet()) {
+            simulateHumidity(roomId);
+        }
+        for (Integer roomId : lightByRoom.keySet()) {
+            simulateLight(roomId);
+        }
         //TODO: weitere Sensoren hinzufügen
         for (Integer roomId : catByRoom.keySet()) {
             simulateCat(roomId);
         }
+    }
+
+    private void simulateLight(Integer roomId) {
+        LightSensor sensor = lightByRoom.get(roomId);
+        if (sensor == null) return;
+
+        double base = lightBaseline.getOrDefault(roomId, 300.0);
+
+        // leichte Drift
+        base += rnd.nextGaussian() * 30.0;
+
+        // seltenes Event: Sonne kommt raus / Licht geht an
+        if (rnd.nextDouble() < 0.08) {
+            base += 200 + rnd.nextDouble() * 1200; // +200..+1400
+        }
+
+        // seltenes Event: Wolke / Licht aus
+        if (rnd.nextDouble() < 0.06) {
+            base -= 150 + rnd.nextDouble() * 800; // -150..-950
+        }
+
+        // clamp baseline (0..5000 lux)
+        base = clamp(base, 0, 5000);
+        lightBaseline.put(roomId, base);
+
+        // final messwert
+        double value = clamp(base + rnd.nextGaussian() * 20.0, 0, 10000);
+
+        sensor.setValue(value);
+    }
+
+    private void simulateHumidity(Integer roomId) {
+        HumiditySensor sensor = humidityByRoom.get(roomId);
+        if (sensor == null) return;
+
+        double base = humidityBaseline.getOrDefault(roomId, 45.0);
+
+        // langsamer Drift
+        double target = 48.0;
+        base += (target - base) * 0.05;
+
+        // leichtes Rauschen
+        base += rnd.nextGaussian() * 0.6;
+
+        // seltenes Event: Feuchtigkeit steigt (Duschen/Kochen)
+        if (rnd.nextDouble() < 0.06) { // 6% pro Tick
+            base += 4.0 + rnd.nextDouble() * 12.0; // +4..+16%
+        }
+
+        // seltenes Event: Lüften/trockene Luft
+        if (rnd.nextDouble() < 0.04) { // 4% pro Tick
+            base -= 3.0 + rnd.nextDouble() * 10.0; // -3..-13%
+        }
+
+        // baseline clamp
+        base = clamp(base, 20, 80);
+        humidityBaseline.put(roomId, base);
+
+        // finaler Messwert
+        double value = clamp(base + rnd.nextGaussian() * 0.3, 10, 95);
+
+        sensor.setValue(value);
     }
 
     private void simulateCat(int roomId) {
@@ -205,6 +297,28 @@ public class SensorSimulationService {
         // Messwert: baseline + event noise
         double value = clamp(base + Math.abs(rnd.nextGaussian() * 3.0), 20, 120);
 
+        sensor.setValue(value);
+    }
+
+    private void simulateThermometer(int roomId) {
+        Thermometer sensor = thermoByRoom.get(roomId);
+        if (sensor == null) return;
+
+        double base = thermoBaseline.getOrDefault(roomId, 21.0);
+
+        // kleine Drift
+        base += rnd.nextGaussian() * 0.15; // ca ±0.15°C
+
+        // seltenes Event (Fenster offen / Sonne / Heizung an)
+        if (rnd.nextDouble() < 0.05) {
+            base += (rnd.nextBoolean() ? 1 : -1) * (0.5 + rnd.nextDouble() * 1.5); // ±0.5..2.0°C
+        }
+
+        base = clamp(base, 15, 30);
+        thermoBaseline.put(roomId, base);
+
+        // finaler Messwert mit kleinem Rauschen
+        double value = clamp(base + rnd.nextGaussian() * 0.05, 10, 35);
         sensor.setValue(value);
     }
 

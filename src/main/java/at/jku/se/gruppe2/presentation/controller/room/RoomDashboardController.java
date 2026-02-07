@@ -2,10 +2,12 @@ package at.jku.se.gruppe2.presentation.controller.room;
 
 import app.MainApp;
 import at.jku.se.gruppe2.domain.model.device.config.CatFeederConfig;
+import at.jku.se.gruppe2.domain.model.device.config.HeatingConfig;
 import at.jku.se.gruppe2.domain.model.device.Device;
 import at.jku.se.gruppe2.domain.model.device.DeviceType;
 import at.jku.se.gruppe2.domain.model.home.Home;
 import at.jku.se.gruppe2.domain.model.home.Room;
+import at.jku.se.gruppe2.domain.service.automation.ClimateControlService;
 import at.jku.se.gruppe2.presentation.service.DialogService;
 import at.jku.se.gruppe2.application.navigation.NavigationService;
 import at.jku.se.gruppe2.domain.service.user.AuthorizationService;
@@ -54,6 +56,8 @@ public class RoomDashboardController {
     private final RoomDevicesService roomDevicesService = new RoomDevicesService(sensorSim);
     private final RoomAutomationService roomAutomationService = new RoomAutomationService(actuatorService, actuatorCfg);
 
+    private final ClimateControlService climateControlService = new ClimateControlService(actuatorService, actuatorCfg);
+
     private final DeviceCardFactory deviceCardFactory = new DeviceCardFactory(
             actuatorCfg,
             actuatorService,
@@ -79,16 +83,24 @@ public class RoomDashboardController {
                 Session.setSelectedRoom(room);  // Update session with complete room
             }
         }
-
+        if (room == null) return;
         setLabel();
         devices = roomDevicesService.loadDevicesAndRegisterSensors(room);
+        room.setDevices(devices);
         updateUIBasedOnPermissions();
         renderDevices();
 
         // Refresh every 2 seconds (same as simulation, generates new values every 2 seconds)
         liveRefresh = new Timeline(new KeyFrame(Duration.seconds(2), e -> {
             roomAutomationService.evaluateAutomation(devices);
-            renderDevices();
+
+            Room currentRoom = Session.getSelectedRoom();
+            if (currentRoom != null) {
+                currentRoom.setDevices(devices);
+                climateControlService.evaluate(currentRoom);
+            }
+
+            deviceCardFactory.updateLiveValues(devices);
         }));
         liveRefresh.setCycleCount(Timeline.INDEFINITE);
         liveRefresh.play();
@@ -142,12 +154,14 @@ public class RoomDashboardController {
     private void handleEditDevice(Device device) {
         // CHECK permission
         Room room = Session.getSelectedRoom();
-        if (room != null && room.getHome() != null) {
-            if (!authService.canEditRoomDetails(room.getHome().getId())) {
-                dialog.error("Permission Denied",
-                        "Only residents and owners can edit device names.");
-                return;
-            }
+        if (room == null || room.getHome() == null) {
+            dialog.error("Permission Denied", "No home context available.");
+            return;
+        }
+        if (!authService.canEditRoomDetails(room.getHome().getId())) {
+            dialog.error("Permission Denied",
+                    "Only residents and owners can edit device names.");
+            return;
         }
 
         // Create styled dialog for editing device name
@@ -180,6 +194,7 @@ public class RoomDashboardController {
                 dialog.info("Success", "Device name updated successfully!");
                 // Reload devices to ensure consistency
                 devices = roomDevicesService.loadDevicesAndRegisterSensors(room);
+                room.setDevices(devices);
                 renderDevices();
             } else {
                 dialog.error("Error", "Failed to update device name. Please try again.");
@@ -209,6 +224,8 @@ public class RoomDashboardController {
             showAlarmConfig(actuatorDevice);
         } else if ("Cat Feeder".equals(type)) {
             showCatFeederConfig(actuatorDevice);
+        } else if ("Heating".equals(type) || "Heating (%)".equals(type)) {
+            showHeatingConfig(actuatorDevice);
         } else {
             UIUtils.styledAlert(Alert.AlertType.INFORMATION, "No configuration available for: " + type, ButtonType.OK).showAndWait();
         }
@@ -217,12 +234,14 @@ public class RoomDashboardController {
     private void handleDeleteDevice(Device d) {
         // CHECK permission
         Room room = Session.getSelectedRoom();
-        if (room != null && room.getHome() != null) {
-            if (!authService.canRemoveDevices(room.getHome().getId())) {
-                dialog.error("Permission Denied",
-                        "Only residents and owners can delete devices.");
-                return;
-            }
+        if (room == null || room.getHome() == null) {
+            dialog.error("Permission Denied", "No home context available.");
+            return;
+        }
+        if (!authService.canRemoveDevices(room.getHome().getId())) {
+            dialog.error("Permission Denied",
+                    "Only residents and owners can delete devices.");
+            return;
         }
 
         Alert confirm = UIUtils.styledConfirm("Delete \"" + d.getLabel() + "\"?");
@@ -231,7 +250,9 @@ public class RoomDashboardController {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
                 deviceRepository.deleteDevice(d.getId());
+                // Reload devices AFTER deletion
                 devices = roomDevicesService.loadDevicesAndRegisterSensors(room);
+                room.setDevices(devices);
                 renderDevices();
             }
         });
@@ -248,20 +269,20 @@ public class RoomDashboardController {
 
     public void handleAddDevice() {
         Room room = Session.getSelectedRoom();
-
+        if (room == null || room.getHome() == null) {
+            dialog.error("Permission Denied", "No home context available.");
+            return;
+        }
         // CHECK permission
-        if (room != null && room.getHome() != null) {
-            if (!authService.canAddDevices(room.getHome().getId())) {
-                dialog.error("Permission Denied",
-                        "Only residents and owners can add devices.");
-                return;
-            }
+        if (!authService.canAddDevices(room.getHome().getId())) {
+            dialog.error("Permission Denied",
+                    "Only residents and owners can add devices.");
+            return;
         }
 
         var categories = List.of(Device.DeviceCategory.SENSOR, Device.DeviceCategory.ACTUATOR);
         ChoiceDialog<Device.DeviceCategory> catDialog =
                 UIUtils.styledChoiceDialog(Device.DeviceCategory.SENSOR, categories, "Category:");
-
         catDialog.setTitle("Add Device");
 
         catDialog.showAndWait().ifPresent(category -> {
@@ -285,8 +306,7 @@ public class RoomDashboardController {
                 nameDialog.showAndWait().ifPresent(devLabel -> {
                     if (devLabel.isBlank()) return;
 
-                    Device newDev = new Device() {
-                    };
+                    Device newDev = new Device() {};
                     newDev.setLabel(devLabel);
 
                     int deviceId = deviceRepository.createDevice(newDev, room);
@@ -302,7 +322,9 @@ public class RoomDashboardController {
                         deviceRepository.attachActuator(deviceId, chosenType.getId());
                     }
 
+                    // Reload devices AFTER adding
                     devices = roomDevicesService.loadDevicesAndRegisterSensors(room);
+                    room.setDevices(devices);
                     renderDevices();
                 });
             });
@@ -385,6 +407,62 @@ public class RoomDashboardController {
 
             UIUtils.styledAlert(Alert.AlertType.INFORMATION,
                     "Saved cat feeder config.", ButtonType.OK).showAndWait();
+        });
+    }
+
+    private void showHeatingConfig(Device actuatorDevice) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Configure Heating");
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/css/app.css").toExternalForm()
+        );
+
+        var cfg = actuatorCfg.getOrCreateHeatingConfig(actuatorDevice.getId());
+
+        CheckBox autoMode = new CheckBox("Auto mode");
+        autoMode.setSelected(cfg.isAutoMode());
+
+        Spinner<Integer> manualPercent = new Spinner<>(0, 100, cfg.getManualPercent());
+        manualPercent.setDisable(cfg.isAutoMode());
+
+        Spinner<Double> targetTemp = new Spinner<>(10.0, 30.0, cfg.getTargetTempC(), 0.5);
+        Spinner<Double> hysteresis = new Spinner<>(0.0, 5.0, cfg.getHysteresisC(), 0.1);
+
+        // Auto -> Manual UI toggling
+        autoMode.selectedProperty().addListener((obs, o, on) -> {
+            manualPercent.setDisable(on);
+            targetTemp.setDisable(!on);
+            hysteresis.setDisable(!on);
+        });
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        grid.add(autoMode, 0, 0, 2, 1);
+
+        grid.add(new Label("Manual percent:"), 0, 1);
+        grid.add(manualPercent, 1, 1);
+
+        grid.add(new Label("Target temp (°C):"), 0, 2);
+        grid.add(targetTemp, 1, 2);
+
+        grid.add(new Label("Hysteresis (°C):"), 0, 3);
+        grid.add(hysteresis, 1, 3);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(btn -> {
+            if (btn != ButtonType.OK) return;
+
+            cfg.setAutoMode(autoMode.isSelected());
+            cfg.setManualPercent(manualPercent.getValue());
+            cfg.setTargetTempC(targetTemp.getValue());
+            cfg.setHysteresisC(hysteresis.getValue());
+
+            actuatorCfg.saveHeatingConfig(actuatorDevice.getId(), cfg);
+            UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Saved heating config.", ButtonType.OK).showAndWait();
         });
     }
 
