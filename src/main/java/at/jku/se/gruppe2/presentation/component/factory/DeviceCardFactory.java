@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.presentation.component.factory;
 
 import at.jku.se.gruppe2.domain.model.device.Device;
+import at.jku.se.gruppe2.domain.model.device.config.HeatingConfig;
 import at.jku.se.gruppe2.domain.model.device.sensor.CatSensor;
 import at.jku.se.gruppe2.domain.model.device.sensor.Sensor;
 import at.jku.se.gruppe2.domain.model.device.sensor.Thermometer;
@@ -14,6 +15,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DeviceCardFactory {
@@ -28,6 +30,11 @@ public class DeviceCardFactory {
     private final Map<Integer, ImageView> catImageViews = new HashMap<>();
     private final Map<Integer, Label> catStatusLabels = new HashMap<>();
     private final Map<Integer, String> catLastShownUrl = new HashMap<>();
+
+    //Temp and heater
+    private final Map<Integer, Label> sensorValueLabels = new HashMap<>();
+    private final Map<Integer, Label> heaterPercentBadges = new HashMap<>();
+    private final Map<Integer, Slider> heaterSliders = new HashMap<>();
 
     public DeviceCardFactory(
             ActuatorConfigService actuatorConfigService,
@@ -46,8 +53,9 @@ public class DeviceCardFactory {
 
     /**
      * Creates a device card with appropriate UI elements based on device type
-     * @param device The device to create a card for
-     * @param canDelete Whether the user can delete this device
+     *
+     * @param device       The device to create a card for
+     * @param canDelete    Whether the user can delete this device
      * @param canConfigure Whether the user can configure this device
      * @return A Pane containing the device card UI
      */
@@ -159,17 +167,36 @@ public class DeviceCardFactory {
         String unit = resolveDisplayUnit(device);
         unit = (unit == null) ? "Not available!" : unit;
 
-        String formattedValue = formatSensorValue(device.getTypeLabel(), s.getValue());
-        Label current = new Label(
-                "Current: " + formattedValue + (unit.isBlank() ? "No measurement available!" : " " + unit)
-        );
-        current.getStyleClass().add("muted");
+        double displayValue = s.getValue();
+        if (s instanceof Thermometer t) {
+            displayValue = t.getValueInSelectedUnit();
+        }
 
+        String formattedValue = formatSensorValue(device.getTypeLabel(), displayValue);
+
+        Label current = new Label();
+        current.getStyleClass().add("muted");
+        sensorValueLabels.put(device.getId(), current);
+
+        updateStandardSensorLabel(device, s, current);  // initial setzen
         deviceCard.getChildren().add(current);
 
         if (device instanceof Thermometer t) {
             deviceCard.getChildren().add(createThermometerUnitToggle(t));
         }
+    }
+
+    private void updateStandardSensorLabel(Device device, Sensor s, Label current) {
+        String unit = resolveDisplayUnit(device);
+        unit = (unit == null) ? "" : unit;
+
+        double displayValue = s.getValue();
+        if (s instanceof Thermometer t) {
+            displayValue = t.getValueInSelectedUnit();
+        }
+
+        String formattedValue = formatSensorValue(device.getTypeLabel(), displayValue);
+        current.setText("Current: " + formattedValue + (unit.isBlank() ? "" : " " + unit));
     }
 
     /**
@@ -187,9 +214,84 @@ public class DeviceCardFactory {
         if ("Cat Feeder".equalsIgnoreCase(typeLabel)) {
             return createCatFeederCard(deviceCard, device, canDelete, canConfigure);
         }
+        if ("Heating".equalsIgnoreCase(typeLabel) || typeLabel.toLowerCase().contains("heating")) {
+            return createHeatingCard(deviceCard, device, canDelete, canConfigure);
+        }
 
         // Standard Actuator: ON / OFF
         return createStandardActuatorCard(deviceCard, device, canDelete, canConfigure);
+    }
+
+    private Pane createHeatingCard(VBox deviceCard, Device device, boolean canDelete, boolean canConfigure) {
+
+        // --- current state (0..100) ---
+        int percent = safeParsePercent(actuatorService.getStateOrDefault(device.getId(), "0"));
+
+        // --- badge (store ref for live updates) ---
+        Label badge = new Label(percent + " %");
+        badge.getStyleClass().addAll("badge", "badge-off");
+        heaterPercentBadges.put(device.getId(), badge);
+
+        // --- slider (store ref for live updates) ---
+        Slider slider = new Slider(0, 100, percent);
+        slider.setMajorTickUnit(25);
+        slider.setMinorTickCount(4);
+        slider.setShowTickMarks(true);
+        slider.setShowTickLabels(true);
+        slider.setSnapToTicks(true);
+        heaterSliders.put(device.getId(), slider);
+
+        // slider -> badge live (only visual; no state write yet)
+        slider.valueProperty().addListener((obs, oldV, newV) -> {
+            int p = (int) Math.round(newV.doubleValue());
+            badge.setText(p + " %");
+        });
+
+        // --- Apply: writes MANUAL percent into HeatingConfig + sets actuator state ---
+        Button applyBtn = new Button("Apply");
+        applyBtn.setDisable(!canConfigure); // only if allowed to control/configure
+        applyBtn.setOnAction(e -> {
+            int p = (int) Math.round(slider.getValue());
+
+            // 1) save to config as MANUAL (auto off)
+            HeatingConfig cfg = actuatorCfg.getOrCreateHeatingConfig(device.getId());
+            cfg.setAutoMode(false);
+            cfg.setManualPercent(p);
+            actuatorCfg.saveHeatingConfig(device.getId(), cfg);
+
+            // 2) set actuator state immediately (UI shows new %)
+            actuatorService.setState(device.getId(), String.valueOf(p));
+
+            // IMPORTANT: do NOT call requestRender.run() here -> causes flicker.
+            // Live-refresh will call updateLiveValues() and keep UI in sync.
+        });
+
+        // --- Configure / Delete ---
+        Button configBtn = new Button("Config");
+        configBtn.setVisible(canConfigure);
+        configBtn.setManaged(canConfigure);
+        configBtn.setOnAction(e -> onConfigure.accept(device));
+
+        Button deleteBtn = new Button("Delete");
+        deleteBtn.setVisible(canDelete);
+        deleteBtn.setManaged(canDelete);
+        deleteBtn.setOnAction(e -> onDelete.accept(device));
+
+        // --- layout ---
+        HBox rowTop = new HBox(8, badge);
+        HBox rowBottom = new HBox(8);
+
+        // nicer sizing so it doesn't truncate
+        applyBtn.setPrefWidth(80);
+        configBtn.setPrefWidth(80);
+        deleteBtn.setPrefWidth(80);
+
+        rowBottom.getChildren().add(applyBtn);
+        if (canConfigure) rowBottom.getChildren().add(configBtn);
+        if (canDelete) rowBottom.getChildren().add(deleteBtn);
+
+        deviceCard.getChildren().addAll(rowTop, slider, rowBottom);
+        return deviceCard;
     }
 
     /**
@@ -513,5 +615,45 @@ public class DeviceCardFactory {
         box.getStyleClass().add("muted");
 
         return box;
+    }
+
+    public void updateLiveValues(List<Device> devices) {
+        for (Device d : devices) {
+
+            // Sensor label updaten
+            if (d instanceof Sensor s) {
+                Label lbl = sensorValueLabels.get(d.getId());
+                if (lbl != null) {
+                    if ("CatSensor".equalsIgnoreCase(d.getTypeLabel()) && s instanceof CatSensor cat) {
+                        // CatSensor hast du eh schon separat (Status+Bild)
+                        // optional: nur statusLbl updaten, falls du es willst
+                    } else {
+                        updateStandardSensorLabel(d, s, lbl);
+                    }
+                }
+            }
+
+            // Heater percent badge + slider updaten
+            if ("Heating".equalsIgnoreCase(d.getTypeLabel())) {
+                String state = actuatorService.getStateOrDefault(d.getId(), "0");
+                int pct = safeParsePercent(state);
+
+                Label badge = heaterPercentBadges.get(d.getId());
+                if (badge != null) badge.setText(pct + " %");
+
+                Slider sl = heaterSliders.get(d.getId());
+                if (sl != null && !sl.isValueChanging()) { // damit User nicht “zurückgezogen” wird
+                    sl.setValue(pct);
+                }
+            }
+        }
+    }
+
+    private int safeParsePercent(String s) {
+        try {
+            return Math.max(0, Math.min(100, Integer.parseInt(s.trim())));
+        } catch (Exception e) {
+            return 0;
+        }
     }
 }
