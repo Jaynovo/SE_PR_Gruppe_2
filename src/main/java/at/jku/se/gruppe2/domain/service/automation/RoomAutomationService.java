@@ -1,7 +1,9 @@
 package at.jku.se.gruppe2.domain.service.automation;
 
 import at.jku.se.gruppe2.domain.model.device.Device;
+import at.jku.se.gruppe2.domain.model.device.actuator.BlindsActuator;
 import at.jku.se.gruppe2.domain.model.device.config.AlarmConfig;
+import at.jku.se.gruppe2.domain.model.device.config.BlindsConfig;
 import at.jku.se.gruppe2.domain.model.device.config.CatFeederConfig;
 import at.jku.se.gruppe2.domain.model.device.config.VentilationConfig;
 import at.jku.se.gruppe2.domain.model.device.sensor.CatSensor;
@@ -26,6 +28,7 @@ public class RoomAutomationService {
         evaluateVentilation(devices);
         evaluateAlarm(devices);
         evaluateCatFeeder(devices);
+        evaluateBlinds(devices);
     }
 
     private void evaluateVentilation(List<Device> devices) {
@@ -184,4 +187,32 @@ public class RoomAutomationService {
         actuatorService.setState(feeder.getId(), "READY");
     }
 
+    private void evaluateBlinds(List<Device> devices) {
+        Sensor light = null;
+        Device blinds = null;
+
+        for (Device d : devices) {
+            if (d instanceof Sensor s && "LightSensor".equalsIgnoreCase(d.getTypeLabel())) {
+                light = s;
+            }
+            if (d.getCategory() == Device.DeviceCategory.ACTUATOR
+                    && "Blinds".equalsIgnoreCase(d.getTypeLabel())) {
+                blinds = d;
+            }
+        }
+
+        if (light == null || blinds == null) return;
+
+        BlindsConfig cfg = actuatorCfg.getOrCreateBlindsConfig(blinds.getId());
+        if (!cfg.isAutoMode()) return;
+
+        double lux = light.getValue();
+        String state = actuatorService.getStateOrDefault(blinds.getId(), "POS=100");
+
+        if (lux >= cfg.getCloseAtLux()) {
+            actuatorService.setState(blinds.getId(), "POS=0");
+        } else if (lux <= cfg.getOpenAtLux()) {
+            actuatorService.setState(blinds.getId(), "POS=100");
+        }
+    }
 }

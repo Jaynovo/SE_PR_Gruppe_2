@@ -220,9 +220,59 @@ public class DeviceCardFactory {
         if ("Heating".equalsIgnoreCase(typeLabel) || typeLabel.toLowerCase().contains("heating")) {
             return createHeatingCard(deviceCard, device, canDelete, canConfigure);
         }
+        if ("Blinds".equalsIgnoreCase(typeLabel) || typeLabel.toLowerCase().contains("blinds")) {
+            return createBlindsCard(deviceCard, device, canDelete, canConfigure);
+        }
 
         // Standard Actuator: ON / OFF
         return createStandardActuatorCard(deviceCard, device, canDelete, canConfigure);
+    }
+
+    private Pane createBlindsCard(VBox deviceCard, Device device, boolean canDelete, boolean canConfigure) {
+        Label positionLabel = new Label();
+        positionLabel.getStyleClass().addAll("badge", "badge-off");
+
+        // Initial setzen
+        updateBlindsLabel(device, positionLabel);
+
+        // für Live-Updates merken
+        sensorValueLabels.put(device.getId(), positionLabel);
+
+        // --- Buttons ---
+        Button configBtn = new Button("Configure");
+        configBtn.setVisible(canConfigure);
+        configBtn.setManaged(canConfigure);
+        configBtn.setOnAction(e -> onConfigure.accept(device));
+
+        Button deleteBtn = new Button("Delete");
+        deleteBtn.setVisible(canDelete);
+        deleteBtn.setManaged(canDelete);
+        deleteBtn.setOnAction(e -> onDelete.accept(device));
+
+        // Layout
+        HBox actions = new HBox(8);
+        if (canConfigure) actions.getChildren().add(configBtn);
+        if (canDelete) actions.getChildren().add(deleteBtn);
+
+        deviceCard.getChildren().addAll(positionLabel, actions);
+        return deviceCard;
+    }
+
+    private void updateBlindsLabel(Device device, Label positionLabel) {
+        String state = actuatorService.getStateOrDefault(device.getId(), "POS=100");
+
+        int pos = 100;
+        try {
+            pos = Integer.parseInt(state.replace("POS=", "").trim());
+        } catch (Exception ignored) {}
+
+        if (pos >= 100) {
+            positionLabel.setText("OPEN (100%)");
+        } else if (pos <= 0) {
+            positionLabel.setText("CLOSED (0%)");
+        } else {
+            positionLabel.setText("POS " + pos + "%");
+        }
     }
 
     private Pane createHeatingCard(VBox deviceCard, Device device, boolean canDelete, boolean canConfigure) {
@@ -646,6 +696,12 @@ public class DeviceCardFactory {
                 Slider sl = heaterSliders.get(d.getId());
                 if (sl != null && !sl.isValueChanging()) {
                     sl.setValue(pct);
+                }
+            }
+            if ("Blinds".equalsIgnoreCase(d.getTypeLabel())) {
+                Label lbl = sensorValueLabels.get(d.getId());
+                if (lbl != null) {
+                    updateBlindsLabel(d, lbl);
                 }
             }
             // Standard Actuator Toggle (z.B. Ventilation) updaten

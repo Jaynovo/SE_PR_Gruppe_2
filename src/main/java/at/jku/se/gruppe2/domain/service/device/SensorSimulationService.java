@@ -46,6 +46,7 @@ public class SensorSimulationService {
     private final Map<Integer, NoiseSensor> noiseByRoom = new ConcurrentHashMap<>();
     private final Map<Integer, Thermometer> thermoByRoom = new ConcurrentHashMap<>();
     private final Map<Integer, HumiditySensor> humidityByRoom = new ConcurrentHashMap<>();
+    private final Map<Integer, LightSensor> lightByRoom = new ConcurrentHashMap<>();
 
     // "Grundniveau" pro Raum (damit es nicht komplett zufällig springt)
     //TODO: weitere Sensoren hinzufügen
@@ -54,6 +55,7 @@ public class SensorSimulationService {
     private final Map<Integer, CatSensor> catByRoom = new ConcurrentHashMap<>();
     private final Map<Integer, Double> thermoBaseline = new ConcurrentHashMap<>();
     private final Map<Integer, Double> humidityBaseline = new ConcurrentHashMap<>();
+    private final Map<Integer, Double> lightBaseline = new ConcurrentHashMap<>();
 
     private volatile boolean running = false;
 
@@ -86,6 +88,10 @@ public class SensorSimulationService {
         if (sensor instanceof HumiditySensor h) {
             humidityByRoom.put(roomId, h);
             humidityBaseline.putIfAbsent(roomId, 45.0); // Start: 45%
+        }
+        if (sensor instanceof LightSensor l) {
+            lightByRoom.put(roomId, l);
+            lightBaseline.putIfAbsent(roomId, 300.0); // Start z.B. 300 lux
         }
         //TODO: weitere Sensoren hinzufügen
     }
@@ -122,6 +128,8 @@ public class SensorSimulationService {
         thermoBaseline.remove(roomId);
         humidityByRoom.remove(roomId);
         humidityBaseline.remove(roomId);
+        lightByRoom.remove(roomId);
+        lightBaseline.remove(roomId);
     }
 
     private void tick() {
@@ -142,10 +150,42 @@ public class SensorSimulationService {
         for (Integer roomId : humidityByRoom.keySet()) {
             simulateHumidity(roomId);
         }
+        for (Integer roomId : lightByRoom.keySet()) {
+            simulateLight(roomId);
+        }
         //TODO: weitere Sensoren hinzufügen
         for (Integer roomId : catByRoom.keySet()) {
             simulateCat(roomId);
         }
+    }
+
+    private void simulateLight(Integer roomId) {
+        LightSensor sensor = lightByRoom.get(roomId);
+        if (sensor == null) return;
+
+        double base = lightBaseline.getOrDefault(roomId, 300.0);
+
+        // leichte Drift
+        base += rnd.nextGaussian() * 30.0;
+
+        // seltenes Event: Sonne kommt raus / Licht geht an
+        if (rnd.nextDouble() < 0.08) {
+            base += 200 + rnd.nextDouble() * 1200; // +200..+1400
+        }
+
+        // seltenes Event: Wolke / Licht aus
+        if (rnd.nextDouble() < 0.06) {
+            base -= 150 + rnd.nextDouble() * 800; // -150..-950
+        }
+
+        // clamp baseline (0..5000 lux)
+        base = clamp(base, 0, 5000);
+        lightBaseline.put(roomId, base);
+
+        // final messwert
+        double value = clamp(base + rnd.nextGaussian() * 20.0, 0, 10000);
+
+        sensor.setValue(value);
     }
 
     private void simulateHumidity(Integer roomId) {

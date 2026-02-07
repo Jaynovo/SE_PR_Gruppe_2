@@ -1,6 +1,7 @@
 package at.jku.se.gruppe2.presentation.component.custom;
 
 import at.jku.se.gruppe2.domain.model.device.Device;
+import at.jku.se.gruppe2.domain.model.device.config.BlindsConfig;
 import at.jku.se.gruppe2.domain.model.device.config.VentilationConfig;
 import at.jku.se.gruppe2.domain.service.device.ActuatorConfigService;
 import at.jku.se.gruppe2.presentation.util.UIUtils;
@@ -25,9 +26,60 @@ public class ActuatorConfigDialog {
             case "AlarmSystem":
                 showAlarmConfig(actuatorDevice);
                 break;
+            case "Blinds":
+                showBlindsConfig(actuatorDevice);
+                break;
             default:
                 UIUtils.styledAlert(Alert.AlertType.INFORMATION, "No configuration available for: " + type, ButtonType.OK).showAndWait();
         }
+    }
+
+    private void showBlindsConfig(Device actuatorDevice) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Configure Blinds");
+        dialog.getDialogPane().getStylesheets().add(
+                actuatorCfg.getClass().getResource("/css/app.css").toExternalForm()
+        );
+
+        BlindsConfig cfg = actuatorCfg.getOrCreateBlindsConfig(actuatorDevice.getId());
+
+        CheckBox autoMode = new CheckBox("Auto mode (based on Light)");
+        autoMode.setSelected(cfg.isAutoMode());
+
+        Spinner<Double> closeLux = new Spinner<>(0.0, 100_000.0, cfg.getCloseAtLux(), 50);
+        Spinner<Double> openLux  = new Spinner<>(0.0, 100_000.0, cfg.getOpenAtLux(), 50);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        grid.add(autoMode, 0, 0, 2, 1);
+        grid.add(new Label("Close blinds above (Lux):"), 0, 1);
+        grid.add(closeLux, 1, 1);
+        grid.add(new Label("Open blinds below (Lux):"), 0, 2);
+        grid.add(openLux, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(btn -> {
+            if (btn != ButtonType.OK) return;
+
+            if (openLux.getValue() >= closeLux.getValue()) {
+                UIUtils.styledAlert(
+                        Alert.AlertType.ERROR,
+                        "Open-Lux must be smaller than Close-Lux",
+                        ButtonType.OK
+                ).showAndWait();
+                return;
+            }
+
+            cfg.setAutoMode(autoMode.isSelected());
+            cfg.setCloseAtLux(closeLux.getValue());
+            cfg.setOpenAtLux(openLux.getValue());
+
+            actuatorCfg.saveBlindsConfig(actuatorDevice.getId(), cfg);
+        });
     }
 
     public void showVentilationConfig(Device actuatorDevice) {

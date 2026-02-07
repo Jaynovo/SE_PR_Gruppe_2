@@ -1,9 +1,6 @@
 package at.jku.se.gruppe2.domain.service.device;
 
-import at.jku.se.gruppe2.domain.model.device.config.AlarmConfig;
-import at.jku.se.gruppe2.domain.model.device.config.CatFeederConfig;
-import at.jku.se.gruppe2.domain.model.device.config.HeatingConfig;
-import at.jku.se.gruppe2.domain.model.device.config.VentilationConfig;
+import at.jku.se.gruppe2.domain.model.device.config.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -116,6 +113,15 @@ public class ActuatorConfigService {
 
     public void saveHeatingConfig(int actuatorId, HeatingConfig cfg) {
         heatingCfgByActuatorId.put(actuatorId, cfg);
+    }
+    // BLINDS
+    private final Map<Integer, BlindsConfig> blindsCfgByActuatorId = new ConcurrentHashMap<>();
+
+    public BlindsConfig getOrCreateBlindsConfig(int actuatorId) {
+        return blindsCfgByActuatorId.computeIfAbsent(actuatorId, id -> new BlindsConfig());
+    }
+    public void saveBlindsConfig(int actuatorId, BlindsConfig cfg) {
+        blindsCfgByActuatorId.put(actuatorId, cfg);
     }
 
     public void resetCatFeederCooldown(int actuatorId) {
