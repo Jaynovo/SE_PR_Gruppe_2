@@ -22,7 +22,7 @@ public class MainApp extends Application {
         primaryStage.setTitle("Atlas Home Solutions");
         primaryStage.setResizable(true);
 
-        Scene scene = new Scene(FXMLLoader.load(getClass().getResource("/fxml/user-login-registration/login_page.fxml")));
+        Scene scene = new Scene(FXMLLoader.load(getClass().getResource("/fxml/user-login-registration/login_page.fxml")), 1200, 900);
         scene.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.CategoryAxis?>
+<BorderPane prefHeight="900.0" prefWidth="1200.0"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="at.jku.se.gruppe2.presentation.controller.statistics.StatisticsDashboardController">
+
+    <top>
+        <ToolBar>
+            <Button text="← Home" onAction="#handleDashboard"/>
+            <Label text="Statistics Dashboard" styleClass="title"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button text="Refresh" onAction="#handleRefresh" styleClass="primary"/>
+        </ToolBar>
+    </top>
+
+    <center>
+        <VBox spacing="12">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
+            <FlowPane hgap="12" vgap="12" prefWrapLength="1100">
+                <VBox styleClass="card filter-card">
+                    <Label text="Scope" styleClass="muted"/>
+                    <ComboBox fx:id="scopeBox" maxWidth="Infinity"/>
+                </VBox>
+
+                <VBox styleClass="card filter-card">
+                    <Label text="Room" styleClass="muted"/>
+                    <ComboBox fx:id="roomBox" maxWidth="Infinity"/>
+                </VBox>
+
+                <VBox styleClass="card filter-card">
+                    <Label text="Metric" styleClass="muted"/>
+                    <ComboBox fx:id="metricBox" maxWidth="Infinity"/>
+                </VBox>
+
+                <VBox styleClass="card filter-card">
+                    <Label text="Range" styleClass="muted"/>
+                    <ComboBox fx:id="rangeBox" maxWidth="Infinity"/>
+                </VBox>
+
+                <!-- Optional: Demo data card (only visible if needed) -->
+                <VBox fx:id="seedCard" styleClass="card filter-card">
+                    <Label text="Demo data" styleClass="muted"/>
+                    <ComboBox fx:id="seedRangeBox" maxWidth="Infinity"/>
+                    <Button fx:id="seedButton" text="Generate" maxWidth="Infinity"/>
+                </VBox>
+            </FlowPane>
+
+            <!-- KPI row -->
+            <HBox spacing="12">
+                <VBox styleClass="card" prefWidth="200">
+                    <Label text="Average" styleClass="muted"/>
+                    <Label fx:id="avgLabel" text="-" styleClass="title"/>
+                </VBox>
+                <VBox styleClass="card" prefWidth="200">
+                    <Label text="Min" styleClass="muted"/>
+                    <Label fx:id="minLabel" text="-" styleClass="title"/>
+                </VBox>
+                <VBox styleClass="card" prefWidth="200">
+                    <Label text="Max" styleClass="muted"/>
+                    <Label fx:id="maxLabel" text="-" styleClass="title"/>
+                </VBox>
+                <VBox styleClass="card" prefWidth="200">
+                    <Label text="Count" styleClass="muted"/>
+                    <Label fx:id="countLabel" text="-" styleClass="title"/>
+                </VBox>
+            </HBox>
+
+            <!-- Chart -->
+            <StackPane fx:id="chartContainer" minHeight="420">
+                <LineChart fx:id="lineChart" animated="false" createSymbols="false" minHeight="420">
+                    <xAxis>
+                        <NumberAxis fx:id="xAxis" label="Time"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis fx:id="yAxis" label="Value"/>
+                    </yAxis>
+                </LineChart>
+            </StackPane>
+        </VBox>
+    </center>
+</BorderPane>

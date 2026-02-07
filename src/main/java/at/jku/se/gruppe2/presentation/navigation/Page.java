@@ -9,7 +9,8 @@ public enum Page {
     USER_REGISTRATION("user-login-registration/registration_page"),
     HOME_REGISTRATION("home-registration/home_registration_page"),
     HOME_EDIT("home-registration/home_edit_page"),
-    ROOM_EDIT("room/room_edit_page");
+    ROOM_EDIT("room/room_edit_page"),
+    STATISTICS_DASHBOARD("dashboards/statistics_dashboard_page");
 
     private final String fxml;
 

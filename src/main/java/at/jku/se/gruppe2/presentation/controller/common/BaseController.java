@@ -36,4 +36,9 @@ public abstract class BaseController {
     protected void openHomeDetails() {
         navigate.goTo(Page.DASHBOARD.fxml());
     }
+
+    @FXML
+    protected void openStatisticsDashboard() {
+        navigate.goTo(Page.STATISTICS_DASHBOARD.fxml());
+    }
 }
