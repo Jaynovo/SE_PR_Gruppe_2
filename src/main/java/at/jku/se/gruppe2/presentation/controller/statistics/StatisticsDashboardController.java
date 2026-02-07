@@ -4,8 +4,12 @@ import at.jku.se.gruppe2.domain.model.device.DeviceType;
 import at.jku.se.gruppe2.domain.model.home.Home;
 import at.jku.se.gruppe2.domain.model.home.Room;
 import at.jku.se.gruppe2.domain.model.user.User;
+import at.jku.se.gruppe2.domain.service.statistics.DemoDataSeeder;
 import at.jku.se.gruppe2.domain.service.statistics.StatisticsService;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.DeviceRepository;
 import at.jku.se.gruppe2.infrastructure.persistence.repository.HomeRepository;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.RoomRepository;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.SensorReadingRepository;
 import at.jku.se.gruppe2.infrastructure.persistence.statistics.DeviceTypeStatisticsRepository;
 import at.jku.se.gruppe2.infrastructure.persistence.statistics.SensorReadingStatisticsRepository;
 import at.jku.se.gruppe2.infrastructure.persistence.statistics.StatisticsScopeRepository;
@@ -33,15 +37,18 @@ import java.util.List;
 public class StatisticsDashboardController extends BaseController implements Initializable {
     @FXML private ComboBox<String> scopeBox;              // Home / Room / Device
     @FXML private ComboBox<Room> roomBox;                 // optional
-    @FXML
-    private ComboBox<DeviceType> metricBox;         // sensor types
+    @FXML private ComboBox<DeviceType> metricBox;         // sensor types
     @FXML private ComboBox<String> rangeBox;              // 24h / 7d / 30d
+    @FXML private ComboBox<DemoDataSeeder.IntervalPreset> seedRangeBox;
+
     @FXML private Button refreshButton;
+    @FXML private Button seedButton;
 
     @FXML private Label avgLabel;
     @FXML private Label minLabel;
     @FXML private Label maxLabel;
     @FXML private Label countLabel;
+    @FXML private Label seedHintLabel;
 
     @FXML private LineChart<String, Number> lineChart;
 
@@ -50,6 +57,9 @@ public class StatisticsDashboardController extends BaseController implements Ini
     private final StatisticsScopeRepository scopeRepo = new StatisticsScopeRepository();
     private final SensorReadingStatisticsRepository sensorStatsRepo = new SensorReadingStatisticsRepository();
     private final DeviceTypeStatisticsRepository deviceTypeRepo = new DeviceTypeStatisticsRepository();
+    private final DeviceRepository deviceRepo = new DeviceRepository();
+    private final SensorReadingRepository readingRepo = new SensorReadingRepository();
+    private final DemoDataSeeder demoSeeder = new DemoDataSeeder(deviceRepo, new RoomRepository(), readingRepo);
 
     private final StatisticsService statsService =
             new StatisticsService(scopeRepo, sensorStatsRepo);
@@ -69,6 +79,14 @@ public class StatisticsDashboardController extends BaseController implements Ini
             disableWithMessage("No home available.");
             return;
         }
+
+        seedRangeBox.setItems(FXCollections.observableArrayList(DemoDataSeeder.IntervalPreset.values()));
+        seedRangeBox.getSelectionModel().select(DemoDataSeeder.IntervalPreset.LAST_7D);
+
+        seedButton.setOnAction(e -> {
+            demoSeeder.seedIfMissing(home.getId(), seedRangeBox.getValue().duration);
+            refresh();
+        });
 
         // Scope + time range controls
         scopeBox.setItems(FXCollections.observableArrayList("Home", "Room"));
@@ -106,6 +124,14 @@ public class StatisticsDashboardController extends BaseController implements Ini
         metricBox.valueProperty().addListener((obs, o, n) -> refresh());
         rangeBox.valueProperty().addListener((obs, o, n) -> refresh());
 
+        if (isDashboardEmpty()) clearStats();
+
+        boolean show = isDashboardEmpty();
+        seedButton.setVisible(show);
+        seedButton.setManaged(show);
+        seedRangeBox.setVisible(show);
+        seedRangeBox.setManaged(show);
+
         refresh();
     }
 
@@ -114,7 +140,23 @@ public class StatisticsDashboardController extends BaseController implements Ini
         refresh();
     }
 
+    private void handleSeed() {
+        var preset = seedRangeBox.getValue();
+        if (preset == null) preset = DemoDataSeeder.IntervalPreset.LAST_7D;
+
+        demoSeeder.seedIfMissing(home.getId(), preset.duration);
+
+        refresh();                    // rerender KPIs + chart
+        updateSeedControlsVisibility(); // hide CTA afterwards
+    }
+
     private void refresh() {
+        if (seedButton != null) updateSeedControlsVisibility();
+        if (isDashboardEmpty()) {
+            clearStats();
+            return;
+        }
+
         DeviceType metric = metricBox.getValue();
         if (metric == null) return;
 
@@ -168,6 +210,7 @@ public class StatisticsDashboardController extends BaseController implements Ini
 
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.setName(seriesName);
+        lineChart.getXAxis().setTickLabelRotation(-30);
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MM-dd HH:mm")
                 .withZone(ZoneId.systemDefault());
@@ -227,5 +270,26 @@ public class StatisticsDashboardController extends BaseController implements Ini
             tc.granularity = SensorReadingStatisticsRepository.Granularity.HOUR;
         }
         return tc;
+    }
+
+    private boolean isDashboardEmpty() {
+        return deviceRepo.getSensorDevicesByHomeId(home.getId()).isEmpty()
+                || !readingRepo.hasAnyReadingsForHome(home.getId());
+    }
+
+    private void updateSeedControlsVisibility() {
+        boolean show = isDashboardEmpty();
+
+        seedButton.setVisible(show);
+        seedButton.setManaged(show);
+
+        seedRangeBox.setVisible(show);
+        seedRangeBox.setManaged(show);
+
+        if (seedHintLabel != null) {
+            seedHintLabel.setVisible(show);
+            seedHintLabel.setManaged(show);
+            seedHintLabel.setText("No sensor data yet. Generate demo readings:");
+        }
     }
 }

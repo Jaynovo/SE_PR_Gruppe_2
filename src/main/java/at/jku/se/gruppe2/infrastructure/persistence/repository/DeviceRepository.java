@@ -207,7 +207,8 @@ public class DeviceRepository {
                 FROM device d
                 LEFT JOIN sensor s   ON s.device_id = d.id
                 LEFT JOIN actuator a ON a.device_id = d.id
-                LEFT JOIN device_type dt ON dt.id = s.sensor_type_id OR dt.id = a.actuator_type_id
+                LEFT JOIN device_type dt ON (dt.id = s.sensor_type_id AND s.device_id IS NOT NULL)
+                                             OR (dt.id = a.actuator_type_id AND a.device_id IS NOT NULL)
                 WHERE d.id = ?;
             """;
 
@@ -215,6 +216,49 @@ public class DeviceRepository {
                 sql,
                 ps -> ps.setInt(1, deviceId),
                 this::mapDeviceWithRoomId
+        );
+    }
+
+    public List<Device> getSensorDevicesByHomeId(int homeId) {
+        String sql = """
+        SELECT  d.id,
+                d.room_id,
+                d.label,
+                dt.id       AS type_id,
+                dt.label    AS type_label,
+                dt.category AS type_category,
+                dt.unit     AS type_unit
+        FROM device d
+        JOIN room r ON r.id = d.room_id
+        JOIN sensor s ON s.device_id = d.id
+        JOIN device_type dt ON dt.id = s.sensor_type_id
+        WHERE r.home_info = ?
+        ORDER BY d.id;
+    """;
+
+        return JdbcTemplate.queryForMultipleObjects(
+                sql,
+                ps -> ps.setInt(1, homeId),
+                this::mapDeviceWithRoomId
+        ).orElse(Collections.emptyList());
+    }
+
+    public Optional<Integer> getDeviceTypeIdByLabel(Device.DeviceCategory category, String label) {
+        String sql = """
+        SELECT id
+        FROM device_type
+        WHERE category = CAST(? AS device_category)
+          AND label = ?
+        LIMIT 1;
+    """;
+
+        return JdbcTemplate.queryForValue(
+                sql,
+                ps -> {
+                    ps.setString(1, category.name());
+                    ps.setString(2, label);
+                },
+                rs -> rs.getInt("id")
         );
     }
 

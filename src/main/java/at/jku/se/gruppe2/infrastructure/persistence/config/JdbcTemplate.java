@@ -183,4 +183,41 @@ public class JdbcTemplate {
             throw new RuntimeException(e);
         }
     }
+    @FunctionalInterface
+    public interface SqlBiConsumer<A, B> {
+        void accept(A a, B b) throws SQLException;
+    }
+
+    public static <T> int executeBatchUpdate(
+            String sql,
+            List<T> items,
+            SqlBiConsumer<PreparedStatement, T> binder
+    ) {
+        if (items == null || items.isEmpty()) return 0;
+
+        try (
+                Connection conn = Database.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
+            int count = 0;
+
+            for (T item : items) {
+                binder.accept(ps, item);
+                ps.addBatch();
+                count++;
+
+                // avoid huge batches
+                if (count % 2000 == 0) {
+                    ps.executeBatch();
+                }
+            }
+
+            ps.executeBatch();
+            return count;
+
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

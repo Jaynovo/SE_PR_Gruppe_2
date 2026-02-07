@@ -60,7 +60,7 @@ public class SensorReadingStatisticsRepository {
               AND sr.time >= ?
               AND sr.time < ?
               AND sr.sensor_id IN %s
-        """;
+        """.formatted(in.sql());
 
         Optional<Kpis> opt = JdbcTemplate.queryForObject(
                 sql,

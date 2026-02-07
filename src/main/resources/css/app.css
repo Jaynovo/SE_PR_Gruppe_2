@@ -270,7 +270,6 @@
     -fx-background-color: #077530;
 }
 
-
 /* =========================================================
    10) MENUS & TOOLBARS
    ========================================================= */
@@ -401,4 +400,47 @@
 .feeder-feeding {
     -fx-background-color: #e67e22;
     -fx-animation: pulse 1.2s infinite;
+}
+
+/* =========================================================
+   11) Statistics-only
+   ========================================================= */
+
+/* ===== LineChart base ===== */
+.chart {
+    -fx-background-color: transparent;
+}
+
+.chart-plot-background {
+    -fx-background-color: #0f172a;
+}
+
+.chart-horizontal-grid-lines,
+.chart-vertical-grid-lines {
+    -fx-stroke: rgba(255,255,255,0.08);
+}
+
+.axis {
+    -fx-tick-label-fill: #e5e7eb;
+}
+.axis-label {
+    -fx-text-fill: #e5e7eb;
+}
+
+.axis .axis-line {
+    -fx-stroke: rgba(255,255,255,0.2);
+}
+
+.chart-legend {
+    -fx-background-color: #1f2937;
+    -fx-padding: 8;
+    -fx-background-radius: 8;
+}
+
+.chart-legend-item {
+    -fx-text-fill: #e5e7eb;
+}
+
+.default-color0.chart-series-line {
+    -fx-stroke: #cc4f29;
 }

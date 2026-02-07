@@ -29,6 +29,20 @@ public class RoomRepository {
         );
     }
 
+    public List<Room> getAllRoomsByHomeId(int homeId) {
+        String request = """
+            SELECT *
+            FROM room
+            WHERE home_info = ?
+            ORDER BY id;
+            """;
+        return JdbcTemplate.queryForMultipleObjects(
+                request,
+                ps -> ps.setInt(1, homeId),
+                this::mapRoom
+        ).orElse(Collections.emptyList());
+    }
+
     public int createRoomInDatabase(Room room, Home home) {
         String request = """
                 INSERT INTO room

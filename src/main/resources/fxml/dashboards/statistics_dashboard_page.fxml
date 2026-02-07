@@ -33,6 +33,10 @@
             <Label text="Range:"/>
             <ComboBox fx:id="rangeBox" prefWidth="90"/>
 
+            <Label fx:id="seedHintLabel" text="No data yet:"/>
+            <ComboBox fx:id="seedRangeBox" prefWidth="140"/>
+            <Button fx:id="seedButton" text="Generate Demo Data"/>
+
             <Button text="Refresh" onAction="#handleRefresh"/>
         </ToolBar>
     </top>

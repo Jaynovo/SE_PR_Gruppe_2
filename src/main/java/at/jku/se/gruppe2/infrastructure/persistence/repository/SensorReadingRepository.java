@@ -15,7 +15,10 @@ import java.util.Optional;
 
 public class SensorReadingRepository {
 
-    public Optional<SensorReading> findByDeviceId(int id) {
+    // -----------------
+    // Finders
+    // -----------------
+    public Optional<SensorReading> findByReadingId(int id) {
         String request = "SELECT * FROM sensor_reading WHERE id = ?";
         return JdbcTemplate.queryForObject(
                 request,
@@ -71,48 +74,77 @@ public class SensorReadingRepository {
         ).orElse(Collections.emptyList());
     }
 
+    // -----------------
+    // Inserts
+    // -----------------
+    public int insertBatch(List<SensorReading> readings) {
+        String sql = """
+        INSERT INTO sensor_reading (sensor_id, time, value)
+        VALUES (?, ?, ?)
+    """;
+
+        return JdbcTemplate.executeBatchUpdate(
+                sql,
+                readings,
+                (ps, r) -> {
+                    ps.setInt(1, r.getDeviceId());
+                    ps.setTimestamp(2, Timestamp.from(r.getTimestamp()));
+                    if (r.getValue() == null) ps.setNull(3, Types.DOUBLE);
+                    else ps.setDouble(3, r.getValue());
+                }
+        );
+    }
 
     public int createSensorReading(@NotNull SensorReading sensorReading) {
         String request;
+
         if (sensorReading.getTimestamp() == null) {
             request = """
-                    INSERT INTO sensor_reading (sensor_id, value)
-                    VALUES (?, ?)
-                    RETURNING id
-                    """;
-            Optional<Integer> optId = JdbcTemplate.queryForValue(
-                    request,
-                    ps -> {
-                        ps.setInt(1, sensorReading.getId());
-                        if (sensorReading.getValue() == null) ps.setNull(2, Types.DOUBLE);
-                        else ps.setDouble(2, sensorReading.getValue());
-                    },
-                    rs -> rs.getInt("id")
-            );
-            int id = optId.orElseThrow(() -> new IllegalArgumentException("Sensor reading not created"));
-            sensorReading.setId(id);
-            return id;
-        } else {
-            request = """
-                    INSERT INTO sensor_reading (sensor_id, time, value)
-                    VALUES (?, ?, ?)
-                    RETURNING id
-                    """;
+                INSERT INTO sensor_reading (sensor_id, value)
+                VALUES (?, ?)
+                RETURNING id
+                """;
+
             Optional<Long> optId = JdbcTemplate.queryForValue(
                     request,
                     ps -> {
-                        ps.setInt(1, sensorReading.getDeviceId());
-                        ps.setTimestamp(2, Timestamp.from(sensorReading.getTimestamp()));
-                        if (sensorReading.getValue() == null) ps.setNull(3, Types.DOUBLE);
-                        else ps.setDouble(3, sensorReading.getValue());
+                        ps.setInt(1, sensorReading.getDeviceId()); // FIXED
+                        if (sensorReading.getValue() == null) ps.setNull(2, Types.DOUBLE);
+                        else ps.setDouble(2, sensorReading.getValue());
                     },
                     rs -> rs.getLong("id")
             );
-            int id = Math.toIntExact(optId.orElseThrow(() -> new IllegalStateException("Sensor reading not created!")));
+
+            int id = Math.toIntExact(optId.orElseThrow(() -> new IllegalArgumentException("Sensor reading not created")));
             sensorReading.setId(id);
             return id;
         }
+
+        request = """
+            INSERT INTO sensor_reading (sensor_id, time, value)
+            VALUES (?, ?, ?)
+            RETURNING id
+            """;
+
+        Optional<Long> optId = JdbcTemplate.queryForValue(
+                request,
+                ps -> {
+                    ps.setInt(1, sensorReading.getDeviceId());
+                    ps.setTimestamp(2, Timestamp.from(sensorReading.getTimestamp()));
+                    if (sensorReading.getValue() == null) ps.setNull(3, Types.DOUBLE);
+                    else ps.setDouble(3, sensorReading.getValue());
+                },
+                rs -> rs.getLong("id")
+        );
+
+        int id = Math.toIntExact(optId.orElseThrow(() -> new IllegalStateException("Sensor reading not created!")));
+        sensorReading.setId(id);
+        return id;
     }
+
+    // -----------------
+    // Delete
+    // -----------------
 
     public int deleteOlderThan(Instant timestamp) {
         String request = """
@@ -123,6 +155,28 @@ public class SensorReadingRepository {
                 request,
                 ps -> ps.setTimestamp(1, Timestamp.from(timestamp))
         );
+    }
+
+    // -----------------
+    // Helpers
+    // -----------------
+
+    public boolean hasAnyReadingsForHome(int homeId) {
+        String sql = """
+        SELECT 1
+        FROM sensor_reading sr
+        JOIN sensor s ON s.device_id = sr.sensor_id
+        JOIN device d ON d.id = s.device_id
+        JOIN room r ON r.id = d.room_id
+        WHERE r.home_info = ?
+        LIMIT 1;
+    """;
+
+        return JdbcTemplate.queryForValue(
+                sql,
+                ps -> ps.setInt(1, homeId),
+                rs -> rs.getInt(1)
+        ).isPresent();
     }
 
     private SensorReading mapSensorReading(ResultSet rs) throws SQLException {
