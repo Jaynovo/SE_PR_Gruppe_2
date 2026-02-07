@@ -441,6 +441,44 @@
     -fx-text-fill: #e5e7eb;
 }
 
-.default-color0.chart-series-line {
-    -fx-stroke: #cc4f29;
+.chart-series-line { -fx-stroke-width: 2px; }
+
+.chart-series-line.series1 { -fx-stroke: #f59e0b; } /* Avg */
+.chart-series-line.series0 { -fx-stroke: #ef4444; } /* Min */
+.chart-series-line.series2 { -fx-stroke: #22c55e; } /* Max */
+
+.series-min .chart-series-line {
+    -fx-stroke: #f59e0b;          /* amber */
+    -fx-stroke-dash-array: 6 6;
+}
+
+.series-avg .chart-series-line {
+    -fx-stroke: #ef4444;          /* red */
+    -fx-stroke-width: 3px;
+}
+
+.series-max .chart-series-line {
+    -fx-stroke: #22c55e;          /* green */
+    -fx-stroke-dash-array: 2 8;
+}
+
+.filter-card {
+    -fx-min-width: 180;
+    -fx-pref-width: 220;
+    -fx-padding: 12;
+    -fx-spacing: 8;
+}
+
+.combo-box, .button {
+    -fx-background-radius: 10;
+}
+
+.button.primary {
+    -fx-background-color: -fx-primary;
+    -fx-text-fill: white;
+}
+.zoom-rect {
+    -fx-fill: rgba(204,79,41,0.15);
+    -fx-stroke: rgba(204,79,41,0.65);
+    -fx-stroke-width: 1.5;
 }
