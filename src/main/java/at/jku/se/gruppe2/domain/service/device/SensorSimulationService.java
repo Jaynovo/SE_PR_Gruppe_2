@@ -45,6 +45,7 @@ public class SensorSimulationService {
     private final Map<Integer, CO2Sensor> co2ByRoom = new ConcurrentHashMap<>();
     private final Map<Integer, NoiseSensor> noiseByRoom = new ConcurrentHashMap<>();
     private final Map<Integer, Thermometer> thermoByRoom = new ConcurrentHashMap<>();
+    private final Map<Integer, HumiditySensor> humidityByRoom = new ConcurrentHashMap<>();
 
     // "Grundniveau" pro Raum (damit es nicht komplett zufällig springt)
     //TODO: weitere Sensoren hinzufügen
@@ -52,6 +53,7 @@ public class SensorSimulationService {
     private final Map<Integer, Double> noiseBaseline = new ConcurrentHashMap<>();
     private final Map<Integer, CatSensor> catByRoom = new ConcurrentHashMap<>();
     private final Map<Integer, Double> thermoBaseline = new ConcurrentHashMap<>();
+    private final Map<Integer, Double> humidityBaseline = new ConcurrentHashMap<>();
 
     private volatile boolean running = false;
 
@@ -80,6 +82,10 @@ public class SensorSimulationService {
         if (sensor instanceof Thermometer t) {
             thermoByRoom.put(roomId, t);
             thermoBaseline.putIfAbsent(roomId, 21.0); // z.B. Start bei 21°C
+        }
+        if (sensor instanceof HumiditySensor h) {
+            humidityByRoom.put(roomId, h);
+            humidityBaseline.putIfAbsent(roomId, 45.0); // Start: 45%
         }
         //TODO: weitere Sensoren hinzufügen
     }
@@ -114,6 +120,8 @@ public class SensorSimulationService {
         catImageIndexByRoom.remove(roomId);
         thermoByRoom.remove(roomId);
         thermoBaseline.remove(roomId);
+        humidityByRoom.remove(roomId);
+        humidityBaseline.remove(roomId);
     }
 
     private void tick() {
@@ -131,10 +139,46 @@ public class SensorSimulationService {
         for (Integer roomId : thermoByRoom.keySet()) {
             simulateThermometer(roomId);
         }
+        for (Integer roomId : humidityByRoom.keySet()) {
+            simulateHumidity(roomId);
+        }
         //TODO: weitere Sensoren hinzufügen
         for (Integer roomId : catByRoom.keySet()) {
             simulateCat(roomId);
         }
+    }
+
+    private void simulateHumidity(Integer roomId) {
+        HumiditySensor sensor = humidityByRoom.get(roomId);
+        if (sensor == null) return;
+
+        double base = humidityBaseline.getOrDefault(roomId, 45.0);
+
+        // langsamer Drift
+        double target = 48.0;
+        base += (target - base) * 0.05;
+
+        // leichtes Rauschen
+        base += rnd.nextGaussian() * 0.6;
+
+        // seltenes Event: Feuchtigkeit steigt (Duschen/Kochen)
+        if (rnd.nextDouble() < 0.06) { // 6% pro Tick
+            base += 4.0 + rnd.nextDouble() * 12.0; // +4..+16%
+        }
+
+        // seltenes Event: Lüften/trockene Luft
+        if (rnd.nextDouble() < 0.04) { // 4% pro Tick
+            base -= 3.0 + rnd.nextDouble() * 10.0; // -3..-13%
+        }
+
+        // baseline clamp
+        base = clamp(base, 20, 80);
+        humidityBaseline.put(roomId, base);
+
+        // finaler Messwert
+        double value = clamp(base + rnd.nextGaussian() * 0.3, 10, 95);
+
+        sensor.setValue(value);
     }
 
     private void simulateCat(int roomId) {

@@ -36,6 +36,9 @@ public class DeviceCardFactory {
     private final Map<Integer, Label> heaterPercentBadges = new HashMap<>();
     private final Map<Integer, Slider> heaterSliders = new HashMap<>();
 
+    //Vent for humidity
+    private final Map<Integer, ToggleButton> actuatorToggles = new HashMap<>();
+
     public DeviceCardFactory(
             ActuatorConfigService actuatorConfigService,
             ActuatorService actuatorService,
@@ -441,6 +444,7 @@ public class DeviceCardFactory {
     private Pane createStandardActuatorCard(VBox deviceCard, Device device, boolean canDelete, boolean canConfigure) {
         ToggleButton toggle = new ToggleButton();
         toggle.getStyleClass().add("actuator-toggle");
+        actuatorToggles.put(device.getId(), toggle);
 
         String currentState = actuatorService.getStateOrDefault(device.getId(), "OFF");
         boolean isOn = "ON".equalsIgnoreCase(currentState);
@@ -625,8 +629,6 @@ public class DeviceCardFactory {
                 Label lbl = sensorValueLabels.get(d.getId());
                 if (lbl != null) {
                     if ("CatSensor".equalsIgnoreCase(d.getTypeLabel()) && s instanceof CatSensor cat) {
-                        // CatSensor hast du eh schon separat (Status+Bild)
-                        // optional: nur statusLbl updaten, falls du es willst
                     } else {
                         updateStandardSensorLabel(d, s, lbl);
                     }
@@ -644,6 +646,20 @@ public class DeviceCardFactory {
                 Slider sl = heaterSliders.get(d.getId());
                 if (sl != null && !sl.isValueChanging()) { // damit User nicht “zurückgezogen” wird
                     sl.setValue(pct);
+                }
+            }
+            // Standard Actuator Toggle (z.B. Ventilation) updaten
+            if (d.getCategory() == Device.DeviceCategory.ACTUATOR) {
+                ToggleButton t = actuatorToggles.get(d.getId());
+                if (t != null) {
+                    String state = actuatorService.getStateOrDefault(d.getId(), "OFF");
+                    boolean isOn = "ON".equalsIgnoreCase(state);
+
+                    // Nur setzen, wenn der User gerade nicht klickt (verhindert UI-Fight)
+                    if (!t.isArmed() && !t.isPressed()) {
+                        t.setSelected(isOn);
+                        t.setText(isOn ? "ON" : "OFF");
+                    }
                 }
             }
         }

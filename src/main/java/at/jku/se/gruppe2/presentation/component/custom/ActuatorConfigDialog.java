@@ -31,7 +31,7 @@ public class ActuatorConfigDialog {
     }
 
     public void showVentilationConfig(Device actuatorDevice) {
-        Dialog<ButtonType> dialog = new Dialog<ButtonType>();
+        Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Configure Ventilation");
         dialog.getDialogPane().getStylesheets().add(
                 actuatorCfg.getClass().getResource("/css/app.css").toExternalForm()
@@ -39,14 +39,21 @@ public class ActuatorConfigDialog {
 
         VentilationConfig cfg = actuatorCfg.getOrCreateVentilationConfig(actuatorDevice.getId());
 
-        CheckBox autoMode = new CheckBox("Auto mode (based on CO₂)");
+        CheckBox autoMode = new CheckBox("Auto mode (CO₂ / Humidity)");
         autoMode.setSelected(cfg.isAutoMode());
 
-        Spinner<Integer> onTh = new Spinner<Integer>(400, 3000, cfg.getOnThresholdPpm());
-        onTh.setEditable(true);
+        // CO2 thresholds (ppm)
+        Spinner<Integer> onTh = new Spinner<>(400, 3000, cfg.getOnThresholdPpm(), 50);
+        Spinner<Integer> offTh = new Spinner<>(400, 3000, cfg.getOffThresholdPpm(), 50);
 
-        Spinner<Integer> offTh = new Spinner<Integer>(400, 3000, cfg.getOffThresholdPpm());
-        offTh.setEditable(true);
+        // Humidity thresholds (%)
+        Spinner<Double> humOnTh = new Spinner<>(20.0, 90.0, cfg.getOnThresholdHumidity(), 0.5);
+        Spinner<Double> humOffTh = new Spinner<>(20.0, 90.0, cfg.getOffThresholdHumidity(), 0.5);
+
+        onTh.setEditable(false);
+        offTh.setEditable(false);
+        humOnTh.setEditable(false);
+        humOffTh.setEditable(false);
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -61,8 +68,11 @@ public class ActuatorConfigDialog {
         grid.add(new Label("Switch OFF at (ppm):"), 0, 2);
         grid.add(offTh, 1, 2);
 
-        onTh.setEditable(false);
-        offTh.setEditable(false);
+        grid.add(new Label("Switch ON at (%):"), 0, 3);
+        grid.add(humOnTh, 1, 3);
+
+        grid.add(new Label("Switch OFF at (%):"), 0, 4);
+        grid.add(humOffTh, 1, 4);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -73,10 +83,21 @@ public class ActuatorConfigDialog {
             int onVal = onTh.getValue();
             int offVal = offTh.getValue();
 
-            //off muss < on sein
+            double humOnVal = humOnTh.getValue();
+            double humOffVal = humOffTh.getValue();
+
+            // OFF muss < ON sein (CO2)
             if (offVal >= onVal) {
                 UIUtils.styledAlert(Alert.AlertType.ERROR,
-                        "OFF threshold must be smaller than ON threshold.",
+                        "OFF threshold (CO₂) must be smaller than ON threshold.",
+                        ButtonType.OK).showAndWait();
+                return;
+            }
+
+            // OFF muss < ON sein (Humidity)
+            if (humOffVal >= humOnVal) {
+                UIUtils.styledAlert(Alert.AlertType.ERROR,
+                        "OFF threshold (Humidity) must be smaller than ON threshold.",
                         ButtonType.OK).showAndWait();
                 return;
             }
@@ -84,8 +105,13 @@ public class ActuatorConfigDialog {
             cfg.setAutoMode(autoMode.isSelected());
             cfg.setOnThresholdPpm(onVal);
             cfg.setOffThresholdPpm(offVal);
+            cfg.setOnThresholdHumidity(humOnVal);
+            cfg.setOffThresholdHumidity(humOffVal);
 
             actuatorCfg.saveVentilationConfig(actuatorDevice.getId(), cfg);
+
+            System.out.println("SAVED: humOn=" + cfg.getOnThresholdHumidity()
+                    + " humOff=" + cfg.getOffThresholdHumidity());
 
             UIUtils.styledAlert(Alert.AlertType.INFORMATION,
                     "Saved ventilation config.", ButtonType.OK).showAndWait();

@@ -30,10 +30,13 @@ public class RoomAutomationService {
 
     private void evaluateVentilation(List<Device> devices) {
         Sensor co2 = null;
+        Sensor humidity = null;
+
         for (Device d : devices) {
-            if (d instanceof Sensor s && "CO2Sensor".equalsIgnoreCase(d.getTypeLabel())) {
-                co2 = s;
-                break;
+            if (d instanceof Sensor s) {
+                String t = d.getTypeLabel() == null ? "" : d.getTypeLabel().toLowerCase();
+                if (t.contains("co2")) co2 = s;
+                if (t.contains("humidity")) humidity = s;
             }
         }
 
@@ -46,18 +49,27 @@ public class RoomAutomationService {
             }
         }
 
-        if (co2 == null || ventilation == null) return;
+        if (ventilation == null) return;
+        if (co2 == null && humidity == null) return;
 
         VentilationConfig vCfg = actuatorCfg.getOrCreateVentilationConfig(ventilation.getId());
         if (!vCfg.isAutoMode()) return;
 
-        double co2Value = co2.getValue();
+        double co2Value = (co2 != null) ? co2.getValue() : Double.NaN;
+        double humValue = (humidity != null) ? humidity.getValue() : Double.NaN;
+
         String currentState = actuatorService.getStateOrDefault(ventilation.getId(), "OFF");
         boolean isOn = "ON".equalsIgnoreCase(currentState);
 
-        if (!isOn && co2Value >= vCfg.getOnThresholdPpm()) {
+        boolean co2High = co2 != null && co2Value >= vCfg.getOnThresholdPpm();
+        boolean humHigh = humidity != null && humValue >= vCfg.getOnThresholdHumidity();
+
+        boolean co2Ok = (co2 == null) || (co2Value <= vCfg.getOffThresholdPpm());
+        boolean humOk = (humidity == null) || (humValue <= vCfg.getOffThresholdHumidity());
+
+        if (!isOn && (co2High || humHigh)) {
             actuatorService.setState(ventilation.getId(), "ON");
-        } else if (isOn && co2Value <= vCfg.getOffThresholdPpm()) {
+        } else if (isOn && (co2Ok && humOk)) {
             actuatorService.setState(ventilation.getId(), "OFF");
         }
     }
@@ -73,8 +85,7 @@ public class RoomAutomationService {
 
         Device alarm = null;
         for (Device d : devices) {
-            if (d.getCategory() == Device.DeviceCategory.ACTUATOR
-                    && "AlarmSystem".equalsIgnoreCase(d.getTypeLabel())) {
+            if (d.getCategory() == Device.DeviceCategory.ACTUATOR && "AlarmSystem".equalsIgnoreCase(d.getTypeLabel())) {
                 alarm = d;
                 break;
             }
@@ -116,11 +127,7 @@ public class RoomAutomationService {
     }
 
     public void onAlarmTriggered(double noiseValue) {
-        UIUtils.showAlarmPopup(
-                "ALARM!",
-                "Alarmanlage ausgelöst!",
-                noiseValue
-        );
+        UIUtils.showAlarmPopup("ALARM!", "Alarmanlage ausgelöst!", noiseValue);
     }
 
     private void evaluateCatFeeder(List<Device> devices) {
@@ -142,8 +149,7 @@ public class RoomAutomationService {
         // 2) Cat Feeder (Actuator Device) finden
         Device feeder = null;
         for (Device d : devices) {
-            if (d.getCategory() == Device.DeviceCategory.ACTUATOR
-                    && "Cat Feeder".equalsIgnoreCase(d.getTypeLabel())) {
+            if (d.getCategory() == Device.DeviceCategory.ACTUATOR && "Cat Feeder".equalsIgnoreCase(d.getTypeLabel())) {
                 feeder = d;
                 break;
             }
