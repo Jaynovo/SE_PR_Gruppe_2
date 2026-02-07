@@ -644,7 +644,7 @@ public class DeviceCardFactory {
                 if (badge != null) badge.setText(pct + " %");
 
                 Slider sl = heaterSliders.get(d.getId());
-                if (sl != null && !sl.isValueChanging()) { // damit User nicht “zurückgezogen” wird
+                if (sl != null && !sl.isValueChanging()) {
                     sl.setValue(pct);
                 }
             }
@@ -655,7 +655,7 @@ public class DeviceCardFactory {
                     String state = actuatorService.getStateOrDefault(d.getId(), "OFF");
                     boolean isOn = "ON".equalsIgnoreCase(state);
 
-                    // Nur setzen, wenn der User gerade nicht klickt (verhindert UI-Fight)
+
                     if (!t.isArmed() && !t.isPressed()) {
                         t.setSelected(isOn);
                         t.setText(isOn ? "ON" : "OFF");

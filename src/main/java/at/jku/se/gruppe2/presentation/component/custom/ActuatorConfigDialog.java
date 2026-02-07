@@ -110,8 +110,6 @@ public class ActuatorConfigDialog {
 
             actuatorCfg.saveVentilationConfig(actuatorDevice.getId(), cfg);
 
-            System.out.println("SAVED: humOn=" + cfg.getOnThresholdHumidity()
-                    + " humOff=" + cfg.getOffThresholdHumidity());
 
             UIUtils.styledAlert(Alert.AlertType.INFORMATION,
                     "Saved ventilation config.", ButtonType.OK).showAndWait();
