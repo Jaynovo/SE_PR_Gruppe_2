@@ -7,6 +7,18 @@ import at.jku.se.gruppe2.infrastructure.persistence.config.JdbcTemplate;
 import java.sql.*;
 import java.util.*;
 
+/**
+ * Repository for accessing and mutating {@link Room} entities in the {@code room} table.
+ *
+ * <p>This repository provides CRUD-style operations for rooms and supports lookups by home.</p>
+ *
+ * <p><b>Cascade behavior:</b> {@link #deleteRoom(int)} explicitly deletes devices belonging to the room
+ * via {@link DeviceRepository#deleteDevicesByRoomId(int)} before removing the room row.</p>
+ *
+ * <p><b>Null handling:</b> Room dimensions (length/width) are optional and may be stored as NULL in the database.</p>
+ *
+ * <p><b>Error handling:</b> SQL/connection errors are wrapped in {@link RuntimeException} by {@link JdbcTemplate}.</p>
+ */
 public class RoomRepository {
 
     private final DeviceRepository deviceRepository;
@@ -15,6 +27,13 @@ public class RoomRepository {
         this.deviceRepository = new DeviceRepository();
     }
 
+    /**
+     * Loads all rooms for the given {@link Home}.
+     *
+     * @param home home whose id is used for lookup ({@code room.home_info})
+     * @return optional list of rooms (present even if empty, depending on {@link JdbcTemplate} behavior)
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<List<Room>> getAllRoomsByHome(Home home) {
         String request = """
                 SELECT *
@@ -29,6 +48,14 @@ public class RoomRepository {
         );
     }
 
+
+    /**
+     * Loads all rooms for the given home id.
+     *
+     * @param homeId home id referenced by {@code room.home_info}
+     * @return list of rooms (never {@code null})
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public List<Room> getAllRoomsByHomeId(int homeId) {
         String request = """
             SELECT *
@@ -43,6 +70,16 @@ public class RoomRepository {
         ).orElse(Collections.emptyList());
     }
 
+    /**
+     * Inserts a new room for the given home and returns the generated id.
+     *
+     * <p>The generated id is written back into the passed {@code room} instance.</p>
+     *
+     * @param room room to insert (label/floor/length/width are persisted)
+     * @param home owning home (used for {@code home_info})
+     * @return generated room id if successful; {@code 0} if the id was not returned
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int createRoomInDatabase(Room room, Home home) {
         String request = """
                 INSERT INTO room
@@ -78,6 +115,13 @@ public class RoomRepository {
         return id.orElse(0);
     }
 
+    /**
+     * Updates an existing room row (label, floor, length, width).
+     *
+     * @param room room to update (must have a valid id)
+     * @return number of affected rows (typically {@code 1} if successful, {@code 0} if not found)
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int updateRoom(Room room) {
         String request = """
                 UPDATE room
@@ -111,6 +155,16 @@ public class RoomRepository {
         );
     }
 
+    /**
+     * Deletes a room by id.
+     *
+     * <p>Before deleting the room row, this method deletes all devices assigned to the room via
+     * {@link DeviceRepository#deleteDevicesByRoomId(int)}.</p>
+     *
+     * @param roomId room id to delete
+     * @return number of affected rows (typically {@code 1} if deleted, {@code 0} if not found)
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int deleteRoom(int roomId) {
         //First delete all Devices belonging to this room
         deviceRepository.deleteDevicesByRoomId(roomId);
@@ -126,6 +180,13 @@ public class RoomRepository {
         );
     }
 
+    /**
+     * Loads a room by its id.
+     *
+     * @param roomId room id
+     * @return optional room; empty if not found
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<Room> getRoomById(int roomId) {
         String request = """
             SELECT *
@@ -140,6 +201,17 @@ public class RoomRepository {
         );
     }
 
+
+    /**
+     * Maps the current {@link ResultSet} row into a {@link Room} domain object.
+     *
+     * <p>Note: this mapper initializes {@link Room#setDevices(List)} with an empty list.
+     * Device population is expected to happen via separate repository calls.</p>
+     *
+     * @param rs result set positioned at a valid row
+     * @return mapped room
+     * @throws SQLException if reading from the result set fails
+     */
     private Room mapRoom(ResultSet rs) throws SQLException {
         Room room = new Room();
 

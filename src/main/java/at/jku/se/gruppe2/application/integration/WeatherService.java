@@ -9,11 +9,34 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Locale;
 
+/**
+ * Utility service for retrieving current weather data (specifically temperature)
+ * from the Open-Meteo API for a given geographic coordinate.
+ *
+ * <p><b>Error handling:</b> This service is fail-safe and returns {@link Double#NaN}
+ * if the request fails, the API returns a non-200 status, or the expected JSON
+ * fields are not present. All exceptions are caught internally.</p>
+ *
+ * <p><b>Side effects:</b> writes diagnostic output to {@code System.out}/{@code System.err}.</p>
+ *
+ * <p><b>External dependency:</b> calls {@code https://api.open-meteo.com/}.</p>
+ */
 public class WeatherService {
 
     private static final HttpClient client = HttpClient.newHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    /**
+     * Fetches the current temperature (in °C as returned by Open-Meteo) for the given latitude/longitude.
+     *
+     * <p>The method calls the Open-Meteo endpoint with {@code current_weather=true} and then reads
+     * {@code current_weather.temperature} from the JSON response.</p>
+     *
+     * @param latitude latitude in decimal degrees (e.g., 48.3069)
+     * @param longitude longitude in decimal degrees (e.g., 14.2858)
+     * @return the current temperature if available; otherwise {@link Double#NaN}
+     * @throws Exception (none) (all exceptions are caught internally; the method does not throw)
+     */
     public static double getCurrentTemperature(double latitude, double longitude) {
         try {
             String url = String.format(

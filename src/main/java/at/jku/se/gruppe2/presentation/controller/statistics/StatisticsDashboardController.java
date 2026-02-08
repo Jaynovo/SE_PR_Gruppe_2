@@ -286,11 +286,8 @@ public class StatisticsDashboardController extends BaseController implements Ini
 
         updateDataBoundsFromChart();
         configureTimeAxis();
-
-        // Tooltips only on AVG to avoid noise (optional)
         installTooltips(avgSeries);
 
-        // Optional: hide symbols to reduce clutter for 30d hourly
         lineChart.setCreateSymbols(false);
     }
 
