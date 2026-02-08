@@ -1,5 +1,7 @@
 # Installation & Startup Manual
 
+[Jump to using the App immediately](#using-the-application)
+
 ## 1. Purpose
 
 This document describes how to install, configure, and run the **Smart Home Simulator application** on a local development machine.  
@@ -75,3 +77,43 @@ This will start the application. It is good practice to reload all dependencies 
 
 Using this should open the JavaFX-Window and you should be greeted by the Login-Screen:
 ![Screenshot from the Smarthome Simulator App](docs/screenshots/smarthomesimulator_login_screen.png)
+
+## Using the Application
+
+We have provided a sample SQL-file that creates a few users, fully mocked houses and includes different roles and readings. Just run [user_file.sql](db/user_file.sql) in your database to try it out!
+
+The users created are as follows:
+- alex.owner@demo.local
+- riley.resident@demo.local
+- sam.guest@demo.local
+- pat.owner@demo.local
+
+They share the same password: **test**, which is incredibly unsafe but makes testing easy.
+
+Upon logging in with alex.owner@demo.local, you will be greeted by this dashboard:
+
+![Dashboardview of Alex Owner, in an Owner-Role](docs/screenshots/alex_owner_dashboard.png)
+
+There is a lot of information in here, but the buttons themselves are fairly self-explanatory:
+
+The top right offers a view of the Role the User occupies in the Home and a dropdown menu "Manage User" which lets you edit your Profile Information or Logout.  
+On the top left, you will see the current outside temperature of your Home, with the entered details right below it.  
+Below that, you will find an overview of your Rooms, with additional information about the floor, dimensions, area and your Devices in that Room, as well as Buttons to manage those Rooms.  
+On the right-hand side, you will important features such as sharing your home and managing the users in your home.
+![Control Buttons](docs/screenshots/control_buttons.png)
+---------
+Our SmartHome Dashboard offers a **Role-system** to make sure, you have all the control over who has access to what in your home.  
+The button "Manage Home User" gives you control over the Residents and Guests in your home, with Residents being able to manage Rooms (delete/create devices in rooms) as well as control devices. Guests may only control devices. The owner retains full control over everything.
+![Screenshot of Manage Home Members](docs/screenshots/manage_home_users.png)
+The button "Change Home Details" lets you change your home's address and location-based services.
+---------
+The button "Stats" gives you an overview of all your statistics - things like average temperature (for your house or individual rooms).  
+*Note: The UI is still buggy and may require you to double-click in the graph and scroll to reset properly*
+
+![Screenshot of Stats Page](docs/screenshots/stats_dashboard.png)
+```
+- Shift-Drag to Pan
+- Scroll to Zoom in/out
+- Left-Click Drag to create a selection box
+- Double-Click to reset view
+```
