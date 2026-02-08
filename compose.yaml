@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:latest  # always pull the newest version
+    image: postgres:16  # always pull the newest version
     restart: always         # makes sure that it restarts automatically
     shm_size: 128mb
     env_file:
@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"         # Standard ports
     volumes:
-      - db_data:/var/lib/postgresql
+      - db_data:/var/lib/postgresql/data
 volumes:
   db_data:
 
