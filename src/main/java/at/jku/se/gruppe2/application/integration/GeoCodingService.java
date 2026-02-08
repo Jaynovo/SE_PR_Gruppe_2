@@ -48,7 +48,7 @@ public class GeoCodingService {
      *
      * @param address the address to enrich; if {@code null}, the method returns without changes
      * @return nothing (void)
-     * @throws none (all exceptions are caught internally)
+     * @throws Exception (none) (all exceptions are caught internally)
      */
     public static void enrichWithCoordinates(Address address) {
         try {
