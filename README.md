@@ -5,9 +5,6 @@ Thomas Brunnbauer
 Markus Gaber
 Jason Sajovic
 
-Rollen:
-tbd 
-
 Zeitaufzeichnung:  
 "| time xxh" bedeutet, dass alle Gruppenmitglieder an den Commit gearbeitet haben.  
 "| [label] xxh" bedeutet, dass nur "label" an den Commit gearbeitet hat.  
@@ -26,4 +23,8 @@ XL: >8h
 Story Points:  
 Based on Sizes, provide a clearer estimate of hours
 
-Database access is objectoriented; Pass along objects!
+
+Testing: Certain classes were excluded from testing because they are either covered by other classes using them or because they are mostly UI-controlling  
+**Note** that running any of the Tests within persistence will **clear the database of all rows**.
+
+For installation and usage instructions, [go here](installation.md)!

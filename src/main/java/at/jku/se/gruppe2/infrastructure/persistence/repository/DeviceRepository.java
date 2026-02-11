@@ -10,8 +10,32 @@ import at.jku.se.gruppe2.infrastructure.persistence.config.JdbcTemplate;
 import java.sql.*;
 import java.util.*;
 
+/**
+ * Repository for accessing and mutating {@link Device} entities and related tables.
+ *
+ * <p>This repository provides CRUD operations for {@code device} and helper operations for:</p>
+ * <ul>
+ *   <li>linking a device to a {@code sensor} or {@code actuator} type</li>
+ *   <li>loading device types from {@code device_type}</li>
+ *   <li>reading/writing {@code actuator_state}</li>
+ * </ul>
+ *
+ * <p><b>Polymorphic mapping:</b> Depending on the device type category (SENSOR/ACTUATOR),
+ * the repository instantiates specific subclasses such as {@link Thermometer} or
+ * {@link VentilationActuator} based on the {@code device_type.label}.</p>
+ *
+ * <p><b>Error handling:</b> SQL/connection errors are wrapped in {@link RuntimeException}
+ * by {@link JdbcTemplate}.</p>
+ */
 public class DeviceRepository {
 
+    /**
+     * Loads all devices belonging to a given room id (including joined device type info if present).
+     *
+     * @param roomId room id (foreign key {@code device.room_id})
+     * @return list of devices in that room (never {@code null})
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public List<Device> getDevicesByRoomId(int roomId) {
         String sql = """
             SELECT  d.id,
@@ -39,6 +63,16 @@ public class DeviceRepository {
         return devicesOpt.orElse(Collections.emptyList());
     }
 
+    /**
+     * Creates a {@code device} row for the given device and room.
+     *
+     * <p>The generated id is written back into the passed {@code device} instance.</p>
+     *
+     * @param device device to create (label is persisted)
+     * @param room owning room (used for {@code room_id})
+     * @return generated id if successful; {@code 0} if the id was not returned
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int createDevice(Device device, Room room) {
         String sql = """
                 INSERT INTO device (room_id, label)
@@ -61,6 +95,13 @@ public class DeviceRepository {
         return id.orElse(0);
     }
 
+    /**
+     * Updates the label of an existing device.
+     *
+     * @param device device to update (must have id and label set)
+     * @return number of affected rows (typically {@code 1} if successful, {@code 0} if not found)
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int updateDevice(Device device) {
         String sql = """
                 UPDATE device
@@ -77,6 +118,14 @@ public class DeviceRepository {
         );
     }
 
+
+    /**
+     * Deletes a device by id.
+     *
+     * @param deviceId primary key of the device
+     * @return number of affected rows
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int deleteDevice(int deviceId) {
         String sql = "DELETE FROM device WHERE id = ?";
 
@@ -86,6 +135,13 @@ public class DeviceRepository {
         );
     }
 
+    /**
+     * Deletes all devices belonging to a given room id.
+     *
+     * @param roomId room id (foreign key {@code device.room_id})
+     * @return number of affected rows (may be {@code 0})
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int deleteDevicesByRoomId(int roomId) {
         String request = """
             DELETE FROM device
@@ -98,6 +154,12 @@ public class DeviceRepository {
         );
     }
 
+    /**
+     * Factory method that creates a concrete {@link Sensor} subtype based on the device type label.
+     *
+     * @param typeLabel value of {@code device_type.label}
+     * @return a concrete sensor instance; returns an anonymous {@link Sensor} if no mapping matches
+     */
     private Sensor createSensor(String typeLabel) {
         return switch (typeLabel) {
             case "Thermometer" -> new Thermometer();
@@ -113,6 +175,12 @@ public class DeviceRepository {
         };
     }
 
+    /**
+     * Factory method that creates a concrete {@link Actuator} subtype based on the device type label.
+     *
+     * @param typeLabel value of {@code device_type.label}
+     * @return a concrete actuator instance; returns an anonymous {@link Actuator} if no mapping matches
+     */
     private Actuator createActuator(String typeLabel) {
         return switch (typeLabel) {
             case "Ventilation" -> new VentilationActuator();
@@ -125,6 +193,14 @@ public class DeviceRepository {
         };
     }
 
+
+    /**
+     * Loads all device types of a given category from {@code device_type}.
+     *
+     * @param category category to filter by (cast to the DB enum {@code device_category})
+     * @return list of device types (never {@code null})
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public List<DeviceType> getDeviceTypesByCategory(Device.DeviceCategory category) {
         String sql = """
         SELECT id, category, label, unit
@@ -149,6 +225,14 @@ public class DeviceRepository {
         return typesOpt.orElse(java.util.Collections.emptyList());
     }
 
+    /**
+     * Attaches a device to a sensor type by inserting into the {@code sensor} table.
+     *
+     * @param deviceId device id
+     * @param sensorTypeId sensor type id (references {@code device_type.id})
+     * @return number of affected rows (typically {@code 1})
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int attachSensor(int deviceId, int sensorTypeId) {
         String sql = """
         INSERT INTO sensor (device_id, sensor_type_id)
@@ -164,6 +248,14 @@ public class DeviceRepository {
         );
     }
 
+    /**
+     * Attaches a device to an actuator type by inserting into the {@code actuator} table.
+     *
+     * @param deviceId device id
+     * @param actuatorTypeId actuator type id (references {@code device_type.id})
+     * @return number of affected rows (typically {@code 1})
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int attachActuator(int deviceId, int actuatorTypeId) {
         String sql = """
         INSERT INTO actuator (device_id, actuator_type_id)
@@ -179,6 +271,13 @@ public class DeviceRepository {
         );
     }
 
+    /**
+     * Returns the most recent state string for a given actuator (device id).
+     *
+     * @param actuatorDeviceId actuator id (stored as {@code actuator_state.actuator_id})
+     * @return optional state string; empty if no state has been stored yet
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<String> getLatestActuatorState(int actuatorDeviceId) {
         String sql = """
         SELECT state
@@ -195,6 +294,13 @@ public class DeviceRepository {
         );
     }
 
+    /**
+     * Loads a single device by id (including joined device type info if present).
+     *
+     * @param deviceId primary key of the device
+     * @return optional device (empty if not found)
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<Device> getDeviceById(int deviceId) {
         String sql = """
             SELECT  d.id,
@@ -219,6 +325,13 @@ public class DeviceRepository {
         );
     }
 
+    /**
+     * Loads all sensor devices that belong to a given home id.
+     *
+     * @param homeId home id referenced by {@code room.home_info}
+     * @return list of sensor devices (never {@code null})
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public List<Device> getSensorDevicesByHomeId(int homeId) {
         String sql = """
         SELECT  d.id,
@@ -243,6 +356,14 @@ public class DeviceRepository {
         ).orElse(Collections.emptyList());
     }
 
+    /**
+     * Resolves the {@code device_type.id} for the given category and label.
+     *
+     * @param category device category (cast to DB enum {@code device_category})
+     * @param label device type label
+     * @return optional type id; empty if no matching type exists
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<Integer> getDeviceTypeIdByLabel(Device.DeviceCategory category, String label) {
         String sql = """
         SELECT id
@@ -263,7 +384,18 @@ public class DeviceRepository {
     }
 
     /**
-     * Maps a database row into a Device object.
+     * Maps a database row (including optional joined type columns) into a {@link Device} instance.
+     *
+     * <p>If {@code type_id} is {@code NULL}, an anonymous {@link Device} instance is created and
+     * {@link Device#getType()} remains unset.</p>
+     *
+     * <p>If a type exists, a concrete sensor/actuator subclass is instantiated based on
+     * {@code type_category} and {@code type_label}, and a {@link DeviceType} instance is created
+     * and assigned via {@link Device#setType(DeviceType)}.</p>
+     *
+     * @param rs result set positioned at a valid row
+     * @return mapped device (id and label set; type may be unset)
+     * @throws SQLException if reading from the result set fails
      */
     private Device mapDevice(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
@@ -302,12 +434,28 @@ public class DeviceRepository {
         return device;
     }
 
+    /**
+     * Variant of {@link #mapDevice(ResultSet)} that also assigns {@code room_id} to the mapped device.
+     *
+     * @param rs result set positioned at a valid row
+     * @return mapped device with {@code roomId} set
+     * @throws SQLException if reading from the result set fails
+     */
     private Device mapDeviceWithRoomId(ResultSet rs) throws SQLException {
         Device device = mapDevice(rs);  // Reuse the mapping logic
         device.setRoomId(rs.getInt("room_id"));
         return device;
     }
 
+
+    /**
+     * Inserts a new actuator state record.
+     *
+     * @param actuatorDeviceId actuator id (device id) that the state belongs to
+     * @param state state string to persist
+     * @return number of affected rows (typically {@code 1})
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int insertActuatorState(int actuatorDeviceId, String state) {
         String sql = """
         INSERT INTO actuator_state (actuator_id, state)

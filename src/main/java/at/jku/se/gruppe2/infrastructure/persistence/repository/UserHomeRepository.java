@@ -7,10 +7,36 @@ import at.jku.se.gruppe2.infrastructure.persistence.config.JdbcTemplate;
 import java.sql.*;
 import java.util.*;
 
+
+/**
+ * Repository for managing membership relationships between users and homes via the {@code home_user} table.
+ *
+ * <p>This repository provides:</p>
+ * <ul>
+ *   <li>Role lookup and permission checks for a user in a home</li>
+ *   <li>Adding/removing users to/from homes</li>
+ *   <li>Updating roles</li>
+ *   <li>Listing users in a home (with user profile data)</li>
+ *   <li>Listing homes for a user (membership list)</li>
+ *   <li>Owner-related helper queries</li>
+ *   <li>Role-based counts</li>
+ * </ul>
+ *
+ * <p><b>Role handling:</b> Roles are stored in the database as {@code user_role} and mapped to
+ * {@link UserRole}. Comparisons such as permission checks delegate to {@link UserRole#hasPermission(UserRole)}.</p>
+ *
+ * <p><b>Error handling:</b> SQL/connection errors are wrapped in {@link RuntimeException} by
+ * {@link JdbcTemplate}.</p>
+ */
 public class UserHomeRepository {
 
     /**
-     * Get the role of a user in a specific home
+     * Retrieves the role of a user in a specific home.
+     *
+     * @param userId user id ({@code home_user.user_id})
+     * @param homeId home id ({@code home_user.home_id})
+     * @return optional role; empty if the user is not assigned to the home
+     * @throws RuntimeException if a database/driver error occurs
      */
     public Optional<UserRole> getUserRoleInHome(int userId, int homeId) {
         String sql = """
@@ -30,7 +56,16 @@ public class UserHomeRepository {
     }
 
     /**
-     * Add a user to a home with a specific role
+     * Adds a user to a home with a specific role.
+     *
+     * <p>If a membership row already exists for {@code (user_id, home_id)}, this method updates the role
+     * instead of failing, using {@code ON CONFLICT ... DO UPDATE}.</p>
+     *
+     * @param userId user id
+     * @param homeId home id
+     * @param role role to assign
+     * @return number of affected rows (for PostgreSQL this is typically {@code 1})
+     * @throws RuntimeException if a database/driver error occurs
      */
     public int addUserToHome(int userId, int homeId, UserRole role) {
         String sql = """
@@ -51,7 +86,12 @@ public class UserHomeRepository {
     }
 
     /**
-     * Remove a user from a home
+     * Removes a user from a home.
+     *
+     * @param userId user id
+     * @param homeId home id
+     * @return number of affected rows (typically {@code 1} if removed, {@code 0} if membership did not exist)
+     * @throws RuntimeException if a database/driver error occurs
      */
     public int removeUserFromHome(int userId, int homeId) {
         String sql = """
@@ -69,7 +109,13 @@ public class UserHomeRepository {
     }
 
     /**
-     * Update a user's role in a home
+     * Updates a user's role in a home.
+     *
+     * @param userId user id
+     * @param homeId home id
+     * @param newRole new role to set
+     * @return number of affected rows (typically {@code 1} if updated, {@code 0} if membership did not exist)
+     * @throws RuntimeException if a database/driver error occurs
      */
     public int updateUserRole(int userId, int homeId, UserRole newRole) {
         String sql = """
@@ -89,7 +135,19 @@ public class UserHomeRepository {
     }
 
     /**
-     * Get all users in a home with their roles
+     * Loads all users belonging to a given home, including profile fields from {@code user_information}.
+     *
+     * <p>Ordering is role-aware:</p>
+     * <ol>
+     *   <li>OWNER</li>
+     *   <li>RESIDENT</li>
+     *   <li>GUEST</li>
+     * </ol>
+     * followed by alphabetical ordering of first and last name.</p>
+     *
+     * @param homeId home id
+     * @return list of {@link HomeUser} membership DTOs (never {@code null})
+     * @throws RuntimeException if a database/driver error occurs
      */
     public List<HomeUser> getUsersInHome(int homeId) {
         String sql = """
@@ -122,7 +180,14 @@ public class UserHomeRepository {
     }
 
     /**
-     * Get all homes a user belongs to with their roles
+     * Loads all homes a user belongs to (membership rows), including user profile data.
+     *
+     * <p><b>Note:</b> This method returns membership objects, not the {@code home} entity.
+     * If you need home metadata, perform an additional join to {@code home}.</p>
+     *
+     * @param userId user id
+     * @return list of membership DTOs ordered by join time descending (never {@code null})
+     * @throws RuntimeException if a database/driver error occurs
      */
     public List<HomeUser> getHomesForUser(int userId) {
         String sql = """
@@ -149,7 +214,15 @@ public class UserHomeRepository {
     }
 
     /**
-     * Check if a user has at least the specified role in a home
+     * Checks whether a user has at least the required role in a home.
+     *
+     * <p>Delegates role hierarchy logic to {@link UserRole#hasPermission(UserRole)}.</p>
+     *
+     * @param userId user id
+     * @param homeId home id
+     * @param requiredRole minimum required role
+     * @return {@code true} if the user is in the home and has sufficient permissions; {@code false} otherwise
+     * @throws RuntimeException if a database/driver error occurs
      */
     public boolean hasPermission(int userId, int homeId, UserRole requiredRole) {
         Optional<UserRole> userRole = getUserRoleInHome(userId, homeId);
@@ -157,7 +230,11 @@ public class UserHomeRepository {
     }
 
     /**
-     * Get the owner(s) of a home
+     * Loads all owners of a home.
+     *
+     * @param homeId home id
+     * @return list of owners (never {@code null})
+     * @throws RuntimeException if a database/driver error occurs
      */
     public List<HomeUser> getHomeOwners(int homeId) {
         String sql = """
@@ -183,14 +260,23 @@ public class UserHomeRepository {
     }
 
     /**
-     * Check if user is owner of home
+     * Checks whether the given user is an owner of the given home.
+     *
+     * @param userId user id
+     * @param homeId home id
+     * @return {@code true} if the user has OWNER permission in that home; {@code false} otherwise
+     * @throws RuntimeException if a database/driver error occurs
      */
     public boolean isOwner(int userId, int homeId) {
         return hasPermission(userId, homeId, UserRole.OWNER);
     }
 
     /**
-     * Check if a home has at least one owner
+     * Checks whether a home has at least one owner.
+     *
+     * @param homeId home id
+     * @return {@code true} if at least one OWNER exists; {@code false} otherwise
+     * @throws RuntimeException if a database/driver error occurs
      */
     public boolean homeHasOwner(int homeId) {
         String sql = """
@@ -209,7 +295,12 @@ public class UserHomeRepository {
     }
 
     /**
-     * Count users with a specific role in a home
+     * Counts users with a specific role in a home.
+     *
+     * @param homeId home id
+     * @param role role to count
+     * @return number of users with that role (0 if none)
+     * @throws RuntimeException if a database/driver error occurs
      */
     public int countUsersWithRole(int homeId, UserRole role) {
         String sql = """
@@ -230,6 +321,15 @@ public class UserHomeRepository {
         return count.orElse(0);
     }
 
+    /**
+     * Maps the current {@link ResultSet} row into a {@link HomeUser} membership DTO.
+     *
+     * <p>This mapper expects joined profile columns from {@code user_information}.</p>
+     *
+     * @param rs result set positioned at a valid row
+     * @return mapped {@link HomeUser}
+     * @throws SQLException if reading from the result set fails
+     */
     private HomeUser mapHomeUser(ResultSet rs) throws SQLException {
         HomeUser homeUser = new HomeUser();
         homeUser.setUserId(rs.getInt("user_id"));

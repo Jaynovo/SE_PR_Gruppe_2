@@ -13,11 +13,38 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repository for persisting and retrieving {@link SensorReading} telemetry data from the
+ * {@code sensor_reading} table.
+ *
+ * <p>This repository supports:</p>
+ * <ul>
+ *   <li>Finding readings by reading id or sensor id</li>
+ *   <li>Finding the latest reading for a sensor</li>
+ *   <li>Finding readings for a sensor within a time interval</li>
+ *   <li>Inserting readings (single insert and batch insert)</li>
+ *   <li>Deleting old readings</li>
+ *   <li>Checking if a home has any readings (existence check)</li>
+ * </ul>
+ *
+ * <p><b>Time semantics:</b> Time values are stored as SQL {@code TIMESTAMP} and mapped to/from
+ * {@link Instant}. Interval queries use {@code BETWEEN}, which is inclusive for both endpoints.</p>
+ *
+ * <p><b>Error handling:</b> SQL/connection errors are wrapped in {@link RuntimeException} by
+ * {@link JdbcTemplate}.</p>
+ */
 public class SensorReadingRepository {
 
     // -----------------
     // Finders
     // -----------------
+    /**
+     * Loads a sensor reading by its primary key id.
+     *
+     * @param id reading id
+     * @return optional reading; empty if not found
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<SensorReading> findByReadingId(int id) {
         String request = "SELECT * FROM sensor_reading WHERE id = ?";
         return JdbcTemplate.queryForObject(
@@ -27,7 +54,19 @@ public class SensorReadingRepository {
         );
     }
 
-    // Same as above, but with the sensor_id
+
+    /**
+     * Loads a sensor reading by sensor id.
+     *
+     * <p><b>Note:</b> This method uses {@link JdbcTemplate#queryForObject(String, JdbcTemplate.SqlConsumer, JdbcTemplate.SqlFunction)}
+     * and therefore returns at most one reading. If multiple readings exist for the sensor, which row is returned
+     * depends on the database execution plan/order. If you want the latest reading, use
+     * {@link #findLatestBySensorId(int)} instead.</p>
+     *
+     * @param sensor_id sensor id ({@code sensor_reading.sensor_id})
+     * @return optional reading; empty if not found
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<SensorReading> findBySensorId(int sensor_id) {
         String request = "SELECT * FROM sensor_reading WHERE sensor_id = ?";
         return JdbcTemplate.queryForObject(
@@ -37,7 +76,13 @@ public class SensorReadingRepository {
         );
     }
 
-    // This uses the sensor_id to find the last reading
+    /**
+     * Loads the latest sensor reading for a given sensor id.
+     *
+     * @param sensor_id sensor id ({@code sensor_reading.sensor_id})
+     * @return optional reading; empty if the sensor has no readings
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<SensorReading> findLatestBySensorId(int sensor_id) {
         String request = """
                 SELECT *
@@ -54,7 +99,17 @@ public class SensorReadingRepository {
         );
     }
 
-    // Includes selected times (i.e. from 1am -> 4am, you will get 1am and 4am exactly as well)
+    /**
+     * Loads all readings for a given sensor id within an inclusive time interval.
+     *
+     * <p>The query uses {@code time BETWEEN start AND end} which includes both {@code start} and {@code end}.</p>
+     *
+     * @param sensor_id sensor id ({@code sensor_reading.sensor_id})
+     * @param start inclusive start timestamp
+     * @param end inclusive end timestamp
+     * @return list of readings ordered by time ascending (never {@code null})
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public List<SensorReading> findBySensorIdBetween(int sensor_id, Instant start, Instant end) {
         String request = """
                 SELECT * 
@@ -77,6 +132,17 @@ public class SensorReadingRepository {
     // -----------------
     // Inserts
     // -----------------
+
+    /**
+     * Inserts multiple sensor readings using a JDBC batch operation.
+     *
+     * <p>This method returns the number of items attempted (not necessarily the number of rows affected),
+     * as per {@link JdbcTemplate#executeBatchUpdate(String, List, JdbcTemplate.SqlBiConsumer)}.</p>
+     *
+     * @param readings list of readings to insert; if {@code null} or empty, returns {@code 0}
+     * @return number of items added to the batch (typically equals {@code readings.size()})
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int insertBatch(List<SensorReading> readings) {
         String sql = """
         INSERT INTO sensor_reading (sensor_id, time, value)
@@ -95,6 +161,20 @@ public class SensorReadingRepository {
         );
     }
 
+    /**
+     * Inserts a single sensor reading and returns the generated id.
+     *
+     * <p>If {@link SensorReading#getTimestamp()} is {@code null}, the database default timestamp is used
+     * by inserting only {@code (sensor_id, value)}. Otherwise, {@code time} is explicitly set.</p>
+     *
+     * <p>The generated id is written back into the passed {@code sensorReading} instance.</p>
+     *
+     * @param sensorReading reading to insert (must not be {@code null})
+     * @return generated reading id
+     * @throws IllegalArgumentException if the INSERT fails and no id is returned for the "timestamp is null" path
+     * @throws IllegalStateException if the INSERT fails and no id is returned for the "timestamp provided" path
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int createSensorReading(@NotNull SensorReading sensorReading) {
         String request;
 
@@ -146,6 +226,13 @@ public class SensorReadingRepository {
     // Delete
     // -----------------
 
+    /**
+     * Deletes all readings older than the given timestamp.
+     *
+     * @param timestamp cutoff timestamp; rows with {@code time < timestamp} are deleted
+     * @return number of affected rows
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int deleteOlderThan(Instant timestamp) {
         String request = """
                 DELETE FROM sensor_reading
@@ -161,6 +248,15 @@ public class SensorReadingRepository {
     // Helpers
     // -----------------
 
+    /**
+     * Checks whether there exists at least one sensor reading for any sensor device in the given home.
+     *
+     * <p>This method performs an existence query ({@code SELECT 1 ... LIMIT 1}) for performance.</p>
+     *
+     * @param homeId home id referenced by {@code room.home_info}
+     * @return {@code true} if at least one reading exists for the home; {@code false} otherwise
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public boolean hasAnyReadingsForHome(int homeId) {
         String sql = """
         SELECT 1
@@ -179,6 +275,14 @@ public class SensorReadingRepository {
         ).isPresent();
     }
 
+
+    /**
+     * Maps the current {@link ResultSet} row into a {@link SensorReading} domain object.
+     *
+     * @param rs result set positioned at a valid row
+     * @return mapped sensor reading
+     * @throws SQLException if reading from the result set fails
+     */
     private SensorReading mapSensorReading(ResultSet rs) throws SQLException {
         SensorReading sensorReading = new SensorReading();
 

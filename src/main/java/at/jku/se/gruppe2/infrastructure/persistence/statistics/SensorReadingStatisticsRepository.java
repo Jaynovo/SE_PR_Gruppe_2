@@ -8,8 +8,34 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
 
+
+/**
+ * Repository for aggregated statistics over sensor readings.
+ *
+ * <p>This class queries {@code sensor_reading} joined with {@code sensor} to provide:</p>
+ * <ul>
+ *   <li>KPI snapshots (avg/min/max/count) for a sensor type across a set of sensor ids</li>
+ *   <li>Bucketed time-series values for charting (by hour/day/week/month)</li>
+ * </ul>
+ *
+ * <p><b>Scope model:</b> All queries operate on a set of sensor device ids ({@code sensor.device_id})
+ * and filter by a specific sensor type id ({@code sensor.sensor_type_id}).</p>
+ *
+ * <p><b>Time window:</b> All queries use a half-open interval: {@code [fromInclusive, toExclusive)}.</p>
+ *
+ * <p><b>Empty input behavior:</b> If {@code sensorIds} is null/empty, methods return safe empty results
+ * (no DB query is executed).</p>
+ *
+ * <p><b>Error handling:</b> SQL/connection errors are wrapped in {@link RuntimeException} by
+ * {@link JdbcTemplate}.</p>
+ */
 public class SensorReadingStatisticsRepository {
 
+    /**
+     * Supported bucket sizes for time-series aggregation.
+     *
+     * <p>The {@link #pg()} value is passed to PostgreSQL {@code date_trunc(text, timestamp)}.</p>
+     */
     public enum Granularity {
         HOUR("hour"),
         DAY("day"),
@@ -18,24 +44,58 @@ public class SensorReadingStatisticsRepository {
 
         private final String pg;
         Granularity(String pg) { this.pg = pg; }
+
+        /**
+         * Returns the PostgreSQL {@code date_trunc} granularity string.
+         *
+         * @return "hour", "day", "week", or "month"
+         */
         public String pg() { return pg; }
     }
 
+
+    /**
+     * Supported SQL aggregations for time-series queries.
+     */
     public enum Aggregation {
         AVG, MIN, MAX, SUM, COUNT
     }
 
-    /** KPI snapshot for a given scope/type/time-range. */
+
+    /**
+     * KPI snapshot for a given scope/type/time-range.
+     *
+     * @param avg   average of {@code sr.value} (null if no values)
+     * @param min   minimum of {@code sr.value} (null if no values)
+     * @param max   maximum of {@code sr.value} (null if no values)
+     * @param count number of readings in the window
+     */
     public record Kpis(Double avg, Double min, Double max, long count) { }
 
-    /** A single bucket point for charting. */
+    /**
+     * A single bucket point for charting.
+     *
+     * @param bucketStart start timestamp of the bucket (as returned by {@code date_trunc})
+     * @param value aggregated value for that bucket (may be null if the aggregation yields NULL)
+     */
     public record BucketPoint(Instant bucketStart, Double value) { }
 
     /**
-     * KPIs for a given sensor type (device_type.id) over a set of sensor IDs.
+     * Computes KPI values (avg/min/max/count) for a given sensor type over a set of sensor ids.
      *
-     * @param sensorIds     sensor.device_id values
-     * @param sensorTypeId  device_type.id (category SENSOR)
+     * <p>The query filters by:</p>
+     * <ul>
+     *   <li>{@code s.sensor_type_id = sensorTypeId}</li>
+     *   <li>{@code sr.time >= fromInclusive AND sr.time < toExclusive}</li>
+     *   <li>{@code sr.sensor_id IN (sensorIds...)}</li>
+     * </ul>
+     *
+     * @param sensorIds      sensor.device_id values to include
+     * @param sensorTypeId   device_type.id for a sensor type (category SENSOR)
+     * @param fromInclusive  inclusive start of the time window
+     * @param toExclusive    exclusive end of the time window
+     * @return KPI snapshot; if {@code sensorIds} is empty, returns {@code (null, null, null, 0)}
+     * @throws RuntimeException if a database/driver error occurs
      */
     public Kpis getKpisForSensorsOfType(List<Integer> sensorIds,
                                         int sensorTypeId,
@@ -79,10 +139,18 @@ public class SensorReadingStatisticsRepository {
     }
 
     /**
-     * Bucketed time-series for a given sensor type over a set of sensor IDs.
+     * Computes a bucketed time-series for a given sensor type over a set of sensor ids.
      *
-     * @param aggregation AVG/MIN/MAX/SUM/COUNT
-     * @return ordered by bucket ascending
+     * <p>Buckets are generated using {@code date_trunc(granularity, sr.time)} and the chosen aggregation.</p>
+     *
+     * @param sensorIds      sensor.device_id values to include
+     * @param sensorTypeId   device_type.id for a sensor type (category SENSOR)
+     * @param fromInclusive  inclusive start of the time window
+     * @param toExclusive    exclusive end of the time window
+     * @param granularity    bucket granularity (hour/day/week/month)
+     * @param aggregation    aggregation to apply to the bucket (AVG/MIN/MAX/SUM/COUNT)
+     * @return list of bucket points ordered by bucket ascending; empty if {@code sensorIds} is empty
+     * @throws RuntimeException if a database/driver error occurs
      */
     public List<BucketPoint> getTimeSeriesForSensorsOfType(List<Integer> sensorIds,
                                                            int sensorTypeId,
@@ -131,8 +199,15 @@ public class SensorReadingStatisticsRepository {
     }
 
     /**
-     * Convenience: counts (events) per bucket for sensors of type.
-     * Useful for MotionSensor etc. (either COUNT(*) or SUM(value) depending on how you encode events).
+     * Convenience method for event-like sensors: returns {@link Aggregation#COUNT} per bucket.
+     *
+     * @param sensorIds      sensor.device_id values to include
+     * @param sensorTypeId   device_type.id for a sensor type (category SENSOR)
+     * @param fromInclusive  inclusive start of the time window
+     * @param toExclusive    exclusive end of the time window
+     * @param granularity    bucket granularity (hour/day/week/month)
+     * @return list of bucket points ordered by bucket ascending; empty if {@code sensorIds} is empty
+     * @throws RuntimeException if a database/driver error occurs
      */
     public List<BucketPoint> getEventCountSeriesForSensorsOfType(List<Integer> sensorIds,
                                                                  int sensorTypeId,
@@ -148,6 +223,13 @@ public class SensorReadingStatisticsRepository {
     // Mapping
     // -------------------------------------------------------------------------
 
+    /**
+     * Maps a KPI result row into a {@link Kpis} record.
+     *
+     * @param rs result set positioned at the KPI row
+     * @return KPI snapshot
+     * @throws SQLException if reading from the result set fails
+     */
     private Kpis mapKpis(ResultSet rs) throws SQLException {
         Double avg = getNullableDouble(rs, "avg_value");
         Double min = getNullableDouble(rs, "min_value");
@@ -156,6 +238,13 @@ public class SensorReadingStatisticsRepository {
         return new Kpis(avg, min, max, count);
     }
 
+    /**
+     * Maps a bucket row into a {@link BucketPoint}.
+     *
+     * @param rs result set positioned at a bucket row
+     * @return bucket point
+     * @throws SQLException if reading from the result set fails
+     */
     private BucketPoint mapBucketPoint(ResultSet rs) throws SQLException {
         Timestamp ts = rs.getTimestamp("bucket");
         Instant bucket = (ts != null) ? ts.toInstant() : null;
@@ -165,6 +254,14 @@ public class SensorReadingStatisticsRepository {
         return new BucketPoint(bucket, value);
     }
 
+    /**
+     * Reads a double value from the given column and returns {@code null} if the database value is NULL.
+     *
+     * @param rs result set
+     * @param col column name
+     * @return boxed Double or null
+     * @throws SQLException if reading from the result set fails
+     */
     private static Double getNullableDouble(ResultSet rs, String col) throws SQLException {
         double v = rs.getDouble(col);
         return rs.wasNull() ? null : v;
@@ -174,6 +271,12 @@ public class SensorReadingStatisticsRepository {
     // SQL helpers
     // -------------------------------------------------------------------------
 
+    /**
+     * Returns the SQL fragment used for the selected aggregation.
+     *
+     * @param agg aggregation to use
+     * @return SQL fragment such as {@code "AVG(sr.value)"} or {@code "COUNT(*)"}
+     */
     private static String aggregationSql(Aggregation agg) {
         return switch (agg) {
             case AVG -> "AVG(sr.value)";
@@ -185,7 +288,9 @@ public class SensorReadingStatisticsRepository {
     }
 
     /**
-     * Minimal helper to build "IN (?, ?, ...)" and bind ints.
+     * Helper to build an {@code IN (?, ?, ...)} clause and bind integer parameters safely.
+     *
+     * <p>This avoids string-concatenating raw numbers into SQL while still supporting variable-length lists.</p>
      */
     private static final class InClause {
         private final List<Integer> values;
@@ -194,11 +299,22 @@ public class SensorReadingStatisticsRepository {
             this.values = values;
         }
 
+        /**
+         * Creates an {@link InClause} for integer values.
+         *
+         * @param ints integer list
+         * @return in-clause helper with a defensive copy of the list
+         */
         static InClause forInts(List<Integer> ints) {
             // Defensive copy in case caller mutates list later
             return new InClause(new ArrayList<>(ints));
         }
 
+        /**
+         * Builds the SQL placeholder list, e.g. {@code "(?, ?, ?)"}.
+         *
+         * @return SQL placeholder list
+         */
         String sql() {
             // "(?, ?, ?)"
             StringJoiner sj = new StringJoiner(", ", "(", ")");
@@ -206,6 +322,13 @@ public class SensorReadingStatisticsRepository {
             return sj.toString();
         }
 
+        /**
+         * Binds all values to the prepared statement starting at the given index.
+         *
+         * @param ps prepared statement
+         * @param startIndex 1-based start index for parameters
+         * @throws SQLException if binding fails
+         */
         void bind(PreparedStatement ps, int startIndex) throws SQLException {
             int idx = startIndex;
             for (Integer v : values) {

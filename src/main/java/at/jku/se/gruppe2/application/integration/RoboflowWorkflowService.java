@@ -8,6 +8,20 @@ import java.net.http.*;
 import java.time.Duration;
 import java.util.Base64;
 
+/**
+ * Service for calling a Roboflow Workflow (serverless endpoint) to perform object detection
+ * on images and determine whether a cat is present above a configured confidence threshold.
+ *
+ * <p>This implementation supports two input paths:</p>
+ * <ul>
+ *   <li>Download an image from a URL and send it as Base64 to Roboflow.</li>
+ *   <li>Send a provided Base64 image string directly to Roboflow.</li>
+ * </ul>
+ *
+ * <p><b>Side effects:</b> writes diagnostic output to {@code System.out}.</p>
+ *
+ * <p><b>External dependency:</b> performs HTTP requests to Roboflow's serverless API.</p>
+ */
 public class RoboflowWorkflowService {
 
     private static final String ENDPOINT =
@@ -25,7 +39,17 @@ public class RoboflowWorkflowService {
         System.out.println("Roboflow key present: " + (apiKey != null && !apiKey.isBlank()));
     }
 
-    /** URL lokal laden -> base64 -> an Roboflow senden (empfohlen, löst Imgur-Problem) */
+    /**
+     * Downloads the image from the given URL, encodes it as Base64, and sends it to Roboflow.
+     *
+     * <p>This is the recommended path when external image hosts cause issues, because it avoids sending
+     * Roboflow a remote URL and instead uploads the image content.</p>
+     *
+     * @param imageUrl image URL to download
+     * @return detection result containing whether a cat was detected (based on threshold) and
+     *         the best confidence score observed for the class "cat"
+     * @throws RuntimeException if downloading or encoding the image fails
+     */
     public DetectionResult detectCatFromImageUrlAsBase64(String imageUrl) {
         try {
             byte[] bytes = download(imageUrl);
@@ -36,7 +60,14 @@ public class RoboflowWorkflowService {
         }
     }
 
-    /** Base64 direkt an Roboflow senden */
+    /**
+     * Sends a Base64-encoded image to Roboflow and returns a parsed detection result.
+     *
+     * @param base64 Base64-encoded image content (no data URL prefix expected)
+     * @return detection result containing whether a cat was detected (based on threshold) and
+     *         the best confidence score observed for the class "cat"
+     * @throws RuntimeException if the HTTP request fails or the response cannot be parsed
+     */
     public DetectionResult detectCatFromBase64(String base64) {
         String body = """
             {
@@ -50,6 +81,13 @@ public class RoboflowWorkflowService {
         return sendAndParse(body);
     }
 
+    /**
+     * Sends the request body to the Roboflow endpoint and parses the JSON response into a {@link DetectionResult}.
+     *
+     * @param body JSON request body to POST
+     * @return parsed detection result
+     * @throws RuntimeException if the HTTP status is non-200, the request is interrupted, or parsing fails
+     */
     private DetectionResult sendAndParse(String body) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -85,6 +123,29 @@ public class RoboflowWorkflowService {
         }
     }
 
+    /**
+     * Parses the Roboflow Workflow JSON response and determines the best confidence score for class "cat".
+     *
+     * <p>Expected (simplified) response shape:</p>
+     * <pre>
+     * {
+     *   "outputs": [
+     *     {
+     *       "predictions": {
+     *         "predictions": [
+     *           { "class": "cat", "confidence": 0.87, ... },
+     *           ...
+     *         ]
+     *       }
+     *     }
+     *   ]
+     * }
+     * </pre>
+     *
+     * @param json raw JSON response body
+     * @return detection result based on whether the best cat confidence is {@code >= threshold}
+     * @throws Exception if JSON parsing fails
+     */
     private DetectionResult parseResponse(String json) throws Exception {
         JsonNode root = mapper.readTree(json);
 
@@ -124,6 +185,13 @@ public class RoboflowWorkflowService {
         return new DetectionResult(bestConfidence >= threshold, bestConfidence);
     }
 
+    /**
+     * Downloads an image from the provided URL.
+     *
+     * @param url image URL
+     * @return raw image bytes
+     * @throws Exception if the request fails or returns a non-200 status
+     */
     private byte[] download(String url) throws Exception {
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(url))

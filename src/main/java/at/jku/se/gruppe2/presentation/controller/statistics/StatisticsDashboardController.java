@@ -15,10 +15,7 @@ import at.jku.se.gruppe2.infrastructure.persistence.statistics.SensorReadingStat
 import at.jku.se.gruppe2.infrastructure.persistence.statistics.StatisticsScopeRepository;
 import at.jku.se.gruppe2.infrastructure.security.Session;
 import at.jku.se.gruppe2.presentation.controller.common.BaseController;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
@@ -140,8 +137,10 @@ public class StatisticsDashboardController extends BaseController implements Ini
         // If a room is pre-selected in Session, start in Room scope. Otherwise start in Home scope.
         Room selectedRoom = Session.getSelectedRoom();
         if (selectedRoom != null) {
-            roomBox.setItems(FXCollections.observableArrayList(selectedRoom));
-            roomBox.getSelectionModel().select(selectedRoom);
+            rooms.stream()
+                    .filter(r -> r.getId() == selectedRoom.getId())
+                    .findFirst()
+                    .ifPresent(r -> roomBox.getSelectionModel().select(r));
 
             scopeBox.getSelectionModel().select("Room");
             roomBox.setDisable(false);
@@ -274,7 +273,10 @@ public class StatisticsDashboardController extends BaseController implements Ini
         var maxSeries = buildSeries(metricLabel + " (Max)", maxPoints);
 
         lineChart.getData().setAll(minSeries, avgSeries, maxSeries);
+
+        resetViewToData();
         fixLegendColors();
+
         for (int i = 0; i < lineChart.getData().size(); i++) {
             System.out.println(i + ": " + lineChart.getData().get(i).getName());
         }
@@ -286,11 +288,8 @@ public class StatisticsDashboardController extends BaseController implements Ini
 
         updateDataBoundsFromChart();
         configureTimeAxis();
-
-        // Tooltips only on AVG to avoid noise (optional)
         installTooltips(avgSeries);
 
-        // Optional: hide symbols to reduce clutter for 30d hourly
         lineChart.setCreateSymbols(false);
     }
 
@@ -691,9 +690,40 @@ public class StatisticsDashboardController extends BaseController implements Ini
         }
     }
 
+    /**
+     * Resets the chart view to the bounds of the currently loaded data.
+     *
+     * <p>Any previous zoom or pan state is cleared by temporarily enabling
+     * auto-ranging on both axes. After the JavaFX layout pass completes,
+     * auto-ranging is disabled again and the axis bounds are recalculated
+     * based on the current data.</p>
+     *
+     * <p>The deferred execution via {@code Platform.runLater} ensures that
+     * chart nodes and layout are fully initialized before bounds are locked.</p>
+     */
+    private void resetViewToData() {
+        // Reset any previous zoom/pan state
+        xAxis.setAutoRanging(true);
+        yAxis.setAutoRanging(true);
+
+        javafx.application.Platform.runLater(() -> {
+            // Make sure nodes + layout exist
+            lineChart.applyCss();
+            lineChart.layout();
+
+            // Lock bounds and pad to data
+            xAxis.setAutoRanging(false);
+            yAxis.setAutoRanging(false);
+            initBoundsFromCurrentData();
+
+            // Keep within data bounds if you want
+            updateDataBoundsFromChart();
+            clampAxesToData();
+        });
+    }
+
     private void applyTickUnit(TimeConfig tc) {
         if ("30d".equals(rangeBox.getValue())) {
-            xAxis.setAutoRanging(true); // let bounds compute
             xAxis.setTickUnit(Duration.ofDays(2).toMillis()); // label every 2 days
         } else if ("7d".equals(rangeBox.getValue())) {
             xAxis.setTickUnit(Duration.ofHours(12).toMillis());

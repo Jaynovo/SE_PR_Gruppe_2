@@ -9,6 +9,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
+/**
+ * Repository for accessing and mutating {@link Home} entities in the {@code home} table.
+ *
+ * <p>This repository also resolves the associated {@link Address} referenced by
+ * {@code home.address_information} via {@link AddressRepository}.</p>
+ *
+ * <p><b>Construction:</b> By default, this repository creates its own {@link AddressRepository}.
+ * A second constructor allows dependency injection, which is helpful for testing or alternative
+ * address lookup implementations.</p>
+ *
+ * <p><b>Error handling:</b> SQL/connection errors are wrapped in {@link RuntimeException}
+ * by {@link JdbcTemplate}.</p>
+ */
 public class HomeRepository {
     private final AddressRepository addressRepository;
 
@@ -20,6 +33,14 @@ public class HomeRepository {
         this.addressRepository = addressRepository;
     }
 
+
+    /**
+     * Loads a home by its primary key.
+     *
+     * @param id home id
+     * @return optional home; empty if not found
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<Home> getHomeById(int id) {
         String request = "SELECT * FROM home WHERE id = ?";
 
@@ -31,8 +52,15 @@ public class HomeRepository {
         );
     }
 
-    // These twp functions are practically the same. One uses the ID, the other uses
-    // the User Object and email of that for lookup.
+    /**
+     * Loads the home associated with the given user id.
+     *
+     * <p>This method joins {@code user_information.home_info} to {@code home.id}.</p>
+     *
+     * @param id user id from {@code user_information.id}
+     * @return optional home; empty if the user has no home or does not exist
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<Home> getHomeByUserId(int id) {
         String request = """
         SELECT h.*
@@ -48,6 +76,16 @@ public class HomeRepository {
         );
     }
 
+    /**
+     * Loads the home associated with the given user.
+     *
+     * <p>This method looks up the user by email ({@code user_information.e_mail}) and joins
+     * {@code user_information.home_info} to {@code home.id}.</p>
+     *
+     * @param user user whose email is used for lookup
+     * @return optional home; empty if the user has no home or does not exist
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public Optional<Home> getHomeByUser(User user) {
         String request = """
         SELECT h.*
@@ -63,7 +101,16 @@ public class HomeRepository {
         );
     }
 
-    // Returns created id
+    /**
+     * Inserts a new home row into the database and returns the generated id.
+     *
+     * <p>The generated id is written back into the passed {@code home} instance via {@link Home#setId(int)}.</p>
+     *
+     * @param home home to insert (must have floors, label, and a non-null address with an id)
+     * @return generated home id
+     * @throws IllegalStateException if the INSERT unexpectedly returns no id
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int createHomeInDatabase(Home home) {
         String request = """
             INSERT INTO home (floors, label, address_information)
@@ -86,7 +133,13 @@ public class HomeRepository {
         return id;
     }
 
-    // Returns 1 if Update was successful, 0 if not
+    /**
+     * Updates an existing home row.
+     *
+     * @param home home to update (must have a valid id)
+     * @return number of affected rows (typically {@code 1} if successful, {@code 0} if not found)
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int updateHomeInDatabase(Home home) {
         String request = """
                 UPDATE home
@@ -102,7 +155,13 @@ public class HomeRepository {
             );
     }
 
-    // Returns 1 if Deletion was successful, 0 if not
+    /**
+     * Deletes a home row by id.
+     *
+     * @param id home id to delete
+     * @return number of affected rows (typically {@code 1} if deleted, {@code 0} if not found)
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public int deleteHomeInDatabase(int id) {
         String request = """
                 DELETE FROM home
@@ -118,6 +177,16 @@ public class HomeRepository {
         );
     }
 
+    /**
+     * Maps the current {@link ResultSet} row into a {@link Home} domain object.
+     *
+     * <p>If {@code address_information} is NULL, {@link Home#setAddress(Address)} is set to {@code null}.
+     * Otherwise, the referenced {@link Address} is loaded via {@link AddressRepository#getAddressById(int)}.</p>
+     *
+     * @param rs result set positioned at a valid row
+     * @return mapped home object
+     * @throws SQLException if reading from the result set fails
+     */
     private Home mapHome(ResultSet rs) throws SQLException {
         Home home = new Home();
         home.setId(rs.getInt("id"));
