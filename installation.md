@@ -111,6 +111,7 @@ The button "Manage Home User" gives you control over the Residents and Guests in
 
 
 ![Screenshot of Manage Home Members](docs/screenshots/manage_home_users.png)
+
 The button "Change Home Details" lets you change your home's address and location-based services.
 
 
