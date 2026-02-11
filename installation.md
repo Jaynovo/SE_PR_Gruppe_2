@@ -2,6 +2,8 @@
 
 [Jump to using the App immediately](#using-the-application)
 
+This page is best viewed in the IDE itself!
+
 ## 1. Purpose
 
 This document describes how to install, configure, and run the **Smart Home Simulator application** on a local development machine.  
@@ -100,17 +102,26 @@ The top right offers a view of the Role the User occupies in the Home and a drop
 On the top left, you will see the current outside temperature of your Home, with the entered details right below it.  
 Below that, you will find an overview of your Rooms, with additional information about the floor, dimensions, area and your Devices in that Room, as well as Buttons to manage those Rooms.  
 On the right-hand side, you will important features such as sharing your home and managing the users in your home.
+
+
 ![Control Buttons](docs/screenshots/control_buttons.png)
 ---------
 Our SmartHome Dashboard offers a **Role-system** to make sure, you have all the control over who has access to what in your home.  
 The button "Manage Home User" gives you control over the Residents and Guests in your home, with Residents being able to manage Rooms (delete/create devices in rooms) as well as control devices. Guests may only control devices. The owner retains full control over everything.
+
+
 ![Screenshot of Manage Home Members](docs/screenshots/manage_home_users.png)
 The button "Change Home Details" lets you change your home's address and location-based services.
+
+
 ---------
+
 The button "Stats" gives you an overview of all your statistics - things like average temperature (for your house or individual rooms).  
 *Note: The UI is still buggy and may require you to double-click in the graph and scroll to reset properly*
 
 ![Screenshot of Stats Page](docs/screenshots/stats_dashboard.png)
+
+
 ```
 - Shift-Drag to Pan
 - Scroll to Zoom in/out
