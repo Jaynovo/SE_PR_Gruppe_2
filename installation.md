@@ -118,7 +118,7 @@ The button "Change Home Details" lets you change your home's address and locatio
 ---------
 
 The button "Stats" gives you an overview of all your statistics - things like average temperature (for your house or individual rooms).  
-*Note: The UI is still buggy and may require you to double-click in the graph and scroll to reset properly*
+*Note: The UI may still be buggy and may require you to double-click in the graph and scroll to reset properly*
 
 ![Screenshot of Stats Page](docs/screenshots/stats_dashboard.png)
 
