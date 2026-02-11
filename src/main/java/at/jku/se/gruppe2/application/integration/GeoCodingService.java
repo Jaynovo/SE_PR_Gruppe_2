@@ -12,11 +12,44 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
+
+/**
+ * Utility service for enriching an {@link Address} with geographic coordinates (latitude/longitude)
+ * by performing a forward-geocoding request against the OpenStreetMap Nominatim API.
+ *
+ * <p><b>Behavior and error handling:</b>
+ * <ul>
+ *   <li>If {@code address} is {@code null}, the method returns immediately.</li>
+ *   <li>If the HTTP response is not {@code 200 OK}, no coordinates are set.</li>
+ *   <li>If the response contains no results or lacks {@code lat}/{@code lon}, no coordinates are set.</li>
+ *   <li>All exceptions are caught internally; the method does not throw.</li>
+ * </ul>
+ *
+ * <p><b>Side effects:</b> writes diagnostic output to {@code System.out}/{@code System.err}.
+ *
+ * <p><b>External dependency:</b> calls {@code https://nominatim.openstreetmap.org/}.
+ */
 public class GeoCodingService {
 
     private static final HttpClient client = HttpClient.newHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
 
+
+    /**
+     * Enriches the given {@link Address} instance with latitude and longitude by querying
+     * the OpenStreetMap Nominatim API using the address fields (street, house number,
+     * postal code, city, country).
+     *
+     * <p>If geocoding succeeds, {@link Address#setLatitude(double)} and
+     * {@link Address#setLongitude(double)} are called on the provided instance.</p>
+     *
+     * <p>This method is intentionally fail-safe: it catches all exceptions and prints
+     * error information instead of throwing.</p>
+     *
+     * @param address the address to enrich; if {@code null}, the method returns without changes
+     * @return nothing (void)
+     * @throws Exception (none) (all exceptions are caught internally)
+     */
     public static void enrichWithCoordinates(Address address) {
         try {
             if (address == null) {
@@ -92,6 +125,13 @@ public class GeoCodingService {
         }
     }
 
+    /**
+     * Converts {@code null} strings to the empty string to avoid {@code null} values
+     * in formatted query text.
+     *
+     * @param s the input string (may be {@code null})
+     * @return {@code ""} if {@code s == null}, otherwise {@code s}
+     */
     private static String nullSafe(String s) {
         return s == null ? "" : s;
     }

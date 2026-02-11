@@ -4,7 +4,26 @@ package at.jku.se.gruppe2.infrastructure.persistence.config;
 import java.sql.*;
 import java.util.*;
 
+/**
+ * Minimal JDBC helper ("template") that centralizes repetitive JDBC boilerplate for repositories.
+ *
+ * <p>This class provides convenience methods for:</p>
+ * <ul>
+ *   <li>Queries returning a single scalar value ({@link #queryForValue(String, SqlConsumer, SqlFunction)})</li>
+ *   <li>Queries returning a single row mapped to an object ({@link #queryForObject(String, SqlConsumer, SqlFunction)})</li>
+ *   <li>Queries returning multiple rows mapped to a list ({@link #queryForMultipleObjects(String, SqlConsumer, SqlFunction)})</li>
+ *   <li>Write operations ({@link #executeUpdate(String, SqlConsumer)})</li>
+ *   <li>Batch write operations ({@link #executeBatchUpdate(String, List, SqlBiConsumer)})</li>
+ * </ul>
+ *
+ * <p><b>Exception strategy:</b> Checked SQL/driver exceptions are wrapped in {@link RuntimeException}
+ * to keep repository code concise.</p>
+ *
+ * <p><b>Resource strategy:</b> Uses try-with-resources to reliably close {@link Connection},
+ * {@link PreparedStatement} and {@link ResultSet}.</p>
+ */
 public class JdbcTemplate {
+
     @FunctionalInterface
     public interface SqlConsumer<T> {
         void accept(T t) throws SQLException;
@@ -13,6 +32,11 @@ public class JdbcTemplate {
     @FunctionalInterface
     public interface SqlFunction<T,R> {
         R apply(T t) throws SQLException;
+    }
+
+    @FunctionalInterface
+    public interface SqlBiConsumer<A, B> {
+        void accept(A a, B b) throws SQLException;
     }
 
     /**
@@ -183,11 +207,21 @@ public class JdbcTemplate {
             throw new RuntimeException(e);
         }
     }
-    @FunctionalInterface
-    public interface SqlBiConsumer<A, B> {
-        void accept(A a, B b) throws SQLException;
-    }
 
+
+    /**
+     * Executes a batch update for a list of items using a single prepared statement.
+     *
+     * <p>Each item is bound using {@code binder}, added to the batch, and executed in chunks
+     * to avoid building overly large batches (chunk size: 2000).</p>
+     *
+     * @param sql    SQL statement to execute (typically INSERT/UPDATE; may contain {@code ?} placeholders)
+     * @param items  items to batch; if {@code null} or empty, returns {@code 0} and performs no DB operation
+     * @param binder binder that sets statement parameters for each item
+     * @param <T>    item type
+     * @return number of items added to the batch (i.e., attempted updates)
+     * @throws RuntimeException if a database/driver error occurs
+     */
     public static <T> int executeBatchUpdate(
             String sql,
             List<T> items,

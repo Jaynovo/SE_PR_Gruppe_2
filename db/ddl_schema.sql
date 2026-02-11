@@ -125,7 +125,7 @@ CREATE INDEX idx_home_invitation_email ON home_invitation(invitee_email);
 CREATE INDEX idx_home_invitation_status ON home_invitation(invitation_status);
 
 CREATE TABLE rule (
-    id INTEGER PRIMARY KEY,
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     home_id INTEGER NOT NULL REFERENCES home(id) ON DELETE CASCADE, -- Rules are per house at the moment
 
     name VARCHAR(100) NOT NULL,
