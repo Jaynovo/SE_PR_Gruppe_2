@@ -4,6 +4,12 @@ import at.jku.se.gruppe2.domain.model.device.Device;
 
 import java.util.*;
 
+/**
+ * Represents a room within a {@link Home}
+ * A room may contain multiple {@link Device} instances (sensors and actuators).
+ * Optional geometric properties (length/width) can be used to derive an area.
+ * Additionally, a room may define temperature limits (min/max) which can be used by automation logic
+ */
 public class Room {
 
     private int id;
@@ -21,6 +27,15 @@ public class Room {
 
     public Room() {}
 
+    /**
+     * Creates a room and computes area if both dimensions are provided.
+     *
+     * @param id        room identifier
+     * @param roomLabel room label/name
+     * @param length    room length in m
+     * @param width     room width in m
+     * @param floor     floor number
+     */
     public Room(int id, String roomLabel, Double length, Double width, Integer floor) {
         this.id = id;
         this.roomLabel = roomLabel;
@@ -117,6 +132,13 @@ public class Room {
 
     /* Device List Helper */
 
+    /**
+     * Returns all devices in this room that are instances of the given type.
+     *
+     * @param type device subclass to filter for
+     * @return list of devices of the requested type (never {@code null})
+     * @param <T> device subtype
+     */
     public <T extends Device> List<T> getDevicesOfType(Class<T> type) {
         return devices.stream()
                 .filter(type::isInstance)

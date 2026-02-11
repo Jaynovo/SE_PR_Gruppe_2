@@ -30,6 +30,7 @@ public class UtilityMeterSensor extends Sensor {
     private Double previousReading;
     private Double consumptionRate;     // (per hour/day)
 
+
     public UtilityMeterSensor() {
         super();
         this.utilityType = UtilityType.ELECTRICITY;

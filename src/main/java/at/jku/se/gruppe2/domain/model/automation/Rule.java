@@ -2,6 +2,13 @@ package at.jku.se.gruppe2.domain.model.automation;
 
 import java.time.Instant;
 
+/**
+ * This class serves no purpose in our final project
+ * It was created to represent a Rule that was intended to be used in the automation process of the actuators.
+ * However, we decided to go a different direction. this class and the equivalent respository can be used to create a
+ * better Rule Engine.
+ */
+
 public class Rule {
     private int id;
     private int homeId;

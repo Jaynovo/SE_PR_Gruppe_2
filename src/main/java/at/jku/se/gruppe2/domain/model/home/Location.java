@@ -1,9 +1,19 @@
 package at.jku.se.gruppe2.domain.model.home;
 
+/**
+ * Represents a geographic location using latitude and longitude.
+ * Coordinates are stored in decimal degrees
+ */
 public class Location {
     private double latitude;
     private double longitude;
 
+    /**
+     * Creates a new location.
+     *
+     * @param latitude  latitude in decimal degrees
+     * @param longitude longitude in decimal degrees
+     */
     public Location(double latitude, double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;

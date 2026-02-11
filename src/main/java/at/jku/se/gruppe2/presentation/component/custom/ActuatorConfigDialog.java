@@ -26,7 +26,7 @@ public class ActuatorConfigDialog {
             case "AlarmSystem":
                 showAlarmConfig(actuatorDevice);
                 break;
-            case "Blinds":
+            case "BlindsActuator":
                 showBlindsConfig(actuatorDevice);
                 break;
             default:

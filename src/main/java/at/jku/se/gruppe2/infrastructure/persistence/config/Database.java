@@ -3,8 +3,8 @@ import java.sql.*;
 
 public class Database {
     private final static String URL = "jdbc:postgresql://localhost:5432/shs_db";
-    private final static String USER = "shs_user";
-    private final static String PASSWORD = "supersecretpassword";
+    private final static String USER = "postgres";
+    private final static String PASSWORD = "basiccoconut261";
 
     static {
         try {

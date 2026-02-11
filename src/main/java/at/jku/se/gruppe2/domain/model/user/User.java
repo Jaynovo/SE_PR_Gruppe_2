@@ -3,6 +3,11 @@ package at.jku.se.gruppe2.domain.model.user;
 import at.jku.se.gruppe2.domain.model.home.Address;
 import at.jku.se.gruppe2.domain.model.home.Home;
 
+/**
+ * Represents an application user.
+ * A user may optionally be associated with a {@link Home} and an {@link Address}.</p>
+ */
+
 public class User {
 
     private int id;
@@ -16,7 +21,16 @@ public class User {
 
     public User() {}
 
-    //Konstruktor ohne ID
+    /**
+     * Creates a new user without ID.
+     *
+     * @param firstName first name
+     * @param lastName  last name
+     * @param email     email address
+     * @param password  password (plain storage assumed here)
+     * @param home      associated home (may be {@code null})
+     * @param address   associated address (may be {@code null})
+     */
     public User(String firstName, String lastName, String email, String password, Home home, Address address) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -26,12 +40,25 @@ public class User {
         this.address = address;
     }
 
-    //Konstruktor mit ID (laden aus DB)
+    /**
+     * Creates a user including an ID.
+     *
+     * @param id        user identifier
+     * @param firstName first name
+     * @param lastName  last name
+     * @param email     email address
+     * @param password  password
+     * @param home      associated home
+     * @param address   associated address
+     */
     public User(int id, String firstName, String lastName, String email, String password, Home home, Address address) {
         this(firstName, lastName, email, password, home, address);
         this.id = id;
     }
 
+    /**
+     * Creates a user without home/address association.
+     */
     public User(String firstName, String lastName, String email, String password) {
         this.firstName = firstName;
         this.lastName = lastName;

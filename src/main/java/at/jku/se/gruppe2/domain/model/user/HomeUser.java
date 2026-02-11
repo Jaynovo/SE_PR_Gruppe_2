@@ -18,10 +18,20 @@ public class HomeUser {
     private String avatarPath;
 
     // Constructors
+    /**
+     * Creates a HomeUser with default role {@link UserRole#GUEST}.
+     */
     public HomeUser() {
         this.role = UserRole.GUEST; // Default role
     }
 
+    /**
+     * Creates a HomeUser with specified role.
+     *
+     * @param userId user identifier
+     * @param homeId home identifier
+     * @param role   assigned role
+     */
     public HomeUser(int userId, int homeId, UserRole role) {
         this.userId = userId;
         this.homeId = homeId;
