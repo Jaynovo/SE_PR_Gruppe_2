@@ -24,12 +24,20 @@ public class StatisticsService {
     // Scope model
     // -------------------------------------------------------------------------
 
-    public enum ScopeType { HOME, ROOM, DEVICE }
+    public enum ScopeType {HOME, ROOM, DEVICE}
 
     public record DashboardScope(ScopeType type, int id) {
-        public static DashboardScope home(int homeId)   { return new DashboardScope(ScopeType.HOME, homeId); }
-        public static DashboardScope room(int roomId)   { return new DashboardScope(ScopeType.ROOM, roomId); }
-        public static DashboardScope device(int devId)  { return new DashboardScope(ScopeType.DEVICE, devId); }
+        public static DashboardScope home(int homeId) {
+            return new DashboardScope(ScopeType.HOME, homeId);
+        }
+
+        public static DashboardScope room(int roomId) {
+            return new DashboardScope(ScopeType.ROOM, roomId);
+        }
+
+        public static DashboardScope device(int devId) {
+            return new DashboardScope(ScopeType.DEVICE, devId);
+        }
     }
 
     public record TimeRange(Instant fromInclusive, Instant toExclusive) {
@@ -140,7 +148,7 @@ public class StatisticsService {
         };
     }
 
- public Optional<Integer> findHomeIdForDevice(int deviceId) {
+    public Optional<Integer> findHomeIdForDevice(int deviceId) {
         return scopeRepo.findHomeIdForDevice(deviceId);
     }
 }
