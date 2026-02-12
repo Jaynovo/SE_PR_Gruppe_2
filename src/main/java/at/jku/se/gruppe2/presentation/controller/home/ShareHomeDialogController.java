@@ -18,6 +18,44 @@ import javafx.stage.Stage;
 import java.util.*;
 import java.util.regex.Pattern;
 
+/**
+ * Controller for the Share Home dialog.
+ *
+ * <p>This controller allows home owners to invite other users to join their home by
+ * sending email invitations. It manages the creation of invitations with specified roles
+ * and displays all pending invitations that have been sent.</p>
+ *
+ * <p><b>Key responsibilities:</b></p>
+ * <ul>
+ *   <li>Sending home invitations to email addresses</li>
+ *   <li>Validating email addresses</li>
+ *   <li>Assigning roles to invitations (GUEST or RESIDENT)</li>
+ *   <li>Checking for duplicate invitations</li>
+ *   <li>Preventing self-invitations</li>
+ *   <li>Displaying pending invitations sent by this home</li>
+ *   <li>Allowing cancellation of pending invitations</li>
+ *   <li>Enforcing owner-only permission</li>
+ * </ul>
+ *
+ * <p><b>Permission requirement:</b> Only home owners can access this dialog.
+ * The controller checks {@link AuthorizationService#canInviteUsers} on initialization
+ * and closes the dialog if the user lacks permission.</p>
+ *
+ * <p><b>Email validation:</b> Uses regex pattern to validate email format before
+ * allowing invitation creation.</p>
+ *
+ * <p><b>Role assignment:</b> Invitations can be sent with GUEST or RESIDENT roles.
+ * OWNER role is not available for invitations (only the creator is owner).</p>
+ *
+ * <p><b>FXML bindings:</b> Requires the following UI elements:</p>
+ * <ul>
+ *   <li>{@code emailField} - email address input</li>
+ *   <li>{@code roleComboBox} - role selection dropdown</li>
+ *   <li>{@code emailErrorLabel} - error message display</li>
+ *   <li>{@code invitationsContainer} - VBox for pending invitation cards</li>
+ *   <li>{@code noInvitationsLabel} - shown when no pending invitations exist</li>
+ * </ul>
+ */
 public class ShareHomeDialogController {
 
     @FXML private TextField emailField;
@@ -34,6 +72,15 @@ public class ShareHomeDialogController {
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
+    /**
+     * Sets the home and initializes the dialog.
+     *
+     * <p>Checks if the current user has permission to invite users (OWNER only).
+     * If not, shows error and closes dialog. Otherwise, initializes role dropdown
+     * and loads pending invitations.</p>
+     *
+     * @param home the home to manage invitations for
+     */
     public void setHome(Home home) {
         this.home = home;
 
@@ -51,6 +98,13 @@ public class ShareHomeDialogController {
         loadPendingInvitations();
     }
 
+    /**
+     * Initializes the role selection dropdown.
+     *
+     * <p>Populates the dropdown with GUEST and RESIDENT roles (OWNER is not
+     * available for invitations). Sets up custom cell factories to display
+     * role display names instead of enum values.</p>
+     */
     private void initializeRoleComboBox() {
         roleComboBox.getItems().addAll(UserRole.GUEST, UserRole.RESIDENT);
         roleComboBox.setValue(UserRole.GUEST);
@@ -82,6 +136,29 @@ public class ShareHomeDialogController {
         });
     }
 
+    /**
+     * Handles the send invitation button click.
+     *
+     * <p>Performs the complete invitation creation workflow:</p>
+     * <ol>
+     *   <li>Validates email address format</li>
+     *   <li>Validates role selection</li>
+     *   <li>Checks for self-invitation</li>
+     *   <li>Checks if invitee already has access to home</li>
+     *   <li>Checks for duplicate pending invitations</li>
+     *   <li>Creates and persists invitation</li>
+     *   <li>Shows success/info message</li>
+     *   <li>Clears form and reloads invitations</li>
+     * </ol>
+     *
+     * <p><b>Validation rules:</b></p>
+     * <ul>
+     *   <li>Email must be valid format</li>
+     *   <li>Cannot invite yourself</li>
+     *   <li>Cannot invite user who already has access</li>
+     *   <li>Cannot send duplicate invitations</li>
+     * </ul>
+     */
     @FXML
     private void handleSendInvitation() {
         String email = emailField.getText().trim().toLowerCase();
@@ -156,12 +233,23 @@ public class ShareHomeDialogController {
         }
     }
 
+    /**
+     * Handles the close button click event.
+     */
     @FXML
     private void handleClose() {
         Stage stage = (Stage) emailField.getScene().getWindow();
         stage.close();
     }
 
+    /**
+     * Validates email address format.
+     *
+     * <p>Checks if email is non-empty and matches the email regex pattern.</p>
+     *
+     * @param email the email address to validate
+     * @return {@code true} if valid, {@code false} otherwise (also shows error)
+     */
     private boolean validateEmail(String email) {
         if (email.isEmpty()) {
             showError("Please enter an email address");
@@ -176,17 +264,32 @@ public class ShareHomeDialogController {
         return true;
     }
 
+    /**
+     * Displays an error message below the email field.
+     *
+     * @param message the error message to display
+     */
     private void showError(String message) {
         emailErrorLabel.setText(message);
         emailErrorLabel.setVisible(true);
         emailErrorLabel.setManaged(true);
     }
 
+    /**
+     * Hides the email error message.
+     */
     private void hideError() {
         emailErrorLabel.setVisible(false);
         emailErrorLabel.setManaged(false);
     }
 
+    /**
+     * Loads and displays all pending invitations for this home.
+     *
+     * <p>Queries database for invitations with status PENDING for this home.
+     * Creates a card for each invitation showing invitee email, role, date sent,
+     * and cancel button.</p>
+     */
     private void loadPendingInvitations() {
         if (home == null) {
             return;
@@ -212,6 +315,20 @@ public class ShareHomeDialogController {
         }
     }
 
+    /**
+     * Creates a UI card for a pending invitation.
+     *
+     * <p>Builds an HBox containing:</p>
+     * <ul>
+     *   <li>Invitee email address</li>
+     *   <li>Invited role</li>
+     *   <li>Date sent</li>
+     *   <li>Cancel button</li>
+     * </ul>
+     *
+     * @param invitation the invitation to create a card for
+     * @return an HBox component representing the invitation
+     */
     private HBox createInvitationCard(HomeInvitation invitation) {
         HBox card = new HBox(10);
         card.getStyleClass().add("card");
@@ -240,6 +357,14 @@ public class ShareHomeDialogController {
         return card;
     }
 
+    /**
+     * Handles invitation cancellation.
+     *
+     * <p>Shows confirmation dialog, then updates invitation status to CANCELLED
+     * if user confirms. Reloads the invitation list on success.</p>
+     *
+     * @param invitation the invitation to cancel
+     */
     private void handleCancelInvitation(HomeInvitation invitation) {
         Optional<ButtonType> result = dialog.confirm(
                 "Cancel Invitation",

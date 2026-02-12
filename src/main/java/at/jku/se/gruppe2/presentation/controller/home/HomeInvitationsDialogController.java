@@ -17,32 +17,125 @@ import javafx.stage.Stage;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+/**
+ * Controller for the Home Invitations dialog.
+ *
+ * <p>This controller manages the display of pending home invitations for a user.
+ * It allows users to view all homes they've been invited to and accept or decline
+ * each invitation. When an invitation is accepted, the user joins that home with
+ * the specified role.</p>
+ *
+ * <p><b>Key responsibilities:</b></p>
+ * <ul>
+ *   <li>Loading and displaying pending invitations for the user</li>
+ *   <li>Creating invitation cards with home details and invited role</li>
+ *   <li>Handling invitation acceptance (joining the home)</li>
+ *   <li>Handling invitation decline (rejecting the invitation)</li>
+ *   <li>Managing home replacement when user already has a home</li>
+ *   <li>Updating invitation status in database</li>
+ *   <li>Providing user feedback for all actions</li>
+ * </ul>
+ *
+ * <p><b>Home replacement logic:</b> If a user already has a home and accepts
+ * a new invitation, they are prompted with a confirmation dialog explaining that
+ * their current home will be replaced. This prevents users from accidentally
+ * losing access to their existing home.</p>
+ *
+ * <p><b>Invitation workflow:</b></p>
+ * <ol>
+ *   <li>User receives invitation via {@link HomeInvitation}</li>
+ *   <li>Invitation appears in this dialog with home details and role</li>
+ *   <li>User accepts → added to home with specified role, invitation marked ACCEPTED</li>
+ *   <li>User declines → invitation marked DECLINED, can request new invite later</li>
+ * </ol>
+ *
+ * <p><b>FXML bindings:</b> Requires the following UI elements:</p>
+ * <ul>
+ *   <li>{@code invitationsContainer} - VBox to hold invitation cards</li>
+ *   <li>{@code noInvitationsLabel} - Label shown when no invitations exist</li>
+ * </ul>
+ */
 public class HomeInvitationsDialogController {
 
-    @FXML private VBox invitationsContainer;
-    @FXML private Label noInvitationsLabel;
+    /**
+     * Container for invitation card components.
+     */
+    @FXML
+    private VBox invitationsContainer;
 
+    /**
+     * Label displayed when user has no pending invitations.
+     */
+    @FXML
+    private Label noInvitationsLabel;
+
+    /**
+     * The user whose invitations are being displayed.
+     */
     private User user;
+
+    /**
+     * Repository for accessing and updating invitation data.
+     */
     private final HomeInvitationRepository invitationRepo = new HomeInvitationRepository();
+
+    /**
+     * Repository for accessing home data.
+     */
     private final HomeRepository homeRepo = new HomeRepository();
+
+    /**
+     * Repository for accessing user data.
+     */
     private final UserRepository userRepo = new UserRepository();
+
+    /**
+     * Repository for managing user-home relationships.
+     */
     private final UserHomeRepository userHomeRepo = new UserHomeRepository();
+
+    /**
+     * Service for displaying user dialogs.
+     */
     private final DialogService dialog = new DialogService();
 
+    /**
+     * Date formatter for displaying invitation dates.
+     */
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
+    /**
+     * Sets the user and loads their pending invitations.
+     *
+     * <p>This method must be called after the dialog is created to initialize
+     * it with the user's data and display their invitations.</p>
+     *
+     * @param user the user whose invitations to display
+     */
     public void setUser(User user) {
         this.user = user;
         loadInvitations();
     }
 
+    /**
+     * Handles the close button click event.
+     *
+     * <p>Closes the invitation dialog window.</p>
+     */
     @FXML
     private void handleClose() {
         Stage stage = (Stage) invitationsContainer.getScene().getWindow();
         stage.close();
     }
 
+    /**
+     * Loads and displays all pending invitations for the user.
+     *
+     * <p>Queries the database for invitations with status PENDING for the user's
+     * email address. Creates an invitation card for each one and adds them to
+     * the container. If no invitations exist, displays the "no invitations" message.</p>
+     */
     private void loadInvitations() {
         if (user == null) {
             return;
@@ -66,6 +159,21 @@ public class HomeInvitationsDialogController {
         }
     }
 
+    /**
+     * Creates a UI card for an invitation.
+     *
+     * <p>Builds a VBox containing:</p>
+     * <ul>
+     *   <li>Home name (as title)</li>
+     *   <li>Inviter name ("Invited by: ...")</li>
+     *   <li>Invitation date (formatted as "MMM dd, yyyy")</li>
+     *   <li>Invited role with styling</li>
+     *   <li>Accept and Decline buttons</li>
+     * </ul>
+     *
+     * @param invitation the invitation to create a card for
+     * @return a VBox component representing the invitation
+     */
     private VBox createInvitationCard(HomeInvitation invitation) {
         VBox card = new VBox(12);
         card.getStyleClass().add("card");
@@ -111,6 +219,21 @@ public class HomeInvitationsDialogController {
         return card;
     }
 
+    /**
+     * Handles invitation acceptance with home replacement check.
+     *
+     * <p>Before accepting, this method:</p>
+     * <ol>
+     *   <li>Reloads user from database to get latest state</li>
+     *   <li>Checks if user already has a home</li>
+     *   <li>If yes, shows confirmation dialog explaining replacement</li>
+     *   <li>If user confirms or has no home, proceeds with {@link #acceptInvitation}</li>
+     * </ol>
+     *
+     * <p>This prevents users from accidentally losing access to their current home.</p>
+     *
+     * @param invitation the invitation to accept
+     */
     private void handleAcceptInvitation(HomeInvitation invitation) {
         // Reload user from database to get the latest state
         User freshUser = userRepo.findUserById(user.getId()).orElse(user);
@@ -133,6 +256,28 @@ public class HomeInvitationsDialogController {
         acceptInvitation(invitation);
     }
 
+    /**
+     * Processes invitation acceptance.
+     *
+     * <p>This method performs the complete acceptance workflow:</p>
+     * <ol>
+     *   <li>Loads the home from database</li>
+     *   <li>Adds user to home with invited role via {@link UserHomeRepository}</li>
+     *   <li>Updates user's home reference via {@link UserRepository}</li>
+     *   <li>Updates invitation status to ACCEPTED</li>
+     *   <li>Shows success message</li>
+     *   <li>Reloads invitation list</li>
+     * </ol>
+     *
+     * <p><b>Error handling:</b> Displays error dialogs if:</p>
+     * <ul>
+     *   <li>Home no longer exists</li>
+     *   <li>Failed to add user to home</li>
+     *   <li>Failed to update invitation status</li>
+     * </ul>
+     *
+     * @param invitation the invitation to accept
+     */
     private void acceptInvitation(HomeInvitation invitation) {
         // Get the home to assign
         Home home = homeRepo.getHomeById(invitation.getHomeId()).orElse(null);
@@ -174,6 +319,14 @@ public class HomeInvitationsDialogController {
         loadInvitations();
     }
 
+    /**
+     * Handles invitation decline.
+     *
+     * <p>Shows a confirmation dialog, then updates the invitation status to DECLINED
+     * if user confirms. The user can request a new invitation later if needed.</p>
+     *
+     * @param invitation the invitation to decline
+     */
     private void handleDeclineInvitation(HomeInvitation invitation) {
         Optional<ButtonType> result = dialog.confirm(
                 "Decline Invitation",

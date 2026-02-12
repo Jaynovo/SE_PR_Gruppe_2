@@ -76,6 +76,10 @@
                 <Button text="Save Changes" onAction="#saveButtonClicked" defaultButton="true"/>
             </HBox>
 
+            <HBox alignment="TOP_LEFT" spacing="10">
+                <Button text="Delete Home" onAction="#deleteHomeButtonClicked"/>
+            </HBox>
+
         </VBox>
     </center>
 

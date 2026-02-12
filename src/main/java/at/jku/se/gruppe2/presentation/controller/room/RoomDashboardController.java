@@ -34,14 +34,42 @@ import javafx.util.Duration;
 
 import java.util.*;
 
+/**
+ * Controller for the room dashboard view showing device cards and live sensor data.
+ *
+ * <p>This controller handles {@code room_dashboard_page.fxml} and is responsible for:</p>
+ * <ul>
+ *   <li>Loading and displaying all devices in the currently selected room</li>
+ *   <li>Running a live refresh cycle (every 2 seconds) to update sensor values
+ *       and evaluate automation rules</li>
+ *   <li>Adding and deleting devices with permission checks</li>
+ *   <li>Showing actuator configuration dialogs for specific device types</li>
+ *   <li>Editing device names inline</li>
+ *   <li>Permission-based UI visibility (add button, edit/delete controls)</li>
+ * </ul>
+ *
+ * <p><b>Live refresh:</b> A {@link Timeline} fires every 2 seconds to:</p>
+ * <ol>
+ *   <li>Evaluate automation rules ({@link RoomAutomationService})</li>
+ *   <li>Evaluate climate control ({@link ClimateControlService})</li>
+ *   <li>Update device card labels/controls with latest values ({@link DeviceCardFactory#updateLiveValues})</li>
+ * </ol>
+ *
+ * <p>The live refresh must be stopped before navigating away to avoid dangling timers.</p>
+ *
+ * <p><b>Permission model:</b> Add, delete, configure, and edit operations each
+ * check the current user's role in the home before proceeding.</p>
+ *
+ * @see DeviceCardFactory
+ * @see RoomAutomationService
+ * @see ClimateControlService
+ * @see ActuatorConfigService
+ */
 public class RoomDashboardController {
 
-    @FXML
-    public Label roomLabel;
-    @FXML
-    private FlowPane cardsFlow;
-    @FXML
-    private Button addDeviceButton;
+    @FXML    public Label roomLabel;
+    @FXML    private FlowPane cardsFlow;
+    @FXML    private Button addDeviceButton;
 
     private final NavigationService navigate = new NavigationService();
     private final DialogService dialog = new DialogService();
@@ -49,15 +77,16 @@ public class RoomDashboardController {
     private final ActuatorService actuatorService = new ActuatorService();
     private final ActuatorConfigService actuatorCfg = new ActuatorConfigService();
     private final ActuatorConfigDialog actuatorConfigDialog = new ActuatorConfigDialog(actuatorCfg);
-    private final ActuatorPermissionService actuatorPermService = new ActuatorPermissionService();
     private final AuthorizationService authService = new AuthorizationService();
 
     private final SensorSimulationService sensorSim = MainApp.getSensorSim();
     private final RoomDevicesService roomDevicesService = new RoomDevicesService(sensorSim);
     private final RoomAutomationService roomAutomationService = new RoomAutomationService(actuatorService, actuatorCfg);
-
     private final ClimateControlService climateControlService = new ClimateControlService(actuatorService, actuatorCfg);
 
+    /**
+     * Factory for creating device card UI components with bound action callbacks.
+     */
     private final DeviceCardFactory deviceCardFactory = new DeviceCardFactory(
             actuatorCfg,
             actuatorService,
@@ -67,9 +96,30 @@ public class RoomDashboardController {
             this::renderDevices
     );
 
+    /**
+     * Repeating timeline that updates live sensor/actuator values every 2 seconds.
+     */
     private Timeline liveRefresh;
+
+    /**
+     * The current list of devices in the selected room.
+     */
     private List<Device> devices = new ArrayList<>();
 
+    /**
+     * Initializes the room dashboard for the currently selected room.
+     *
+     * <p>This method:</p>
+     * <ol>
+     *   <li>Loads the selected room from {@link Session}, ensuring home context is set</li>
+     *   <li>Loads all devices for the room and registers them with the simulation service</li>
+     *   <li>Applies permission-based UI visibility</li>
+     *   <li>Renders all device cards</li>
+     *   <li>Starts the 2-second live refresh timeline</li>
+     * </ol>
+     *
+     * <p>Returns early without any action if no room is selected in the session.</p>
+     */
     public void initialize() {
         Room room = Session.getSelectedRoom();
 
@@ -106,6 +156,13 @@ public class RoomDashboardController {
         liveRefresh.play();
     }
 
+    /**
+     * Updates UI element visibility based on the current user's permissions for the home.
+     *
+     * <p>Currently manages the "Add Device" button, which is only shown to users
+     * with the {@code canAddDevices} permission. The button is both hidden and
+     * removed from layout when not permitted.</p>
+     */
     private void updateUIBasedOnPermissions() {
         Room room = Session.getSelectedRoom();
         if (room == null || room.getHome() == null) {
@@ -126,11 +183,20 @@ public class RoomDashboardController {
         }
     }
 
+    /**
+     * Updates the room name label from the current session's selected room.
+     */
     private void setLabel() {
         String room = Session.getSelectedRoom().getRoomLabel();
         roomLabel.setText(room);
     }
 
+    /**
+     * Clears and re-renders all device cards in the flow pane.
+     *
+     * <p>Permission flags ({@code canDelete}, {@code canConfigure}) are resolved per call
+     * and passed to the card factory so each card displays the correct controls.</p>
+     */
     private void renderDevices() {
         cardsFlow.getChildren().clear();
 
@@ -149,7 +215,15 @@ public class RoomDashboardController {
     }
 
     /**
-     * Handles editing a device's name
+     * Handles editing a device's label (name).
+     *
+     * <p>Displays a styled text input dialog pre-filled with the current device name.
+     * Validates the new name (not empty, max 100 characters), saves to the database,
+     * and re-renders the device list on success.</p>
+     *
+     * <p>Requires {@code canEditRoomDetails} permission.</p>
+     *
+     * @param device the device whose label to edit (must not be {@code null})
      */
     private void handleEditDevice(Device device) {
         // CHECK permission
@@ -202,6 +276,22 @@ public class RoomDashboardController {
         });
     }
 
+    /**
+     * Handles opening the configuration dialog for an actuator device.
+     *
+     * <p>Delegates to the appropriate configuration dialog based on actuator type:</p>
+     * <ul>
+     *   <li>Ventilation → {@link #showVentilationConfig(Device)}</li>
+     *   <li>AlarmSystem → {@link #showAlarmConfig(Device)}</li>
+     *   <li>Cat Feeder → {@link #showCatFeederConfig(Device)}</li>
+     *   <li>Heating → {@link #showHeatingConfig(Device)}</li>
+     *   <li>Others → info alert indicating no configuration available</li>
+     * </ul>
+     *
+     * <p>Requires {@code canConfigureActuators} permission.</p>
+     *
+     * @param actuatorDevice the actuator device to configure (must not be {@code null})
+     */
     private void handleConfigureActuator(Device actuatorDevice) {
         // CHECK permission
         Room room = Session.getSelectedRoom();
@@ -231,6 +321,16 @@ public class RoomDashboardController {
         }
     }
 
+    /**
+     * Handles deleting a device after user confirmation.
+     *
+     * <p>Displays a confirmation dialog. On confirmation, deletes the device from the
+     * database and reloads/re-renders the device list.</p>
+     *
+     * <p>Requires {@code canRemoveDevices} permission.</p>
+     *
+     * @param d the device to delete (must not be {@code null})
+     */
     private void handleDeleteDevice(Device d) {
         // CHECK permission
         Room room = Session.getSelectedRoom();
@@ -258,15 +358,39 @@ public class RoomDashboardController {
         });
     }
 
+    /**
+     * Stops the live refresh timeline if it is running.
+     *
+     * <p>Must be called before navigating away from this view to prevent
+     * the timer from continuing to fire after the controller is no longer active.</p>
+     */
     private void stopLiveRefresh() {
         if (liveRefresh != null) liveRefresh.stop();
     }
 
+    /**
+     * Navigates back to the main dashboard, stopping the live refresh first.
+     */
     public void handleDashboard() {
         stopLiveRefresh();
         navigate.goTo(Page.DASHBOARD.fxml());
     }
 
+    /**
+     * Handles the Add Device button by presenting category and type selection dialogs.
+     *
+     * <p>Guides the user through a two-step process:</p>
+     * <ol>
+     *   <li>Select device category (SENSOR or ACTUATOR)</li>
+     *   <li>Select device type from available types of that category</li>
+     *   <li>Enter a label/name for the new device</li>
+     * </ol>
+     *
+     * <p>After creation, the device is attached to the appropriate sensor/actuator
+     * type table and the device list is reloaded.</p>
+     *
+     * <p>Requires {@code canAddDevices} permission.</p>
+     */
     public void handleAddDevice() {
         Room room = Session.getSelectedRoom();
         if (room == null || room.getHome() == null) {
@@ -331,28 +455,53 @@ public class RoomDashboardController {
         });
     }
 
+    /**
+     * Navigates to the user profile page, storing the dashboard as the return page.
+     */
     public void handleUserProfile() {
         Session.setPreviousPage(Page.DASHBOARD.fxml());
         navigate.goTo(Page.PROFILE.fxml());
     }
 
+    /**
+     * Handles logout by showing an info message and navigating to the login page.
+     */
     public void handleLogout() {
         dialog.info("Logout", "You have been logged out.");
         navigate.goTo(Page.LOGIN.fxml());
     }
 
-    // Configuration dialogs for specific actuators
-
+    /**
+     * Delegates to {@link ActuatorConfigDialog} to show the ventilation configuration dialog.
+     *
+     * @param actuatorDevice the ventilation actuator to configure (must not be {@code null})
+     */
     private void showVentilationConfig(Device actuatorDevice) {
-        // Delegate to ActuatorConfigDialog
         actuatorConfigDialog.show(actuatorDevice);
     }
 
+    /**
+     * Delegates to {@link ActuatorConfigDialog} to show the alarm system configuration dialog.
+     *
+     * @param actuatorDevice the alarm system actuator to configure (must not be {@code null})
+     */
     private void showAlarmConfig(Device actuatorDevice) {
-        // Delegate to ActuatorConfigDialog
         actuatorConfigDialog.show(actuatorDevice);
     }
 
+    /**
+     * Displays the configuration dialog for cat feeder actuators.
+     *
+     * <p>Allows configuration of:</p>
+     * <ul>
+     *   <li>Minimum confidence percentage (0-100%) for cat detection</li>
+     *   <li>Cooldown ticks between feedings (0-600 ticks, each tick ≈ 2 seconds)</li>
+     * </ul>
+     *
+     * <p>A hint label shows the cooldown in seconds alongside the tick spinner.</p>
+     *
+     * @param actuatorDevice the cat feeder actuator to configure (must not be {@code null})
+     */
     private void showCatFeederConfig(Device actuatorDevice) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Configure Cat Feeder");
@@ -410,6 +559,22 @@ public class RoomDashboardController {
         });
     }
 
+    /**
+     * Displays the configuration dialog for heating actuators.
+     *
+     * <p>Allows configuration of:</p>
+     * <ul>
+     *   <li>Auto mode (enabled/disabled)</li>
+     *   <li>Manual heating percentage (0-100%) — disabled in auto mode</li>
+     *   <li>Target temperature in °C (10-30°C) — only relevant in auto mode</li>
+     *   <li>Hysteresis in °C (0-5°C) — prevents rapid on/off switching</li>
+     * </ul>
+     *
+     * <p>The manual percent spinner is disabled when auto mode is on; target
+     * temperature and hysteresis spinners are disabled when auto mode is off.</p>
+     *
+     * @param actuatorDevice the heating actuator to configure (must not be {@code null})
+     */
     private void showHeatingConfig(Device actuatorDevice) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Configure Heating");
@@ -466,31 +631,72 @@ public class RoomDashboardController {
         });
     }
 
+    // -------------------------------------------------------------------------
     // Getters for testing purposes
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns the current list of devices in the room.
+     *
+     * @return the current device list (never {@code null})
+     */
     public List<Device> getDevices() {
         return devices;
     }
 
+    /**
+     * Returns the device repository used by this controller.
+     *
+     * @return the {@link DeviceRepository} instance (never {@code null})
+     */
     public DeviceRepository getDeviceRepository() {
         return deviceRepository;
     }
 
+    /**
+     * Returns the sensor simulation service used by this controller.
+     *
+     * @return the {@link SensorSimulationService} instance (never {@code null})
+     */
     public SensorSimulationService getSensorSim() {
         return sensorSim;
     }
 
+    /**
+     * Replaces the current device list.
+     *
+     * <p>Intended for testing purposes to inject a controlled device list
+     * without loading from the database.</p>
+     *
+     * @param devices the new device list (must not be {@code null})
+     */
     public void setDevices(List<Device> devices) {
         this.devices = devices;
     }
 
+    /**
+     * Returns the actuator service used by this controller.
+     *
+     * @return the {@link ActuatorService} instance (never {@code null})
+     */
     public ActuatorService getActuatorService() {
         return actuatorService;
     }
 
+    /**
+     * Returns the actuator configuration service used by this controller.
+     *
+     * @return the {@link ActuatorConfigService} instance (never {@code null})
+     */
     public ActuatorConfigService getActuatorCfg() {
         return actuatorCfg;
     }
 
+    /**
+     * Returns the actuator configuration dialog used by this controller.
+     *
+     * @return the {@link ActuatorConfigDialog} instance (never {@code null})
+     */
     public ActuatorConfigDialog getActuatorConfigDialog() {
         return actuatorConfigDialog;
     }
