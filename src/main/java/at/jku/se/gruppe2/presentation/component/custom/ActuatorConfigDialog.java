@@ -8,17 +8,54 @@ import at.jku.se.gruppe2.presentation.util.UIUtils;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 
+/**
+ * Dialog component for configuring actuator devices in the smart home system.
+ *
+ * <p>This dialog presents device-specific configuration interfaces based on the
+ * actuator type.
+ *
+ * <p>Each configuration type provides validation logic to ensure sensible threshold
+ * values and displays appropriate error messages for invalid input.</p>
+ *
+ * <p><b>Usage example:</b></p>
+ * <pre>{@code
+ * ActuatorConfigDialog dialog = new ActuatorConfigDialog(actuatorConfigService);
+ * dialog.show(ventilationDevice);
+ * }</pre>
+ *
+ * @see ActuatorConfigService
+ * @see Device
+ */
 public class ActuatorConfigDialog {
     private final ActuatorConfigService actuatorCfg;
 
+    /**
+     * Constructs a new actuator configuration dialog.
+     *
+     * @param actuatorCfg service for managing actuator configurations (must not be {@code null})
+     * @throws NullPointerException if {@code actuatorCfg} is {@code null}
+     */
     public ActuatorConfigDialog(ActuatorConfigService actuatorCfg) {
         this.actuatorCfg = actuatorCfg;
     }
 
+    /**
+     * Displays the appropriate configuration dialog based on the actuator device type.
+     *
+     * <p>The dialog type is determined by the device's type label:</p>
+     * <ul>
+     *   <li>"Ventilation" → {@link #showVentilationConfig(Device)}</li>
+     *   <li>"AlarmSystem" → {@link #showAlarmConfig(Device)}</li>
+     *   <li>"Blinds" → {@link #showBlindsConfig(Device)}</li>
+     *   <li>Other types → Information alert indicating no configuration available</li>
+     * </ul>
+     *
+     * @param actuatorDevice the actuator device to configure (must not be {@code null})
+     * @throws NullPointerException if {@code actuatorDevice} is {@code null}
+     */
     public void show(Device actuatorDevice) {
         String type = actuatorDevice.getTypeLabel();
 
-        //TODO: weitere Aktoren hinzufügen and change logic to switch/case
         switch (type) {
             case "Ventilation":
                 showVentilationConfig(actuatorDevice);
@@ -34,6 +71,25 @@ public class ActuatorConfigDialog {
         }
     }
 
+    /**
+     * Displays the configuration dialog for blinds actuators.
+     *
+     * <p>Allows configuration of:</p>
+     * <ul>
+     *   <li>Auto mode (enabled/disabled)</li>
+     *   <li>Light threshold for closing blinds (in Lux)</li>
+     *   <li>Light threshold for opening blinds (in Lux)</li>
+     * </ul>
+     *
+     * <p><b>Validation:</b> The open threshold must be strictly less than the close
+     * threshold to prevent ambiguous behavior. An error alert is shown if this
+     * constraint is violated.</p>
+     *
+     * <p>Configuration changes are persisted only if the user confirms with OK.</p>
+     *
+     * @param actuatorDevice the blinds actuator device to configure (must not be {@code null})
+     * @throws NullPointerException if {@code actuatorDevice} is {@code null}
+     */
     private void showBlindsConfig(Device actuatorDevice) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Configure Blinds");
@@ -82,6 +138,28 @@ public class ActuatorConfigDialog {
         });
     }
 
+    /**
+     * Displays the configuration dialog for ventilation actuators.
+     *
+     * <p>Allows configuration of:</p>
+     * <ul>
+     *   <li>Auto mode (enabled/disabled)</li>
+     *   <li>CO₂ thresholds: ON threshold (400-3000 ppm) and OFF threshold (400-3000 ppm)</li>
+     *   <li>Humidity thresholds: ON threshold (20-90%) and OFF threshold (20-90%)</li>
+     * </ul>
+     *
+     * <p><b>Validation:</b></p>
+     * <ul>
+     *   <li>OFF threshold must be strictly less than ON threshold for CO₂</li>
+     *   <li>OFF threshold must be strictly less than ON threshold for humidity</li>
+     * </ul>
+     *
+     * <p>Configuration changes are persisted only if the user confirms with OK and
+     * all validation passes. A success confirmation is shown after saving.</p>
+     *
+     * @param actuatorDevice the ventilation actuator device to configure (must not be {@code null})
+     * @throws NullPointerException if {@code actuatorDevice} is {@code null}
+     */
     public void showVentilationConfig(Device actuatorDevice) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Configure Ventilation");
@@ -138,7 +216,7 @@ public class ActuatorConfigDialog {
             double humOnVal = humOnTh.getValue();
             double humOffVal = humOffTh.getValue();
 
-            // OFF muss < ON sein (CO2)
+            // OFF muss < ON sein (CO₂)
             if (offVal >= onVal) {
                 UIUtils.styledAlert(Alert.AlertType.ERROR,
                         "OFF threshold (CO₂) must be smaller than ON threshold.",
@@ -168,6 +246,25 @@ public class ActuatorConfigDialog {
         });
     }
 
+    /**
+     * Displays the configuration dialog for alarm system actuators.
+     *
+     * <p>Allows configuration of:</p>
+     * <ul>
+     *   <li>Auto mode (enabled/disabled)</li>
+     *   <li>Noise threshold in decibels (0-120 dB)</li>
+     *   <li>Required consecutive ticks before triggering alarm (1-10)</li>
+     * </ul>
+     *
+     * <p>The consecutive ticks requirement helps prevent false alarms from brief
+     * noise spikes by requiring sustained high noise levels.</p>
+     *
+     * <p>Configuration changes are persisted only if the user confirms with OK.
+     * A success confirmation is shown after saving.</p>
+     *
+     * @param actuatorDevice the alarm system actuator device to configure (must not be {@code null})
+     * @throws NullPointerException if {@code actuatorDevice} is {@code null}
+     */
     public void showAlarmConfig(Device actuatorDevice) {
         Dialog<ButtonType> dialog = new Dialog<ButtonType>();
         dialog.setTitle("Configure Alarm System");

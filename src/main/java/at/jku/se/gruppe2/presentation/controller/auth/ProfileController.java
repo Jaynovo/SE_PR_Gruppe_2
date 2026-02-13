@@ -5,15 +5,12 @@ import at.jku.se.gruppe2.domain.model.home.Address;
 import at.jku.se.gruppe2.application.navigation.NavigationService;
 import at.jku.se.gruppe2.domain.model.user.User;
 import at.jku.se.gruppe2.domain.service.user.ValidationService;
-import at.jku.se.gruppe2.infrastructure.persistence.repository.AddressRepository;
-import at.jku.se.gruppe2.infrastructure.persistence.repository.UserRepository;
-import at.jku.se.gruppe2.infrastructure.security.PasswordUtils;
-import at.jku.se.gruppe2.infrastructure.security.Session;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.*;
+import at.jku.se.gruppe2.infrastructure.security.*;
 import at.jku.se.gruppe2.infrastructure.storage.AvatarStorage;
 import at.jku.se.gruppe2.presentation.util.UIUtils;
 import at.jku.se.gruppe2.presentation.navigation.Page;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.*;
 import javafx.scene.canvas.*;
@@ -27,10 +24,46 @@ import java.io.IOException;
 import java.util.Optional;
 
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-
 import java.io.File;
 
+/**
+ * Controller for the user profile page.
+ *
+ * <p>This controller manages the user profile view and editing functionality, including
+ * personal information (name, email), address management, avatar/profile picture handling,
+ * and password changes. It provides comprehensive validation and visual feedback for all
+ * user modifications.</p>
+ *
+ * <p><b>Key responsibilities:</b></p>
+ * <ul>
+ *   <li>Displaying current user profile data</li>
+ *   <li>Editing personal information (first name, last name)</li>
+ *   <li>Managing user address (create, update, unlink)</li>
+ *   <li>Handling avatar/profile picture (upload, remove, generate default)</li>
+ *   <li>Changing user password with verification</li>
+ *   <li>Comprehensive input validation using {@link ValidationService}</li>
+ *   <li>Visual error feedback with tooltips and field highlighting</li>
+ * </ul>
+ *
+ * <p><b>Avatar handling:</b> The controller supports two avatar modes:</p>
+ * <ol>
+ *   <li>User-uploaded image (stored via {@link AvatarStorage})</li>
+ *   <li>Auto-generated avatar based on user initials</li>
+ * </ol>
+ *
+ * <p><b>Validation:</b> All fields are validated using {@link ValidationService} with
+ * real-time visual feedback through error borders and tooltips.</p>
+ *
+ * <p><b>FXML bindings:</b> This controller requires the following UI elements:</p>
+ * <ul>
+ *   <li>{@code firstNameField}, {@code lastNameField} - name inputs</li>
+ *   <li>{@code emailField} - email display (read-only)</li>
+ *   <li>{@code streetField}, {@code streetNumberField}, {@code cityField},
+ *       {@code postalCodeField}, {@code countryComboBox} - address inputs</li>
+ *   <li>{@code avatarImage} - profile picture display</li>
+ *   <li>{@code unlinkAddressButton} - button to remove address</li>
+ * </ul>
+ */
 @SuppressWarnings("CallToPrintStackTrace")
 public class ProfileController {
 
@@ -49,7 +82,23 @@ public class ProfileController {
     private final AddressRepository addressRepository = new AddressRepository();
     private final NavigationService navigate = new NavigationService();
 
-
+    /**
+     * Initializes the controller after FXML loading.
+     *
+     * <p>This method performs the following initialization steps:</p>
+     * <ol>
+     *   <li>Checks if a user is logged in via {@link Session#getCurrentUser()}</li>
+     *   <li>Redirects to login page if no user is in session</li>
+     *   <li>Sets up the country dropdown with available countries</li>
+     *   <li>Populates form fields with current user data</li>
+     *   <li>Populates address fields if user has an address</li>
+     *   <li>Sets up listeners to refresh avatar when name changes</li>
+     *   <li>Applies circular clipping to avatar image</li>
+     *   <li>Displays current avatar or generates default</li>
+     * </ol>
+     *
+     * @throws IOException if FXML loading fails during navigation to login page
+     */
     @FXML
     public void initialize() throws IOException {
         System.out.println("ProfileController initialized!");
@@ -83,7 +132,19 @@ public class ProfileController {
         refreshAvatarView(); // initial
     }
 
-
+    /**
+     * Generates a default avatar image based on user initials.
+     *
+     * <p>Creates a circular avatar with:</p>
+     * <ul>
+     *   <li>Background color generated from initials hashcode for consistency</li>
+     *   <li>White text displaying the initials</li>
+     *   <li>100x100 pixel canvas size</li>
+     * </ul>
+     *
+     * @param initials the initials to display (typically 1-2 characters)
+     * @return a generated avatar image as {@link Image}
+     */
     private Image generateAvatar(String initials) {
         double size = 100;
 
@@ -115,6 +176,14 @@ public class ProfileController {
         return image;
     }
 
+    /**
+     * Extracts user initials from the name input fields.
+     *
+     * <p>Takes the first character from both first and last name fields (if available)
+     * and converts them to uppercase. If both fields are empty, returns "?" as fallback.</p>
+     *
+     * @return user initials as uppercase string (1-2 characters, or "?" if no names provided)
+     */
     private String getInitials() {
         String first = Optional.ofNullable(firstNameField.getText()).orElse("").trim();
         String last = Optional.ofNullable(lastNameField.getText()).orElse("").trim();
@@ -126,6 +195,15 @@ public class ProfileController {
         return initials.isEmpty() ? "?" : initials;
     }
 
+    /**
+     * Applies circular clipping to an ImageView.
+     *
+     * <p>Creates a circular clip region centered on the ImageView to create
+     * a round profile picture effect regardless of the original image shape.</p>
+     *
+     * @param iv the ImageView to clip
+     * @param size the diameter of the circular clip in pixels
+     */
     private void applyCircleClip(ImageView iv, double size) {
         iv.setFitWidth(size);
         iv.setFitHeight(size);
@@ -133,6 +211,19 @@ public class ProfileController {
         iv.setClip(clip);
     }
 
+    /**
+     * Refreshes the avatar display based on current user data.
+     *
+     * <p>This method attempts to load a custom avatar from the user's avatar path.
+     * If no custom avatar exists or loading fails, it generates a default avatar
+     * based on the user's initials.</p>
+     *
+     * <p><b>Avatar loading priority:</b></p>
+     * <ol>
+     *   <li>User-uploaded avatar from {@link User#getAvatarPath()}</li>
+     *   <li>Generated avatar based on user initials</li>
+     * </ol>
+     */
     private void refreshAvatarView() {
         User current = Session.getCurrentUser();
         if (current == null) return;
@@ -155,6 +246,27 @@ public class ProfileController {
         avatarImage.setImage(generateAvatar(getInitials()));
     }
 
+    /**
+     * Handles the change avatar button click event.
+     *
+     * <p>Opens a file chooser dialog allowing the user to select an image file
+     * (PNG, JPG, JPEG) to use as their profile picture. The selected image is:</p>
+     * <ol>
+     *   <li>Validated for file size (maximum 5MB)</li>
+     *   <li>Loaded and validated as a valid image</li>
+     *   <li>Resized to 256x256 pixels while preserving aspect ratio</li>
+     *   <li>Saved via {@link AvatarStorage#saveAvatarForUser(int, Image)}</li>
+     *   <li>Linked to the user via {@link UserRepository#updateAvatarPath(User, String)}</li>
+     * </ol>
+     *
+     * <p><b>Error handling:</b> Shows error dialogs for:</p>
+     * <ul>
+     *   <li>No user in session</li>
+     *   <li>File size exceeding 5MB</li>
+     *   <li>Invalid or corrupt image files</li>
+     *   <li>Errors during image saving</li>
+     * </ul>
+     */
     @FXML
     private void onChangeAvatar() {
         User current = Session.getCurrentUser();
@@ -197,6 +309,9 @@ public class ProfileController {
         }
     }
 
+    /**
+     * Handles the remove avatar button click event.
+     */
     @FXML
     private void onRemoveAvatar() {
         User current = Session.getCurrentUser();
@@ -211,6 +326,38 @@ public class ProfileController {
         UIUtils.styledAlert(Alert.AlertType.INFORMATION, "Profilbild entfernt.", ButtonType.OK).showAndWait();
     }
 
+    /**
+     * Applies a square viewport to an ImageView for proper cropping.
+     *
+     * <p>Creates a centered square viewport on the image, which is useful for
+     * displaying profile pictures that should be cropped to square aspect ratio
+     * before circular clipping is applied.</p>
+     *
+     * @param iv the ImageView to apply viewport to
+     * @param img the source image
+     */
+    private void applySquareViewport(ImageView iv, Image img) {
+        double w = img.getWidth();
+        double h = img.getHeight();
+        double side = Math.min(w, h);
+        double x = (w - side) / 2;
+        double y = (h - side) / 2;
+        iv.setViewport(new Rectangle2D(x, y, side, side));
+    }
+
+    /**
+     * Handles the unlink address button click event.
+     *
+     * <p>Prompts the user for confirmation, then removes the address association by:</p>
+     * <ol>
+     *   <li>Setting user's address to {@code null}</li>
+     *   <li>Updating the database via {@link UserRepository#updateAddress(User, Address)}</li>
+     *   <li>Clearing all address input fields</li>
+     * </ol>
+     *
+     * <p>Note: This only unlinks the address from the user, it does not delete
+     * the address record from the database.</p>
+     */
     @FXML
     private void onUnlinkAddress() {
         User current = Session.getCurrentUser();
@@ -219,7 +366,6 @@ public class ProfileController {
             return;
         }
 
-        // Check if user has an address to unlink
         if (current.getAddress() == null) {
             UIUtils.styledAlert(Alert.AlertType.INFORMATION, "You don't have an address.", ButtonType.OK).showAndWait();
             return;
@@ -234,11 +380,9 @@ public class ProfileController {
         }
 
         try {
-            // Unlink address from user
             current.setAddress(null);
             userRepository.updateAddress(current, null);
 
-            // Clear address fields in UI
             streetField.clear();
             streetNumberField.clear();
             cityField.clear();
@@ -254,18 +398,25 @@ public class ProfileController {
         }
     }
 
-    //Helper Methode
-    private void applySquareViewport(ImageView iv, Image img) {
-        double w = img.getWidth();
-        double h = img.getHeight();
-        double size = Math.min(w, h);
-
-        double x = (w - size) / 2.0;
-        double y = (h - size) / 2.0;
-
-        iv.setViewport(new Rectangle2D(x, y, size, size)); //center-crop
-    }
-
+    /**
+     * Handles the save profile button click event.
+     *
+     * <p>This method performs comprehensive validation and saves all profile changes:</p>
+     * <ol>
+     *   <li>Clears any previous error styling</li>
+     *   <li>Validates name using {@link ValidationService}</li>
+     *   <li>If any address fields are filled, validates all address fields</li>
+     *   <li>Updates user's name in the database</li>
+     *   <li>Updates or creates address if address data is provided</li>
+     *   <li>Shows success message and navigates back</li>
+     * </ol>
+     *
+     * <p><b>Validation:</b> Uses {@link ValidationService} for all field validations
+     * and displays errors with {@link #setFieldError(Control, String)}.</p>
+     *
+     * <p><b>Address handling:</b> If the user already has an address, it is updated.
+     * If they don't have an address but fill in address fields, a new address is created.</p>
+     */
     @FXML
     private void onSave() {
         User current = Session.getCurrentUser();
@@ -390,11 +541,43 @@ public class ProfileController {
         }
     }
 
+    /**
+     * Handles the cancel button click event.
+     *
+     * <p>Discards any unsaved changes and navigates back to the dashboard.</p>
+     */
     @FXML
     private void onCancel() {
         navigate.goTo(Page.DASHBOARD.fxml());
     }
 
+    /**
+     * Handles the change password button click event.
+     *
+     * <p>Opens a dialog prompting the user to enter:</p>
+     * <ul>
+     *   <li>Current password (for verification)</li>
+     *   <li>New password</li>
+     *   <li>New password confirmation</li>
+     * </ul>
+     *
+     * <p>The password change process:</p>
+     * <ol>
+     *   <li>Validates all three password fields are filled</li>
+     *   <li>Checks that new password and confirmation match</li>
+     *   <li>Verifies current password using {@link PasswordUtils#verifyPassword(String, String)}</li>
+     *   <li>Hashes new password using {@link PasswordUtils#hashPassword(String)}</li>
+     *   <li>Updates password in database via {@link UserRepository#updatePassword(User, String)}</li>
+     * </ol>
+     *
+     * <p><b>Error handling:</b> Shows error dialogs for:</p>
+     * <ul>
+     *   <li>No user in session</li>
+     *   <li>Empty password fields</li>
+     *   <li>Mismatched new password and confirmation</li>
+     *   <li>Incorrect current password</li>
+     * </ul>
+     */
     @FXML
     private void onChangePassword() {
 
@@ -454,10 +637,14 @@ public class ProfileController {
         current.setPassword(hashedPw);
 
         UIUtils.styledAlert(Alert.AlertType.CONFIRMATION, "Password changed!", ButtonType.OK).showAndWait();
-
-        //TODO: Passwort checken und speichern
     }
 
+    /**
+     * Navigates to the previous page or dashboard.
+     *
+     * <p>Attempts to navigate to the page stored in {@link Session#getPreviousPage()}.
+     * If no previous page is stored, navigates to the dashboard as fallback.</p>
+     */
     private void goTo() {
         try {
             String previous = Session.getPreviousPage();
@@ -474,14 +661,17 @@ public class ProfileController {
     }
 
     /**
-     * Helper method to check if a string is null or empty
-     */
-    private boolean isNullOrEmpty(String str) {
-        return str == null || str.trim().isEmpty();
-    }
-
-    /**
-     * Sets an error style on a control and shows a tooltip with the error message
+     * Sets an error style on a control and displays a tooltip with the error message.
+     *
+     * <p>This method provides visual feedback for validation errors by:</p>
+     * <ul>
+     *   <li>Adding a red border to the control</li>
+     *   <li>Creating a red tooltip with the error message</li>
+     *   <li>Immediately showing the tooltip below the control</li>
+     * </ul>
+     *
+     * @param control the form control to mark as having an error
+     * @param errorMessage the error message to display in the tooltip
      */
     private void setFieldError(Control control, String errorMessage) {
         control.setStyle("-fx-border-color: #ef4444; -fx-border-width: 2px;");
@@ -497,7 +687,11 @@ public class ProfileController {
     }
 
     /**
-     * Clears error styling from all input fields
+     * Clears error styling from all input fields.
+     *
+     * <p>Removes red borders and tooltips from all form controls, resetting them
+     * to their default styling. This method is typically called at the start of
+     * validation to clear previous error states.</p>
      */
     private void clearFieldErrors() {
         firstNameField.setStyle("");

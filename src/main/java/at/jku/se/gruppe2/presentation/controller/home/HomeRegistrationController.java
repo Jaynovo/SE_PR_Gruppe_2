@@ -20,6 +20,40 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import java.util.Optional;
 
+/**
+ * Controller for the home registration page.
+ *
+ * <p>This controller manages the creation of new homes. It collects home details
+ * (name, floors, address), validates the input, creates the home in the database,
+ * and establishes the creating user as the home owner.</p>
+ *
+ * <p><b>Key responsibilities:</b></p>
+ * <ul>
+ *   <li>Collecting home information (name and floor count)</li>
+ *   <li>Collecting complete address information</li>
+ *   <li>Pre-populating address fields from user's profile address (if available)</li>
+ *   <li>Validating all input fields</li>
+ *   <li>Creating address record in database</li>
+ *   <li>Creating home record in database</li>
+ *   <li>Linking user to home as OWNER via {@link UserHomeRepository}</li>
+ *   <li>Updating user's home reference</li>
+ *   <li>Navigating to dashboard after successful creation</li>
+ * </ul>
+ *
+ * <p><b>User convenience:</b> If the current user has an address in their profile,
+ * the form is pre-filled with that address information to save time.</p>
+ *
+ * <p><b>Ownership:</b> The user who creates a home automatically becomes its OWNER,
+ * granting full permissions to manage the home, rooms, devices, and other users.</p>
+ *
+ * <p><b>FXML bindings:</b> Requires the following UI elements:</p>
+ * <ul>
+ *   <li>{@code homeLabel} - home name input</li>
+ *   <li>{@code floorLevels} - number of floors input (IntegerField)</li>
+ *   <li>{@code street}, {@code streetNumber}, {@code postalCode}, {@code city},
+ *       {@code countryBox} - address inputs</li>
+ * </ul>
+ */
 @SuppressWarnings("CallToPrintStackTrace")
 public class HomeRegistrationController {
 
@@ -41,6 +75,12 @@ public class HomeRegistrationController {
         this.homeRepo = homeRepo;
     }
 
+    /**
+     * Initializes the controller after FXML loading.
+     *
+     * <p>Sets up the country dropdown and pre-populates address fields with
+     * the current user's address if one exists in their profile.</p>
+     */
     @FXML
     public void initialize() {
         UIUtils.setupCountryComboBox(countryBox);
@@ -48,7 +88,14 @@ public class HomeRegistrationController {
     }
 
     /**
-     * Populates the address fields with the current user's address information if available
+     * Populates address fields with current user's address information if available.
+     *
+     * <p>This method checks if the logged-in user has an address in their profile.
+     * If so, it pre-fills all address fields (street, street number, postal code,
+     * city, country) to save the user time when creating a home.</p>
+     *
+     * <p>Fields are only populated if they contain non-null, non-empty values in
+     * the user's address.</p>
      */
     private void populateUserAddress() {
         User currentUser = Session.getCurrentUser();
@@ -80,6 +127,31 @@ public class HomeRegistrationController {
         }
     }
 
+    /**
+     * Handles the save button click event.
+     *
+     * <p>This method performs the complete home creation workflow:</p>
+     * <ol>
+     *   <li>Validates all input fields using {@link #validateInputs()}</li>
+     *   <li>Creates a {@link Location} with placeholder coordinates (0,0)</li>
+     *   <li>Creates an {@link Address} object and persists it to database</li>
+     *   <li>Creates a {@link Home} object with the address</li>
+     *   <li>Persists the home to database</li>
+     *   <li>Links current user to home with OWNER role via {@link UserHomeRepository}</li>
+     *   <li>Updates user's home reference via {@link UserRepository}</li>
+     *   <li>Shows success message and navigates to dashboard</li>
+     * </ol>
+     *
+     * <p><b>Note:</b> Coordinates are initially set to 0,0. The geocoding service
+     * will populate actual coordinates based on the address later.</p>
+     *
+     * <p><b>Error handling:</b> Displays error dialogs for:</p>
+     * <ul>
+     *   <li>Validation failures</li>
+     *   <li>Database errors during creation</li>
+     *   <li>Unexpected exceptions</li>
+     * </ul>
+     */
     @FXML
     private void saveButtonClicked() {
 
@@ -135,6 +207,12 @@ public class HomeRegistrationController {
         }
     }
 
+    /**
+     * Validates all input fields using {@link ValidationService}.
+     *
+     * <p>Performs comprehensive validation.</p>
+     * @return {@code true} if all validations pass, {@code false} otherwise
+     */
     private boolean validateInputs() {
         ValidationService.ValidationResult result = ValidationService.validateCompleteHome(
                 homeLabel.getText(),
@@ -154,6 +232,12 @@ public class HomeRegistrationController {
         return true;
     }
 
+    /**
+     * Handles the cancel button click event.
+     *
+     * <p>Shows a confirmation dialog before discarding changes. If user confirms,
+     * navigates back to the dashboard without creating the home.</p>
+     */
     @FXML
     private void cancelButtonClicked() {
         Alert alert = UIUtils.styledAlert(
@@ -170,6 +254,9 @@ public class HomeRegistrationController {
         }
     }
 
+    /**
+     * Navigates to the dashboard page.
+     */
     public void handleDashboard() {
         navigate.goTo(Page.DASHBOARD.fxml());
     }

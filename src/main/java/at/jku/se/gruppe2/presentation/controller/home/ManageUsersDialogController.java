@@ -17,8 +17,46 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- * Controller for the Manage Users Dialog
- * Allows home owners to view, edit roles, and remove members
+ * Controller for the Manage Users dialog.
+ *
+ * <p>This controller allows home owners to view all members of their home, change
+ * member roles, and remove members from the home. It provides a complete user
+ * management interface with permission checks and confirmation dialogs.</p>
+ *
+ * <p><b>Key responsibilities:</b></p>
+ * <ul>
+ *   <li>Loading and displaying all home members</li>
+ *   <li>Creating member cards with user details and role information</li>
+ *   <li>Changing member roles (GUEST ↔ RESIDENT ↔ OWNER)</li>
+ *   <li>Removing members from the home</li>
+ *   <li>Enforcing permission checks (only OWNER can manage)</li>
+ *   <li>Preventing changes to owner and current user</li>
+ *   <li>Providing user feedback for all actions</li>
+ * </ul>
+ *
+ * <p><b>Permission requirements:</b> Only home owners (OWNER role) can access
+ * this dialog. The controller checks {@link AuthorizationService#canInviteUsers}
+ * on initialization and closes if permission is denied.</p>
+ *
+ * <p><b>Protection rules:</b></p>
+ * <ul>
+ *   <li>Current user cannot modify their own role or remove themselves</li>
+ *   <li>Owner role cannot be modified or removed</li>
+ *   <li>All other members can have roles changed or be removed</li>
+ * </ul>
+ *
+ * <p><b>Role changes:</b> Uses {@link HomeManagementService#updateUserRole}
+ * to persist role changes with proper validation and authorization.</p>
+ *
+ * <p><b>Member removal:</b> Uses {@link HomeManagementService#removeUserFromHome}
+ * to remove users, which revokes all their access to home, rooms, and devices.</p>
+ *
+ * <p><b>FXML bindings:</b> Requires the following UI elements:</p>
+ * <ul>
+ *   <li>{@code membersContainer} - VBox to hold member cards</li>
+ *   <li>{@code noMembersLabel} - Label shown when no members exist</li>
+ *   <li>{@code memberCountLabel} - Label showing total member count</li>
+ * </ul>
  */
 public class ManageUsersDialogController {
 
@@ -33,6 +71,15 @@ public class ManageUsersDialogController {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
+    /**
+     * Sets the home and initializes the dialog.
+     *
+     * <p>Checks if current user has permission to manage users (OWNER only).
+     * If not, shows error and closes dialog. Otherwise, loads and displays
+     * all home members.</p>
+     *
+     * @param home the home to manage members for
+     */
     public void setHome(Home home) {
         this.home = home;
 
@@ -48,17 +95,35 @@ public class ManageUsersDialogController {
         loadMembers();
     }
 
+    /**
+     * Handles the refresh button click event.
+     *
+     * <p>Reloads the member list from the database to reflect any changes.</p>
+     */
     @FXML
     private void handleRefresh() {
         loadMembers();
     }
 
+    /**
+     * Handles the close button click event.
+     *
+     * <p>Closes the manage users dialog.</p>
+     */
     @FXML
     private void handleClose() {
         Stage stage = (Stage) membersContainer.getScene().getWindow();
         stage.close();
     }
 
+    /**
+     * Loads and displays all members of the home.
+     *
+     * <p>Queries {@link HomeManagementService} for complete member list with
+     * user details and roles. Creates a card for each member and displays
+     * the total count. If no members exist (shouldn't happen), shows the
+     * "no members" message.</p>
+     */
     private void loadMembers() {
         if (home == null) {
             return;
@@ -86,6 +151,28 @@ public class ManageUsersDialogController {
         }
     }
 
+    /**
+     * Creates a UI card for a home member.
+     *
+     * <p>Builds an HBox containing:</p>
+     * <ul>
+     *   <li>Member name and role badge</li>
+     *   <li>Email address</li>
+     *   <li>Join date (formatted as "MMM dd, yyyy")</li>
+     *   <li>Role change dropdown (if modifiable)</li>
+     *   <li>Remove button (if modifiable)</li>
+     *   <li>Special badges for owner or current user</li>
+     * </ul>
+     *
+     * <p><b>Modification rules:</b> A member is modifiable if:</p>
+     * <ul>
+     *   <li>They are not the current user</li>
+     *   <li>They are not the home owner</li>
+     * </ul>
+     *
+     * @param member the member to create a card for
+     * @return an HBox component representing the member
+     */
     private HBox createMemberCard(HomeUser member) {
         HBox card = new HBox(15);
         card.getStyleClass().add("card");
@@ -181,6 +268,21 @@ public class ManageUsersDialogController {
         return card;
     }
 
+    /**
+     * Handles role change request for a member.
+     *
+     * <p>Shows confirmation dialog with role change details, then updates
+     * the role via {@link HomeManagementService#updateUserRole} if confirmed.
+     * On success, reloads member list. On failure or cancellation, reverts
+     * the dropdown to original role.</p>
+     *
+     * <p><b>Error handling:</b> Catches {@link SecurityException} for permission
+     * issues and generic exceptions for other errors.</p>
+     *
+     * @param member the member whose role to change
+     * @param newRole the new role to assign
+     * @param comboBox the role dropdown (for reverting on failure)
+     */
     private void handleChangeRole(HomeUser member, UserRole newRole, ComboBox<UserRole> comboBox) {
         String message = String.format(
                 "Change %s's role from %s to %s?",
@@ -220,6 +322,18 @@ public class ManageUsersDialogController {
         }
     }
 
+    /**
+     * Handles member removal request.
+     *
+     * <p>Shows confirmation dialog with warning about access loss, then removes
+     * the member via {@link HomeManagementService#removeUserFromHome} if confirmed.
+     * On success, reloads member list.</p>
+     *
+     * <p><b>Error handling:</b> Catches {@link SecurityException} for permission
+     * issues and generic exceptions for other errors.</p>
+     *
+     * @param member the member to remove
+     */
     private void handleRemoveMember(HomeUser member) {
         String message = String.format(
                 "Remove %s from this home?\n\nThey will lose access to all devices and rooms.",
@@ -253,6 +367,14 @@ public class ManageUsersDialogController {
         }
     }
 
+    /**
+     * Returns the CSS style class for a given role.
+     *
+     * <p>Maps user roles to CSS classes for visual styling:</p>
+     *
+     * @param role the user role
+     * @return the corresponding CSS class name
+     */
     private String getRoleStyleClass(UserRole role) {
         return switch (role) {
             case OWNER -> "role-owner";

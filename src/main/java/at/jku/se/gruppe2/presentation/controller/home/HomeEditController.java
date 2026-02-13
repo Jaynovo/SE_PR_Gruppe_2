@@ -20,6 +20,43 @@ import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+/**
+ * Controller for the home edit page.
+ *
+ * <p>This controller manages the editing of home details including name, floor count,
+ * and address information. It provides validation, permission checking, and handles
+ * both home updates and home deletion.</p>
+ *
+ * <p><b>Key responsibilities:</b></p>
+ * <ul>
+ *   <li>Loading and displaying current home information</li>
+ *   <li>Validating user input for home and address fields</li>
+ *   <li>Updating home details in the database</li>
+ *   <li>Managing address creation and updates</li>
+ *   <li>Triggering re-geocoding when address changes</li>
+ *   <li>Handling home deletion with cascading effects</li>
+ *   <li>Enforcing permission checks (only owners can edit/delete)</li>
+ * </ul>
+ *
+ * <p><b>Permission requirements:</b> Only home owners (OWNER role) can access this page
+ * and perform edit/delete operations. The controller checks permissions via
+ * {@link AuthorizationService} on initialization and before each action.</p>
+ *
+ * <p><b>Address handling:</b></p>
+ * <ul>
+ *   <li>If home has no address, creates a new one when saved</li>
+ *   <li>If address exists, updates the existing record</li>
+ *   <li>When address changes, resets coordinates to trigger geocoding</li>
+ * </ul>
+ *
+ * <p><b>FXML bindings:</b> Requires the following UI elements:</p>
+ * <ul>
+ *   <li>{@code homeLabel} - home name input</li>
+ *   <li>{@code floorLevels} - number of floors input (IntegerField)</li>
+ *   <li>{@code street}, {@code streetNumber}, {@code postalCode}, {@code city},
+ *       {@code countryBox} - address inputs</li>
+ * </ul>
+ */
 public class HomeEditController extends BaseController implements Initializable {
 
     @FXML private TextField homeLabel;
@@ -37,6 +74,25 @@ public class HomeEditController extends BaseController implements Initializable 
     private final AddressRepository addressRepo = new AddressRepository();
     private final AuthorizationService authService = new AuthorizationService();
 
+    /**
+     * Initializes the controller after FXML loading.
+     *
+     * <p>This method performs the following initialization steps:</p>
+     * <ol>
+     *   <li>Sets up the country dropdown with searchable countries</li>
+     *   <li>Validates user session</li>
+     *   <li>Loads the user's home from database</li>
+     *   <li>Checks if user has permission to edit (must be OWNER)</li>
+     *   <li>Loads the home's address</li>
+     *   <li>Pre-fills form fields with current data</li>
+     * </ol>
+     *
+     * <p>If any validation fails (no user, no home, no permission), displays
+     * an error and redirects appropriately.</p>
+     *
+     * @param location not used
+     * @param resources not used
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // Setup country ComboBox with filter
@@ -71,6 +127,12 @@ public class HomeEditController extends BaseController implements Initializable 
         populateForm();
     }
 
+    /**
+     * Populates form fields with current home and address data.
+     *
+     * <p>Fills in the home name, floor count, and all address fields with
+     * the current values from {@link #currentHome} and {@link #currentAddress}.</p>
+     */
     private void populateForm() {
         // Home details
         homeLabel.setText(currentHome.getHomeLabel());
@@ -86,6 +148,28 @@ public class HomeEditController extends BaseController implements Initializable 
         }
     }
 
+    /**
+     * Handles the save button click event.
+     *
+     * <p>This method performs the complete save workflow:</p>
+     * <ol>
+     *   <li>Checks user permission to edit via {@link AuthorizationService#canEditHomeDetails}</li>
+     *   <li>Validates all input fields using {@link #validateInputs()}</li>
+     *   <li>Updates home name and floor count</li>
+     *   <li>Creates new address or updates existing address</li>
+     *   <li>Resets coordinates if address changed (for re-geocoding)</li>
+     *   <li>Persists changes to database</li>
+     *   <li>Shows success message and returns to dashboard</li>
+     * </ol>
+     *
+     * <p><b>Error handling:</b> Displays error dialogs for:</p>
+     * <ul>
+     *   <li>Permission denied</li>
+     *   <li>Validation failures</li>
+     *   <li>Database save failures</li>
+     *   <li>Unexpected exceptions</li>
+     * </ul>
+     */
     @FXML
     public void saveButtonClicked() {
         // CHECK Permission
@@ -155,6 +239,12 @@ public class HomeEditController extends BaseController implements Initializable 
         }
     }
 
+    /**
+     * Validates all input fields using {@link ValidationService}.
+     *
+     * <p>Performs comprehensive validation.</p>
+     * @return {@code true} if all validations pass, {@code false} otherwise
+     */
     private boolean validateInputs() {
         ValidationService.ValidationResult result = ValidationService.validateCompleteHome(
                 homeLabel.getText(),
@@ -174,6 +264,16 @@ public class HomeEditController extends BaseController implements Initializable 
         return true;
     }
 
+    /**
+     * Checks if the address has been modified.
+     *
+     * <p>Compares current form values with the original address to determine
+     * if any address field has changed. This is used to decide whether
+     * coordinates need to be reset for re-geocoding.</p>
+     *
+     * @return {@code true} if any address field differs from the original,
+     *         {@code true} if no address existed before
+     */
     private boolean hasAddressChanged() {
         if (currentAddress == null) return true;
 
@@ -184,11 +284,31 @@ public class HomeEditController extends BaseController implements Initializable 
                 !countryBox.getValue().equals(currentAddress.getCountry());
     }
 
+    /**
+     * Handles the cancel button click event.
+     *
+     * <p>Discards all changes and returns to the dashboard without saving.</p>
+     */
     @FXML
     public void cancelButtonClicked() {
         navigate.goTo(Page.DASHBOARD.fxml());
     }
 
+    /**
+     * Handles the delete home button click event.
+     *
+     * <p>This method performs the complete home deletion workflow:</p>
+     * <ol>
+     *   <li>Checks user permission via {@link AuthorizationService#canDeleteHome}</li>
+     *   <li>Validates user session</li>
+     *   <li>Shows confirmation dialog with warning about data loss</li>
+     *   <li>Deletes the home from database (cascades to rooms and devices)</li>
+     *   <li>Shows success message and returns to dashboard</li>
+     * </ol>
+     *
+     * <p><b>Permission required:</b> Only OWNER can delete the home.</p>
+     *
+     */
     @FXML
     public void deleteHomeButtonClicked() {
         // CHECK Permission
