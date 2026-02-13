@@ -1,8 +1,7 @@
 package at.jku.se.gruppe2.domain.service.user;
 
-import at.jku.se.gruppe2.domain.model.user.HomeUser;
-import at.jku.se.gruppe2.domain.model.user.UserRole;
-import at.jku.se.gruppe2.infrastructure.persistence.repository.UserHomeRepository;
+import at.jku.se.gruppe2.domain.model.user.*;
+import at.jku.se.gruppe2.infrastructure.persistence.repository.*;
 import at.jku.se.gruppe2.infrastructure.security.Session;
 
 import java.util.*;
@@ -13,16 +12,21 @@ import java.util.*;
 public class HomeManagementService {
     private final UserHomeRepository userHomeRepository;
     private final AuthorizationService authorizationService;
+    private final UserRepository userRepository;
+
+
 
     public HomeManagementService() {
         this.userHomeRepository = new UserHomeRepository();
         this.authorizationService = new AuthorizationService();
+        this.userRepository = new UserRepository();
     }
 
     public HomeManagementService(UserHomeRepository userHomeRepository,
                                  AuthorizationService authorizationService) {
         this.userHomeRepository = userHomeRepository;
         this.authorizationService = authorizationService;
+        this.userRepository = new UserRepository();
     }
 
     /**
@@ -60,12 +64,21 @@ public class HomeManagementService {
      * Remove a user from a home (owner only)
      */
     public boolean removeUserFromHome(int homeId, int userId) {
-        // Check permissions
         if (!authorizationService.canRemoveUser(homeId, userId)) {
             throw new SecurityException("You don't have permission to remove this user");
         }
 
-        return userHomeRepository.removeUserFromHome(userId, homeId) > 0;
+        boolean removed = userHomeRepository.removeUserFromHome(userId, homeId) > 0;
+
+        if (removed) {
+            // Clear the stale home_info FK so the user doesn't appear to still
+            // belong to a home they've been removed from.
+            User removedUser = new User();
+            removedUser.setId(userId);
+            userRepository.updateHome(removedUser, null);
+        }
+
+        return removed;
     }
 
     /**

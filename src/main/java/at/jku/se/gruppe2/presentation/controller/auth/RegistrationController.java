@@ -145,8 +145,8 @@ public class RegistrationController {
                 address = new Address(
                         streetNameField.getText(),
                         streetNumberField.getText(),
-                        postalCodeField.getText(),
                         cityField.getText(),
+                        postalCodeField.getText(),
                         countryBox.getValue(),
                         0.0, 0.0
                 );
