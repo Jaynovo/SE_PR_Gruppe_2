@@ -7,14 +7,27 @@ package at.jku.se.gruppe2.domain.model.device.sensor;
  */
 public class CatSensor extends Sensor {
 
-    // default threshold; can be changed via setter/config file later
+    /**
+     * Default detection threshold (clamped to 0..1).
+     */
     private double detectionThreshold = 0.75;
-    private String lastImageUrl;
 
+    /**
+     * Optional URL of the last image used for detection (e.g., from a camera service).
+     */
+    private String lastImageUrl;
+    /**
+     * @return detection threshold (0..1)
+     */
     public double getDetectionThreshold() {
         return detectionThreshold;
     }
-
+    /**
+     * Sets the detection threshold.
+     * Values are clamped to the range 0..1.
+     *
+     * @param detectionThreshold threshold in range 0..1
+     */
     public void setDetectionThreshold(double detectionThreshold) {
         if (detectionThreshold < 0.0) detectionThreshold = 0.0;
         if (detectionThreshold > 1.0) detectionThreshold = 1.0;
@@ -31,23 +44,31 @@ public class CatSensor extends Sensor {
     }
 
     /**
-     * Returns current confidence (0..1)
+     * @return  current confidence (0..1)
      */
     public double getConfidence() {
         return getValue();
     }
 
     /**
-     * True if confidence >= threshold
+     * Checks whether the confidence indicates a detected cat
+     * @return {@code true} if {@code confidence >= detectionThreshold}, otherwise {@code false}
      */
     public boolean isCatDetected() {
         return getConfidence() >= detectionThreshold;
     }
-
+    /**
+     * @return URL of the last image used for detection (may be {@code null})
+     */
     public String getLastImageUrl() {
         return lastImageUrl;
     }
-
+    /**
+     * Updates the detection result (confidence + optional image URL).
+     *
+     * @param confidence confidence in range 0..1
+     * @param imageUrl   URL of the image used for detection (may be {@code null})
+     */
     public void updateDetection(double confidence, String imageUrl) {
         setConfidence(confidence);
         this.lastImageUrl = imageUrl;

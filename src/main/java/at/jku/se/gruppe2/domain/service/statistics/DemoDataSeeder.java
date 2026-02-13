@@ -11,8 +11,35 @@ import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+/**
+ * Seeds demo sensor data for a given home if the database is missing sensor devices
+ * and/or sensor readings.
+ *
+ * <p>This class is intended for development/demo environments to populate the statistics
+ * dashboard with time series data. It can:
+ * <ul>
+ *   <li>Create default sensor devices for existing rooms (if missing)</li>
+ *   <li>Generate synthetic readings for a specified backfill duration</li>
+ * </ul>
+ *
+ * <h3>Generated data characteristics</h3>
+ * <ul>
+ *   <li>Time series are generated in fixed steps (default: {@code stepMinutes}=5).</li>
+ *   <li>Values follow a daily sinusoidal pattern (low at night, higher daytime) plus noise.</li>
+ *   <li>Some sensors have special logic (e.g., motion is 0/1 with higher daytime probability).</li>
+ *   <li>{@code CatSensor} is explicitly ignored (no demo seeding).</li>
+ * </ul>
+ *
+ * <h3>Time handling</h3>
+ * <p>Start/end instants are truncated to minutes to stabilize bucket boundaries and avoid
+ * producing non-aligned timestamps. Local time calculations for the daily cycle use the
+ * configured {@link ZoneId}.</p>
+ */
 public class DemoDataSeeder {
 
+    /**
+     * Predefined interval presets for convenience in UI or demo configuration.
+     */
     public enum IntervalPreset {
         LAST_6H("Last 6 hours", Duration.ofHours(6)),
         LAST_24H("Last 24 hours", Duration.ofHours(24)),
@@ -33,10 +60,34 @@ public class DemoDataSeeder {
     private final ZoneId zone;
     private final Random rng;
 
+    /**
+     * Creates a seeder with default generation parameters.
+     *
+     * <p>Defaults:
+     * <ul>
+     *   <li>{@code stepMinutes} = 5</li>
+     *   <li>{@code zone} = {@link ZoneId#systemDefault()}</li>
+     *   <li>{@code rng} = new {@link Random}()</li>
+     * </ul></p>
+     *
+     * @param deviceRepo  repository used for device and device type operations
+     * @param roomRepo    repository used to load rooms
+     * @param readingRepo repository used to check and insert sensor readings
+     */
     public DemoDataSeeder(DeviceRepository deviceRepo, RoomRepository roomRepo, SensorReadingRepository readingRepo) {
         this(deviceRepo, roomRepo, readingRepo, 5, ZoneId.systemDefault(), new Random());
     }
 
+    /**
+     * Creates a seeder with explicitly provided parameters.
+     *
+     * @param deviceRepo   repository used for device and device type operations
+     * @param roomRepo     repository used to load rooms
+     * @param readingRepo  repository used to check and insert sensor readings
+     * @param stepMinutes  step size for time series generation in minutes (e.g., 5)
+     * @param zone         time zone used to compute local-time daily cycles
+     * @param rng          random generator used for noise and probabilities
+     */
     public DemoDataSeeder(DeviceRepository deviceRepo, RoomRepository roomRepo, SensorReadingRepository readingRepo,
                           int stepMinutes, ZoneId zone, Random rng) {
         this.deviceRepo = deviceRepo;
@@ -47,8 +98,30 @@ public class DemoDataSeeder {
         this.rng = rng;
     }
 
+    /**
+     * Result of a seeding operation.
+     *
+     * @param seeded          {@code true} if seeding was executed, {@code false} if nothing was needed
+     * @param createdDevices  number of default sensor devices created
+     * @param insertedReadings number of readings inserted into the database
+     */
     public record SeedResult(boolean seeded, int createdDevices, int insertedReadings) {}
 
+    /**
+     * Seeds default sensors and readings for a home, but only if missing.
+     *
+     * <p>Logic:
+     * <ul>
+     *   <li>If the home already has readings and has sensor devices: no action.</li>
+     *   <li>If sensors are missing: create default sensors in available rooms.</li>
+     *   <li>Generate synthetic readings for all sensor devices for the backfill duration.</li>
+     * </ul></p>
+     *
+     * @param homeId   home identifier
+     * @param backfill how far back in time readings should be generated (e.g., {@code Duration.ofDays(7)})
+     * @return {@link SeedResult} describing what was created/inserted
+     * @throws IllegalStateException if sensors must be created but the home has no rooms
+     */
     public SeedResult seedIfMissing(int homeId, Duration backfill) {
         boolean hasReadings = readingRepo.hasAnyReadingsForHome(homeId);
         List<Device> sensors = deviceRepo.getSensorDevicesByHomeId(homeId);
@@ -66,6 +139,20 @@ public class DemoDataSeeder {
         return new SeedResult(true, created, inserted);
     }
 
+    /**
+     * Ensures a minimal set of default sensors exist for a home by creating them in the first rooms.
+     *
+     * <p>Implementation detail:
+     * <ul>
+     *   <li>Uses the first room as "living room".</li>
+     *   <li>Uses the second room as "bedroom" if available, otherwise the first room again.</li>
+     *   <li>{@code CatSensor} is ignored and never created.</li>
+     * </ul></p>
+     *
+     * @param homeId home identifier
+     * @return number of created sensor devices
+     * @throws IllegalStateException if the home has no rooms or required device types are missing
+     */
     private int ensureDefaultSensors(int homeId) {
         List<Room> rooms = roomRepo.getAllRoomsByHomeId(homeId);
         if (rooms.isEmpty()) throw new IllegalStateException("No rooms for homeId=" + homeId);
@@ -87,6 +174,15 @@ public class DemoDataSeeder {
         return created;
     }
 
+    /**
+     * Creates a single sensor device for the given room.
+     *
+     * @param room            target room
+     * @param deviceLabel     human-readable device label
+     * @param sensorTypeLabel device type label as stored in device_type table (category SENSOR)
+     * @return 1 if created, 0 if skipped (e.g., CatSensor)
+     * @throws IllegalStateException if the device type does not exist or if creation fails
+     */
     private int createSensorDevice(Room room, String deviceLabel, String sensorTypeLabel) {
         // ignore CatSensor explicitly
         if ("CatSensor".equals(sensorTypeLabel)) return 0;
@@ -104,6 +200,13 @@ public class DemoDataSeeder {
         return 1;
     }
 
+    /**
+     * Generates synthetic readings for the given sensor devices and inserts them as a batch.
+     *
+     * @param sensors  list of sensor devices
+     * @param backfill duration into the past for which readings are generated
+     * @return number of inserted readings (as returned by repository)
+     */
     private int generateAndInsertReadings(List<Device> sensors, Duration backfill) {
         if (sensors == null || sensors.isEmpty()) return 0;
 
@@ -134,6 +237,12 @@ public class DemoDataSeeder {
         return readingRepo.insertBatch(batch);
     }
 
+    /**
+     * Chooses an initial base value for a specific sensor type.
+     *
+     * @param typeLabel sensor type label (e.g., "CO2Sensor", "Thermometer")
+     * @return initial baseline value
+     */
     private double baseFor(String typeLabel) {
         return switch (typeLabel) {
             case "Thermometer" -> 20.0 + rng.nextGaussian() * 1.2;
@@ -147,6 +256,14 @@ public class DemoDataSeeder {
         };
     }
 
+    /**
+     * Synthesizes a sensor value for a timestamp using a daily sinusoidal cycle and noise.
+     *
+     * @param typeLabel sensor type label
+     * @param base      baseline value for the device
+     * @param t         timestamp to generate for
+     * @return generated sensor value
+     */
     private Double synthValue(String typeLabel, double base, Instant t) {
         LocalTime lt = LocalDateTime.ofInstant(t, zone).toLocalTime();
         double minutesOfDay = lt.getHour() * 60.0 + lt.getMinute();
@@ -184,6 +301,14 @@ public class DemoDataSeeder {
         };
     }
 
+    /**
+     * Clamps a value to an inclusive range.
+     *
+     * @param v   input value
+     * @param min minimum value
+     * @param max maximum value
+     * @return clamped value in range {@code [min, max]}
+     */
     private double clamp(double v, double min, double max) {
         return Math.max(min, Math.min(max, v));
     }

@@ -10,6 +10,18 @@ import at.jku.se.gruppe2.infrastructure.persistence.repository.*;
 
 import java.util.*;
 
+/**
+ * Service responsible for building a fully-hydrated {@link User} aggregate from persistence.
+ *
+ * <p>This service loads a user and (if available) enriches it with:
+ * <ul>
+ *   <li>User address (if user has an address reference)</li>
+ *   <li>User home (if assigned)</li>
+ *   <li>Home address (if home has an address reference)</li>
+ *   <li>Rooms in the home</li>
+ *   <li>Devices per room</li>
+ * </ul>
+ */
 public class UserBuildingService {
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
@@ -18,6 +30,9 @@ public class UserBuildingService {
     private final DeviceRepository deviceRepository;
     private final UserHomeRepository userHomeRepository;
 
+    /**
+     * Creates the service with default repository instances.
+     */
     public UserBuildingService() {
         deviceRepository = new DeviceRepository();
         homeRepository = new HomeRepository();
@@ -27,6 +42,16 @@ public class UserBuildingService {
         userHomeRepository = new UserHomeRepository();
     }
 
+    /**
+     * Creates the service with injected repositories.
+     *
+     * @param userRepository      repository used to load the user
+     * @param roomRepository      repository used to load rooms for a home
+     * @param homeRepository      repository used to load the home for a user
+     * @param addressRepository   repository used to load address entities
+     * @param deviceRepository    repository used to load devices per room
+     * @param userHomeRepository  repository for user-home relationships (reserved for future use)
+     */
     public UserBuildingService(UserRepository userRepository, RoomRepository roomRepository, HomeRepository homeRepository, AddressRepository addressRepository, DeviceRepository deviceRepository, UserHomeRepository userHomeRepository) {
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
@@ -36,6 +61,29 @@ public class UserBuildingService {
         this.userHomeRepository = userHomeRepository;
     }
 
+    /**
+     * Builds a {@link User} object by email and enriches it with related data from repositories.
+     *
+     * <p>Loaded structure:
+     * <ol>
+     *   <li>User by email</li>
+     *   <li>User address (if referenced)</li>
+     *   <li>Home associated with the user</li>
+     *   <li>Home address (if referenced)</li>
+     *   <li>Rooms of the home</li>
+     *   <li>Devices for each room</li>
+     * </ol>
+     *
+     * <p>Some data is optional and may remain {@code null}:
+     * <ul>
+     *   <li>Home (if user has no assigned home)</li>
+     *   <li>Addresses (if IDs are missing or lookup fails)</li>
+     * </ul></p>
+     *
+     * @param email email address used to look up the user
+     * @return fully built {@link User} (without home if none exists)
+     * @throws IllegalArgumentException if no user exists with the given email
+     */
     public User buildUserByEmail(String email) {
         User user = userRepository.findUserByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User with email " + email + " not found"));

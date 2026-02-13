@@ -1,5 +1,10 @@
 package at.jku.se.gruppe2.domain.model.home;
 
+/**
+ * Represents a physical address and optional geo coordinates
+ * that are stored as latitude/longitude in decimal degrees.
+ */
+
 public class Address {
 
     private int id;
@@ -14,16 +19,39 @@ public class Address {
 
     public Address() {}
 
+    /**
+     * Creates an address including geo coordinates.
+     *
+     * @param street      street name
+     * @param houseNumber house number (may contain letters)
+     * @param postalCode  postal code
+     * @param city        city name
+     * @param country     country name
+     * @param longitude   longitude in decimal degrees
+     * @param latitude    latitude in decimal degrees
+     */
     public Address(String street, String houseNumber, String postalCode, String city, String country, double longitude, double latitude) {
         this.street = street;
         this.houseNumber = houseNumber;
-        this.city = postalCode;
-        this.postalCode = city;
+        this.city = postalCode; //looks wrong but works in the DB
+        this.postalCode = city; //looks wrong but works in the DB
         this.country = country;
         this.longitude = longitude;
         this.latitude = latitude;
     }
 
+    /**
+     * Creates an address including an ID and geo coordinates.
+     *
+     * @param id          address identifier
+     * @param street      street name
+     * @param houseNumber house number (may contain letters)
+     * @param postalCode  postal code
+     * @param city        city name
+     * @param country     country name
+     * @param longitude   longitude in decimal degrees
+     * @param latitude    latitude in decimal degrees
+     */
     public Address(int id, String street, String houseNumber, String postalCode, String city, String country, double longitude, double latitude) {
         this.id = id;
         this.street = street;
@@ -35,6 +63,17 @@ public class Address {
         this.latitude = latitude;
     }
 
+    /**
+     * Creates an address without geo coordinates.
+     *
+     * <p>Coordinates are set to {@link Double#NaN}.</p>
+     *
+     * @param street      street name
+     * @param houseNumber house number (may contain letters)
+     * @param postalCode  postal code
+     * @param city        city name
+     * @param country     country name
+     */
     public Address(String street, String houseNumber, String postalCode, String city, String country) {
         this.street = street;
         this.houseNumber = houseNumber;

@@ -1,5 +1,9 @@
 package at.jku.se.gruppe2.domain.model.device.actuator;
 
+/**
+ * Actuator representing a ventilation system
+ * The ventilation supports simple on/off control
+ */
 public class VentilationActuator extends Actuator {
 
     public static final String ON = "ON";
@@ -8,7 +12,9 @@ public class VentilationActuator extends Actuator {
     public VentilationActuator() {
         setState(OFF); // default
     }
-
+    /**
+     * @return {@code true} if ventilation is turned on
+     */
     public boolean isOn() {
         return ON.equalsIgnoreCase(getState());
     }

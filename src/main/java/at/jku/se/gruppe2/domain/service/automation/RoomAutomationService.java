@@ -14,16 +14,36 @@ import at.jku.se.gruppe2.presentation.util.UIUtils;
 
 import java.util.List;
 
+/**
+ * Central service for evaluating automation rules within a room.
+ *
+ * <p>This service inspects the devices present in a room and applies automation logic for:
+ * ventilation, alarm system, cat feeder, and blinds.</p>
+ */
 public class RoomAutomationService {
     private final ActuatorConfigService actuatorCfg;
     private final ActuatorService actuatorService;
+    /**
+     * Tracks the last alarm state to avoid repeating side effects (e.g., popup) for the same trigger.
+     */
     private String lastAlarmState = "DISARMED";
 
+    /**
+     * Creates a new room automation service.
+     *
+     * @param actuatorService service used to read/write actuator states
+     * @param actuatorCfg     service used to load/store actuator configurations and counters
+     */
     public RoomAutomationService(ActuatorService actuatorService, ActuatorConfigService actuatorCfg) {
         this.actuatorService = actuatorService;
         this.actuatorCfg = actuatorCfg;
     }
 
+    /**
+     * Evaluates all supported automations for the given list of devices.
+     *
+     * @param devices devices present in the room
+     */
     public void evaluateAutomation(List<Device> devices) {
         evaluateVentilation(devices);
         evaluateAlarm(devices);
@@ -31,6 +51,16 @@ public class RoomAutomationService {
         evaluateBlinds(devices);
     }
 
+    /**
+     * Evaluates ventilation automation.
+     *
+     * <p>Ventilation can be triggered by either CO₂ (ppm) or humidity (%) thresholds.
+     * Separate ON/OFF thresholds provide hysteresis to avoid frequent toggling.</p>
+     *
+     * <p>If auto mode is disabled in {@link VentilationConfig}, the method does nothing.</p>
+     *
+     * @param devices list of devices in the room
+     */
     private void evaluateVentilation(List<Device> devices) {
         Sensor co2 = null;
         Sensor humidity = null;
@@ -77,6 +107,20 @@ public class RoomAutomationService {
         }
     }
 
+    /**
+     * Evaluates the alarm system automation based on the noise sensor.
+     *
+     * <p>Logic overview:
+     * <ul>
+     *   <li>Only runs if alarm is {@code ARMED} and not already {@code TRIGGERED}.</li>
+     *   <li>Counts consecutive ticks where noise exceeds {@code noiseThresholdDb}.</li>
+     *   <li>If the counter reaches {@code requiredConsecutiveTicks}, alarm is triggered.</li>
+     * </ul>
+     *
+     * The counter is maintained via {@link ActuatorConfigService}.</p>
+     *
+     * @param devices list of devices in the room
+     */
     private void evaluateAlarm(List<Device> devices) {
         Sensor noise = null;
         for (Device d : devices) {
@@ -129,10 +173,32 @@ public class RoomAutomationService {
         }
     }
 
+    /**
+     * Callback invoked when the alarm is triggered.
+     *
+     * <p>Default implementation shows a UI popup. For unit tests or headless execution,
+     * override this method to suppress UI side effects.</p>
+     *
+     * @param noiseValue noise level that caused the trigger (in dB)
+     */
     public void onAlarmTriggered(double noiseValue) {
         UIUtils.showAlarmPopup("ALARM!", "Alarmanlage ausgelöst!", noiseValue);
     }
 
+    /**
+     * Evaluates cat feeder automation based on {@link CatSensor} confidence.
+     *
+     * <p>Logic overview:
+     * <ul>
+     *   <li>Finds a cat sensor and a feeder actuator device.</li>
+     *   <li>Uses a cooldown counter stored in {@link ActuatorConfigService}.</li>
+     *   <li>If cat is detected and confidence exceeds the configured threshold:
+     *       sets feeder state to {@code FEEDING} and starts cooldown.</li>
+     *   <li>Otherwise sets feeder state to {@code READY}.</li>
+     * </ul></p>
+     *
+     * @param devices list of devices in the room
+     */
     private void evaluateCatFeeder(List<Device> devices) {
 
         // 1) CatSensor finden
@@ -187,6 +253,14 @@ public class RoomAutomationService {
         actuatorService.setState(feeder.getId(), "READY");
     }
 
+    /**
+     * Evaluates blinds automation based on ambient light (lux).
+     *
+     * <p>If light exceeds {@code closeAtLux}, blinds are closed (POS=0).
+     * If light drops below {@code openAtLux}, blinds are opened (POS=100).</p>
+     *
+     * @param devices list of devices in the room
+     */
     private void evaluateBlinds(List<Device> devices) {
         Sensor light = null;
         Device blinds = null;

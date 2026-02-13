@@ -2,6 +2,10 @@ package at.jku.se.gruppe2.domain.model.home;
 
 import java.util.List;
 
+/**
+ * Represents a smart home consisting of an address and one or more rooms.
+ * This model stores structural information such as number of floors and the list of rooms
+ */
 public class Home {
     private int id;
     private String homeLabel;
@@ -12,6 +16,14 @@ public class Home {
     public Home() {
     }
 
+    /**
+     * Creates a home with validation.
+     *
+     * @param homeLabel label/name of the home (must be at least 4 characters, not blank)
+     * @param floors    number of floors (must be &gt; 0)
+     * @param address   address of the home (must not be {@code null})
+     * @throws IllegalArgumentException if any parameter violates the constraints
+     */
     public Home(String homeLabel, int floors, Address address) {
         if (homeLabel == null || homeLabel.isBlank() || homeLabel.length() < 4)
             throw new IllegalArgumentException("Home label must be at least 4 characters.");
@@ -43,10 +55,16 @@ public class Home {
         this.floors = floors;
     }
 
+    /**
+     * @return rooms belonging to this home (may be {@code null} if not initialized)
+     */
     public List<Room> getRooms() {
         return rooms;
     }
 
+    /**
+     * @param rooms list of rooms belonging to this home
+     */
     public void setRooms(List<Room> rooms) {
         this.rooms = rooms;
     }
